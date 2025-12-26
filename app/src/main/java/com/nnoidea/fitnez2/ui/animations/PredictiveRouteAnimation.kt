@@ -50,7 +50,6 @@ fun Modifier.predictiveRouteAnimation(state: PredictiveRouteState): Modifier =
                 scaleX = scale
                 scaleY = scale
 
-                // translationX = 
                 shape = RoundedCornerShape(24.dp)
                 clip = true
             }
@@ -71,13 +70,12 @@ fun PredictiveRouteBackground(
                                 // Anchor pivot to Center so it zooms evenly
                                 transformOrigin = TransformOrigin(0.5f, 0.5f)
 
-                                // Scale: Start larger (1.1) and shrink to 1.0 (Zoom Out effect)
+                                // Scale: Shrink from 1.0 to 0.9
                                 val scale = 1f - (0.1f * progress)
                                 scaleX = scale
                                 scaleY = scale
 
-                                // Translation: Slide in from the left
-                                // Start at -15% width (slightly off-screen/left) and slide to 0
+                                // Shift content to the left
                                 translationX = -size.width / 2
                             }
             ) {
@@ -95,3 +93,31 @@ fun PredictiveRouteBackground(
         }
     }
 }
+
+fun routeEnterTransition():
+        androidx.compose.animation.AnimatedContentTransitionScope<
+                androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition =
+        {
+            androidx.compose.animation.EnterTransition.None
+        }
+
+fun routeExitTransition():
+        androidx.compose.animation.AnimatedContentTransitionScope<
+                androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition =
+        {
+            androidx.compose.animation.ExitTransition.None
+        }
+
+fun routePopEnterTransition():
+        androidx.compose.animation.AnimatedContentTransitionScope<
+                androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition =
+        {
+            androidx.compose.animation.EnterTransition.None
+        }
+
+fun routePopExitTransition():
+        androidx.compose.animation.AnimatedContentTransitionScope<
+                androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition =
+        {
+            androidx.compose.animation.ExitTransition.None
+        }

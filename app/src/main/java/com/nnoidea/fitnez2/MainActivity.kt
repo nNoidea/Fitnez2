@@ -24,6 +24,10 @@ import com.nnoidea.fitnez2.ui.animations.predictiveRouteAnimation
 import com.nnoidea.fitnez2.ui.animations.predictiveSidePanelAnimation
 import com.nnoidea.fitnez2.ui.animations.rememberPredictiveRouteState
 import com.nnoidea.fitnez2.ui.animations.rememberPredictiveSidePanelState
+import com.nnoidea.fitnez2.ui.animations.routeEnterTransition
+import com.nnoidea.fitnez2.ui.animations.routeExitTransition
+import com.nnoidea.fitnez2.ui.animations.routePopEnterTransition
+import com.nnoidea.fitnez2.ui.animations.routePopExitTransition
 import com.nnoidea.fitnez2.ui.components.SidePanel
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import com.nnoidea.fitnez2.ui.screens.HomeScreen
@@ -79,18 +83,10 @@ class MainActivity : ComponentActivity() {
                             AppPage.entries.forEach { page ->
                                 composable(
                                         route = page.route,
-                                        enterTransition = {
-                                            androidx.compose.animation.EnterTransition.None
-                                        },
-                                        exitTransition = {
-                                            androidx.compose.animation.ExitTransition.None
-                                        },
-                                        popEnterTransition = {
-                                            androidx.compose.animation.EnterTransition.None
-                                        },
-                                        popExitTransition = {
-                                            androidx.compose.animation.ExitTransition.None
-                                        }
+                                        enterTransition = routeEnterTransition(),
+                                        exitTransition = routeExitTransition(),
+                                        popEnterTransition = routePopEnterTransition(),
+                                        popExitTransition = routePopExitTransition()
                                 ) {
                                     // Predictive Back Handler for the Drawer
                                     SidePanelPredictiveBackHandler(
