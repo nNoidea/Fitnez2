@@ -56,3 +56,22 @@ fun Modifier.predictiveSidePanelAnimation(state: PredictiveSidePanelState): Modi
                 clip = true
             }
         }
+
+@Composable
+fun PredictiveSidePanelContainer(
+        drawerState: DrawerState,
+        scope: CoroutineScope,
+        content: @Composable () -> Unit
+) {
+    val predictiveSidePanelState = rememberPredictiveSidePanelState()
+
+    SidePanelPredictiveBackHandler(
+            predictiveState = predictiveSidePanelState,
+            drawerState = drawerState,
+            scope = scope
+    )
+
+    androidx.compose.foundation.layout.Box(
+            modifier = Modifier.predictiveSidePanelAnimation(predictiveSidePanelState)
+    ) { content() }
+}

@@ -121,3 +121,35 @@ fun routePopExitTransition():
         {
             androidx.compose.animation.ExitTransition.None
         }
+
+@Composable
+fun PredictiveRouteContainer(
+        navController: NavController,
+        enabled: Boolean,
+        backgroundContent: @Composable () -> Unit,
+        content: @Composable () -> Unit
+) {
+    if (enabled) {
+        val predictiveRouteState = rememberPredictiveRouteState()
+
+        RoutePredictiveBackHandler(
+                predictiveState = predictiveRouteState,
+                navController = navController,
+                enabled = true
+        )
+
+        Box {
+            // Background Layer
+            PredictiveRouteBackground(
+                    state = predictiveRouteState,
+                    modifier = Modifier.fillMaxSize()
+            ) { backgroundContent() }
+
+            // Foreground Content
+            Box(modifier = Modifier.predictiveRouteAnimation(predictiveRouteState)) { content() }
+        }
+    } else {
+        // When disabled (e.g., Home screen), just show content without wrappers
+        content()
+    }
+}
