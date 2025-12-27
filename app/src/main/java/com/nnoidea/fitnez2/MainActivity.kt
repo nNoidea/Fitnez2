@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
 
                     ModalNavigationDrawer(
                         drawerState = drawerState,
+
                         drawerContent = {
                             PredictiveSidePanelContainer(
                                 drawerState = drawerState,
@@ -55,9 +56,7 @@ class MainActivity : ComponentActivity() {
                                             if (clickedRoute == AppPage.Home.route) {
                                                 if (currentPage != AppPage.Home) {
                                                     scope.launch {
-                                                        drawerState.snapTo(
-                                                            DrawerValue.Closed
-                                                        )
+                                                        drawerState.snapTo(DrawerValue.Closed)
                                                         finish()
                                                     }
                                                 }
@@ -68,15 +67,14 @@ class MainActivity : ComponentActivity() {
                                                     val intent =
                                                         Intent(
                                                             this@MainActivity,
-                                                            MainActivity::class
-                                                                .java
-                                                        )
-                                                            .apply {
-                                                                putExtra(
-                                                                    EXTRA_PAGE_ROUTE,
-                                                                    clickedRoute
-                                                                )
-                                                            }
+                                                            MainActivity::class.java
+                                                        ).apply {
+                                                            putExtra(
+                                                                EXTRA_PAGE_ROUTE,
+                                                                clickedRoute
+                                                            )
+                                                        }
+
                                                     startActivity(intent)
 
                                                     if (currentPage != AppPage.Home) {
@@ -91,7 +89,9 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                    ) { currentPage.content { scope.launch { drawerState.open() } } }
+                    ) {
+                        currentPage.content { scope.launch { drawerState.open() } }
+                    }
                 }
             }
         }
