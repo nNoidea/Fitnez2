@@ -16,9 +16,9 @@ fun HamburgerMenu(onClick: () -> Unit, modifier: Modifier = Modifier) {
     // We'll apply statusBarsPadding to ensure it's not overlapping with system icons,
     // and use the standard Material 3 navigation icon offset.
     IconButton(
-            onClick = onClick,
-            modifier =
-                    modifier.statusBarsPadding()
-                            .padding(start = 8.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
+        onClick = onClick,
+        modifier =
+            modifier.statusBarsPadding()
+                .padding(start = 8.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
     ) { Icon(imageVector = Icons.Default.Menu, contentDescription = "Open Navigation Drawer") }
 }
