@@ -27,7 +27,6 @@ import com.nnoidea.fitnez2.ui.navigation.AppPage
 
 @Composable
 fun SidePanel(
-        items: List<AppPage>,
         currentRoute: String?,
         onItemClick: (String) -> Unit,
         modifier: Modifier = Modifier
@@ -65,51 +64,63 @@ fun SidePanel(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Navigation Items
-            items.forEach { item ->
-                val isSelected = currentRoute == item.route
-                NavigationDrawerItem(
-                        label = {
-                            Text(
-                                    text = item.label,
-                                    fontWeight =
-                                            if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        selected = isSelected,
-                        onClick = { onItemClick(item.route) },
-                        icon = {
-                            Icon(
-                                    imageVector = item.icon,
-                                    contentDescription = item.label,
-                            )
-                        },
-                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-            }
+            SidePanelItem(
+                page = AppPage.Home,
+                isSelected = currentRoute == AppPage.Home.route,
+                onItemClick = { onItemClick(AppPage.Home.route) }
+            )
+            SidePanelItem(
+                page = AppPage.FoodPrep,
+                isSelected = currentRoute == AppPage.FoodPrep.route,
+                onItemClick = { onItemClick(AppPage.FoodPrep.route) }
+            )
 
             Spacer(modifier = Modifier.weight(1f))
 
             // Footer Section
             HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+
+            SidePanelItem(
+                page = AppPage.Settings,
+                isSelected = currentRoute == AppPage.Settings.route,
+                onItemClick = { onItemClick(AppPage.Settings.route) }
             )
 
             NavigationDrawerItem(
-                    label = { Text("Help & Feedback") },
-                    selected = false,
-                    onClick = { /* Handle help */},
-                    icon = { Icon(Icons.AutoMirrored.Filled.Help, contentDescription = null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                label = { Text("Help & Feedback") },
+                selected = false,
+                onClick = { /* Handle help */ },
+                icon = { Icon(Icons.AutoMirrored.Filled.Help, contentDescription = null) },
+                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
 
-@Preview
 @Composable
-fun SidePanelPreview() {
-    MaterialTheme {
-        SidePanel(items = AppPage.entries, currentRoute = AppPage.Home.route, onItemClick = {})
-    }
+private fun SidePanelItem(
+    page: AppPage,
+    isSelected: Boolean,
+    onItemClick: () -> Unit
+) {
+    NavigationDrawerItem(
+        label = {
+            Text(
+                text = page.label,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            )
+        },
+        selected = isSelected,
+        onClick = onItemClick,
+        icon = {
+            Icon(
+                imageVector = page.icon,
+                contentDescription = page.label,
+            )
+        },
+        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+    )
 }

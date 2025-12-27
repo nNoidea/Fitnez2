@@ -49,7 +49,6 @@ class MainActivity : ComponentActivity() {
                                         scope = scope
                                 ) {
                                     SidePanel(
-                                            items = AppPage.entries,
                                             currentRoute = currentPage.route,
                                             onItemClick = { clickedRoute ->
                                                 if (clickedRoute != currentPage.route) {
