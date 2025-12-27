@@ -16,16 +16,19 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlin.math.ln
 import kotlinx.coroutines.CancellationException
 
 private class PredictiveRouteState {
     var progress by mutableFloatStateOf(0f)
+    val scale: Float
+        get() = 1f - (ln(1f + 12f * progress) * 0.05f)
 }
 
 private fun Modifier.predictiveRouteForeground(state: PredictiveRouteState): Modifier =
         this.graphicsLayer {
             if (state.progress > 0f) {
-                val scale = 1f - (state.progress * 0.1f)
+                val scale = state.scale
                 scaleX = scale
                 scaleY = scale
 
@@ -37,17 +40,14 @@ private fun Modifier.predictiveRouteForeground(state: PredictiveRouteState): Mod
 private fun Modifier.predictiveRouteBackground(state: PredictiveRouteState): Modifier =
         this.graphicsLayer {
             if (state.progress > 0f) {
-                val progress = state.progress
-                // Anchor pivot to Center so it zooms evenly
-                transformOrigin = TransformOrigin(0.5f, 0.5f)
-
-                // Scale: Shrink from 1.0 to 0.9
-                val scale = 1f - (0.1f * progress)
+                val scale = state.scale
                 scaleX = scale
                 scaleY = scale
 
+                // Anchor pivot to Center so it zooms evenly
+                transformOrigin = TransformOrigin(0.8f, 0.5f)
                 // Shift content to the left
-                translationX = -size.width / 2
+                translationX = -size.width / 2f
             }
         }
 
@@ -98,19 +98,30 @@ fun PredictiveRouteContainer(
             }
         }
 
-        Box {
-            // Background Layer
-            Box(modifier = Modifier.fillMaxSize().predictiveRouteBackground(predictiveRouteState)) {
-                backgroundContent()
-            }
-
-            // Global Scrim Layer
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Base Scrim (behind everything)
             if (predictiveRouteState.progress > 0f) {
                 Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)))
             }
 
+            // Background Layer (Homescreen Preview)
+            Box(modifier = Modifier.fillMaxSize().predictiveRouteBackground(predictiveRouteState)) {
+                backgroundContent()
+
+                // Background-specific Scrim (on top of background content)
+                if (predictiveRouteState.progress > 0f) {
+                    Box(
+                            modifier =
+                                    Modifier.fillMaxSize()
+                                            .background(Color.Black.copy(alpha = 0.35f))
+                    )
+                }
+            }
+
             // Foreground Content
-            Box(modifier = Modifier.predictiveRouteForeground(predictiveRouteState)) { content() }
+            Box(modifier = Modifier.predictiveRouteForeground(predictiveRouteState).fillMaxSize()) {
+                content()
+            }
         }
     } else {
         // When disabled (e.g., Home screen), just show content without wrappers

@@ -22,7 +22,7 @@ private class PredictiveSidePanelState {
 private fun Modifier.predictiveSidePanelAnimation(state: PredictiveSidePanelState): Modifier =
         this.graphicsLayer {
             if (state.progress > 0f) {
-                val scale = 1f - (state.progress * 0.05f)
+                val scale = 1f - (state.progress * 0.1f)
                 scaleX = scale
                 scaleY = scale
                 // Slight slide out effect
