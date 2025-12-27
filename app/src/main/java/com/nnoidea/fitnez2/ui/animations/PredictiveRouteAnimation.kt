@@ -1,6 +1,7 @@
 package com.nnoidea.fitnez2.ui.animations
 
 import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.animation.EnterTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,10 +20,14 @@ import androidx.navigation.NavController
 import kotlin.math.ln
 import kotlinx.coroutines.CancellationException
 
+private val PEEK_TRANSFORM_ORIGIN = TransformOrigin(0.8f, 0.5f)
+
+private fun getPeekScale(progress: Float): Float = 1f - (ln(1f + 12f * progress) * 0.05f)
+
 private class PredictiveRouteState {
     var progress by mutableFloatStateOf(0f)
     val scale: Float
-        get() = 1f - (ln(1f + 12f * progress) * 0.05f)
+        get() = getPeekScale(progress)
 }
 
 private fun Modifier.predictiveRouteForegroundPeek(state: PredictiveRouteState): Modifier =
@@ -44,10 +49,13 @@ private fun Modifier.predictiveRouteBackgroundPeek(state: PredictiveRouteState):
                 scaleX = scale
                 scaleY = scale
 
+                shape = RoundedCornerShape(24.dp)
+                clip = true
+
                 // Anchor pivot to Center so it zooms evenly
-                transformOrigin = TransformOrigin(0.8f, 0.5f)
+                transformOrigin = PEEK_TRANSFORM_ORIGIN
                 // Shift content to the left
-                translationX = -size.width / 2f
+                translationX = -size.width / 2
             }
         }
 
@@ -55,28 +63,58 @@ fun routeEnterTransition():
         androidx.compose.animation.AnimatedContentTransitionScope<
                 androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition =
         {
-            androidx.compose.animation.EnterTransition.None
+            androidx.compose.animation.
+                    // EnterTransition.None
+                    fadeIn() +
+                    androidx.compose.animation.slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = androidx.compose.animation.core.tween(1000)
+                    )
         }
 
 fun routeExitTransition():
         androidx.compose.animation.AnimatedContentTransitionScope<
                 androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition =
         {
-            androidx.compose.animation.ExitTransition.None
+            androidx.compose.animation.
+                    // ExitTransition.None
+                    fadeOut() +
+                    androidx.compose.animation.scaleOut(
+                            targetScale = getPeekScale(1f),
+                            transformOrigin = PEEK_TRANSFORM_ORIGIN,
+                            animationSpec = androidx.compose.animation.core.tween(1000)
+                    )
         }
 
 fun routePopEnterTransition():
         androidx.compose.animation.AnimatedContentTransitionScope<
                 androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition =
         {
-            androidx.compose.animation.EnterTransition.None
+            androidx.compose.animation.
+                    // EnterTransition.None
+                    fadeIn() +
+                    androidx.compose.animation.scaleIn(
+                            initialScale = getPeekScale(1f),
+                            transformOrigin = PEEK_TRANSFORM_ORIGIN,
+                            animationSpec = androidx.compose.animation.core.tween(10000)
+                    ) +
+                    androidx.compose.animation.slideInHorizontally(
+                            initialOffsetX = { -it / 2 },
+                            animationSpec = androidx.compose.animation.core.tween(10000)
+                    )
         }
 
 fun routePopExitTransition():
         androidx.compose.animation.AnimatedContentTransitionScope<
                 androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition =
         {
-            androidx.compose.animation.ExitTransition.None
+            androidx.compose.animation.
+                    // ExitTransition.None
+                    fadeOut() +
+                    androidx.compose.animation.slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = androidx.compose.animation.core.tween(1000)
+                    )
         }
 
 @Composable
@@ -100,9 +138,9 @@ fun PredictiveRouteContainer(
 
         Box(modifier = Modifier.fillMaxSize()) {
             // Base Scrim (behind everything)
-            if (predictiveRouteState.progress > 0f) {
-                Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)))
-            }
+            // if (predictiveRouteState.progress > 0f) {
+            //     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)))
+            // }
 
             // Background Layer (Homescreen Preview)
             Box(

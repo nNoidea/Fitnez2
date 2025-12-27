@@ -12,6 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -36,7 +38,12 @@ class MainActivity : ComponentActivity() {
             Fitnez2Theme {
                 androidx.compose.material3.Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.background
+                        color =
+                                Color.Black.copy(alpha = 0.5f)
+                                        .compositeOver(
+                                                androidx.compose.material3.MaterialTheme.colorScheme
+                                                        .background
+                                        )
                 ) {
                     val navController = rememberNavController()
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
