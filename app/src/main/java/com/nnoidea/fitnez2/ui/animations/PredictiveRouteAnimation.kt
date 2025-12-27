@@ -25,7 +25,7 @@ private class PredictiveRouteState {
         get() = 1f - (ln(1f + 12f * progress) * 0.05f)
 }
 
-private fun Modifier.predictiveRouteForeground(state: PredictiveRouteState): Modifier =
+private fun Modifier.predictiveRouteForegroundPeek(state: PredictiveRouteState): Modifier =
         this.graphicsLayer {
             if (state.progress > 0f) {
                 val scale = state.scale
@@ -37,7 +37,7 @@ private fun Modifier.predictiveRouteForeground(state: PredictiveRouteState): Mod
             }
         }
 
-private fun Modifier.predictiveRouteBackground(state: PredictiveRouteState): Modifier =
+private fun Modifier.predictiveRouteBackgroundPeek(state: PredictiveRouteState): Modifier =
         this.graphicsLayer {
             if (state.progress > 0f) {
                 val scale = state.scale
@@ -105,7 +105,11 @@ fun PredictiveRouteContainer(
             }
 
             // Background Layer (Homescreen Preview)
-            Box(modifier = Modifier.fillMaxSize().predictiveRouteBackground(predictiveRouteState)) {
+            Box(
+                    modifier =
+                            Modifier.fillMaxSize()
+                                    .predictiveRouteBackgroundPeek(predictiveRouteState)
+            ) {
                 backgroundContent()
 
                 // Background-specific Scrim (on top of background content)
@@ -119,9 +123,11 @@ fun PredictiveRouteContainer(
             }
 
             // Foreground Content
-            Box(modifier = Modifier.predictiveRouteForeground(predictiveRouteState).fillMaxSize()) {
-                content()
-            }
+            Box(
+                    modifier =
+                            Modifier.predictiveRouteForegroundPeek(predictiveRouteState)
+                                    .fillMaxSize()
+            ) { content() }
         }
     } else {
         // When disabled (e.g., Home screen), just show content without wrappers
