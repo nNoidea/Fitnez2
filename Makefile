@@ -1,9 +1,14 @@
-.PHONY: build install clean stop
+.PHONY: build install clean stop prod
 
 # Default task: Builds the debug APK
 build:
 	@echo "Building Debug APK..."
 	./gradlew assembleDebug
+
+prod:
+	@echo "Building Production APK and copying it to desktop..."
+	./gradlew assembleRelease
+	cp app/build/outputs/apk/release/app-release.apk ~/Desktop/app-release.apk
 
 # Installs the built APK to a connected device or emulator
 install:
