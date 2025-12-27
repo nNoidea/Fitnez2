@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -23,56 +24,50 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 
 @Composable
 fun SidePanel(
-        currentRoute: String?,
-        onItemClick: (String) -> Unit,
-        modifier: Modifier = Modifier
+    currentRoute: String?,
+    onItemClick: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    ModalDrawerSheet(
-            modifier = modifier,
-            drawerTonalElevation = 0.dp
-    ) {
+    ModalDrawerSheet {
         Column(
-                modifier =
-                        Modifier.fillMaxHeight()
-                                .padding(horizontal = 12.dp)
-                                .verticalScroll(rememberScrollState())
+            modifier =
+                Modifier.fillMaxHeight()
+                    .padding(horizontal = 12.dp)
+                    .verticalScroll(rememberScrollState())
         ) {
             // Header Section
             Spacer(modifier = Modifier.height(32.dp))
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Icon(
-                        imageVector = Icons.Default.FitnessCenter,
-                        contentDescription = null,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                )
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
                 Text(
-                        text = "Fitnez"
-                )
-                Text(
-                        text = "Version 1.0.0",
+                    text = "Fitnez2",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-1).sp
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Navigation Items
-            SidePanelItem(
-                page = AppPage.Home,
-                isSelected = currentRoute == AppPage.Home.route,
-                onItemClick = { onItemClick(AppPage.Home.route) }
+            item(
+                label = AppPage.Home.label,
+                icon = AppPage.Home.icon,
+                selected = currentRoute == AppPage.Home.route,
+                onClick = { onItemClick(AppPage.Home.route) }
             )
-            SidePanelItem(
-                page = AppPage.FoodPrep,
-                isSelected = currentRoute == AppPage.FoodPrep.route,
-                onItemClick = { onItemClick(AppPage.FoodPrep.route) }
+            item(
+                label = AppPage.FoodPrep.label,
+                icon = AppPage.FoodPrep.icon,
+                selected = currentRoute == AppPage.FoodPrep.route,
+                onClick = { onItemClick(AppPage.FoodPrep.route) }
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -82,18 +77,23 @@ fun SidePanel(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
-            SidePanelItem(
-                page = AppPage.Settings,
-                isSelected = currentRoute == AppPage.Settings.route,
-                onItemClick = { onItemClick(AppPage.Settings.route) }
+            item(
+                label = AppPage.Settings.label,
+                icon = AppPage.Settings.icon,
+                selected = currentRoute == AppPage.Settings.route,
+                onClick = { onItemClick(AppPage.Settings.route) }
             )
 
-            NavigationDrawerItem(
-                label = { Text("Help & Feedback") },
-                selected = false,
-                onClick = { /* Handle help */ },
-                icon = { Icon(Icons.AutoMirrored.Filled.Help, contentDescription = null) },
-                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+            item(
+                label = "Help & Feedback",
+                icon = Icons.AutoMirrored.Filled.Help,
+                onClick = { /* Handle help */ }
+            )
+
+            item(
+                label = "1.0.0",
+                icon = Icons.Default.Info,
+                onClick = {}
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -101,26 +101,28 @@ fun SidePanel(
 }
 
 @Composable
-private fun SidePanelItem(
-    page: AppPage,
-    isSelected: Boolean,
-    onItemClick: () -> Unit
+private fun item(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    selected: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     NavigationDrawerItem(
         label = {
             Text(
-                text = page.label,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                text = label,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
             )
         },
-        selected = isSelected,
-        onClick = onItemClick,
+        selected = selected,
+        onClick = onClick,
         icon = {
             Icon(
-                imageVector = page.icon,
-                contentDescription = page.label,
+                imageVector = icon,
+                contentDescription = label,
             )
         },
-        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        modifier = modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
     )
 }
