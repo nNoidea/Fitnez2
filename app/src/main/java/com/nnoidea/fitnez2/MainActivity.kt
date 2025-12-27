@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
             Fitnez2Theme {
                 androidx.compose.material3.Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = androidx.compose.ui.graphics.Color.Black
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)

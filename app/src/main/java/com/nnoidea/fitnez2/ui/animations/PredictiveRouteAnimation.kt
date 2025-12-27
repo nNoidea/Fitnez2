@@ -1,7 +1,6 @@
 package com.nnoidea.fitnez2.ui.animations
 
 import androidx.activity.compose.PredictiveBackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +10,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -18,32 +18,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.CancellationException
 
-class PredictiveRouteState {
+private class PredictiveRouteState {
     var progress by mutableFloatStateOf(0f)
 }
 
-@Composable
-fun rememberPredictiveRouteState(): PredictiveRouteState {
-    return remember { PredictiveRouteState() }
-}
-
-@Composable
-fun RoutePredictiveBackHandler(
-        predictiveState: PredictiveRouteState,
-        navController: NavController,
-        enabled: Boolean = true
-) {
-    PredictiveBackHandler(enabled = enabled) { progress ->
-        try {
-            progress.collect { backEvent -> predictiveState.progress = backEvent.progress }
-            navController.popBackStack()
-        } catch (e: CancellationException) {
-            predictiveState.progress = 0f
-        }
-    }
-}
-
-fun Modifier.predictiveRouteAnimation(state: PredictiveRouteState): Modifier =
+private fun Modifier.predictiveRouteForeground(state: PredictiveRouteState): Modifier =
         this.graphicsLayer {
             if (state.progress > 0f) {
                 val scale = 1f - (state.progress * 0.1f)
@@ -55,44 +34,30 @@ fun Modifier.predictiveRouteAnimation(state: PredictiveRouteState): Modifier =
             }
         }
 
-@Composable
-fun PredictiveRouteBackground(
-        state: PredictiveRouteState,
-        modifier: Modifier = Modifier,
-        content: @Composable () -> Unit
-) {
-    if (state.progress > 0f) {
-        Box(modifier = modifier) {
-            Box(
-                    modifier =
-                            Modifier.fillMaxSize().graphicsLayer {
-                                val progress = state.progress
-                                // Anchor pivot to Center so it zooms evenly
-                                transformOrigin = TransformOrigin(0.5f, 0.5f)
+private fun Modifier.predictiveRouteBackground(state: PredictiveRouteState): Modifier =
+        this
+                .graphicsLayer {
+                    if (state.progress > 0f) {
+                        val progress = state.progress
+                        // Anchor pivot to Center so it zooms evenly
+                        transformOrigin = TransformOrigin(0.5f, 0.5f)
 
-                                // Scale: Shrink from 1.0 to 0.9
-                                val scale = 1f - (0.1f * progress)
-                                scaleX = scale
-                                scaleY = scale
+                        // Scale: Shrink from 1.0 to 0.9
+                        val scale = 1f - (0.1f * progress)
+                        scaleX = scale
+                        scaleY = scale
 
-                                // Shift content to the left
-                                translationX = -size.width / 2
-                            }
-            ) {
-                content()
-
-                // Scrim Overlay
-                // Darkens the background, fades away as we swipe (reveal more)
-                val scrimAlpha = 0.5f * (2f - state.progress)
-                Box(
-                        modifier =
-                                Modifier.fillMaxSize()
-                                        .background(Color.Black.copy(alpha = scrimAlpha))
-                )
-            }
-        }
-    }
-}
+                        // Shift content to the left
+                        translationX = -size.width / 2
+                    }
+                }
+                .drawWithContent {
+                    drawContent()
+                    if (state.progress > 0f) {
+                        val scrimAlpha = 0.5f * (2f - state.progress)
+                        drawRect(Color.Black.copy(alpha = scrimAlpha.coerceIn(0f, 1f)))
+                    }
+                }
 
 fun routeEnterTransition():
         androidx.compose.animation.AnimatedContentTransitionScope<
@@ -130,23 +95,25 @@ fun PredictiveRouteContainer(
         content: @Composable () -> Unit
 ) {
     if (enabled) {
-        val predictiveRouteState = rememberPredictiveRouteState()
+        val predictiveRouteState = remember { PredictiveRouteState() }
 
-        RoutePredictiveBackHandler(
-                predictiveState = predictiveRouteState,
-                navController = navController,
-                enabled = true
-        )
+        PredictiveBackHandler(enabled = enabled) { progress ->
+            try {
+                progress.collect { backEvent -> predictiveRouteState.progress = backEvent.progress }
+                navController.popBackStack()
+            } catch (e: CancellationException) {
+                predictiveRouteState.progress = 0f
+            }
+        }
 
         Box {
             // Background Layer
-            PredictiveRouteBackground(
-                    state = predictiveRouteState,
-                    modifier = Modifier.fillMaxSize()
-            ) { backgroundContent() }
+            Box(modifier = Modifier.fillMaxSize().predictiveRouteBackground(predictiveRouteState)) {
+                backgroundContent()
+            }
 
             // Foreground Content
-            Box(modifier = Modifier.predictiveRouteAnimation(predictiveRouteState)) { content() }
+            Box(modifier = Modifier.predictiveRouteForeground(predictiveRouteState)) { content() }
         }
     } else {
         // When disabled (e.g., Home screen), just show content without wrappers

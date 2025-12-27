@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -16,35 +15,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-class PredictiveSidePanelState {
+private class PredictiveSidePanelState {
     var progress by mutableFloatStateOf(0f)
 }
 
-@Composable
-fun rememberPredictiveSidePanelState(): PredictiveSidePanelState {
-    return remember { PredictiveSidePanelState() }
-}
-
-@Composable
-fun SidePanelPredictiveBackHandler(
-        predictiveState: PredictiveSidePanelState,
-        drawerState: DrawerState,
-        scope: CoroutineScope = rememberCoroutineScope()
-) {
-    PredictiveBackHandler(enabled = drawerState.isOpen) { progress ->
-        try {
-            progress.collect { backEvent -> predictiveState.progress = backEvent.progress }
-            scope.launch {
-                drawerState.close()
-                predictiveState.progress = 0f
-            }
-        } catch (e: CancellationException) {
-            predictiveState.progress = 0f
-        }
-    }
-}
-
-fun Modifier.predictiveSidePanelAnimation(state: PredictiveSidePanelState): Modifier =
+private fun Modifier.predictiveSidePanelAnimation(state: PredictiveSidePanelState): Modifier =
         this.graphicsLayer {
             if (state.progress > 0f) {
                 val scale = 1f - (state.progress * 0.05f)
@@ -63,13 +38,19 @@ fun PredictiveSidePanelContainer(
         scope: CoroutineScope,
         content: @Composable () -> Unit
 ) {
-    val predictiveSidePanelState = rememberPredictiveSidePanelState()
+    val predictiveSidePanelState = remember { PredictiveSidePanelState() }
 
-    SidePanelPredictiveBackHandler(
-            predictiveState = predictiveSidePanelState,
-            drawerState = drawerState,
-            scope = scope
-    )
+    PredictiveBackHandler(enabled = drawerState.isOpen) { progress ->
+        try {
+            progress.collect { backEvent -> predictiveSidePanelState.progress = backEvent.progress }
+            scope.launch {
+                drawerState.close()
+                predictiveSidePanelState.progress = 0f
+            }
+        } catch (e: CancellationException) {
+            predictiveSidePanelState.progress = 0f
+        }
+    }
 
     androidx.compose.foundation.layout.Box(
             modifier = Modifier.predictiveSidePanelAnimation(predictiveSidePanelState)
