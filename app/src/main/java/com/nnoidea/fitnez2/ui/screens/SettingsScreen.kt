@@ -22,10 +22,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         ) {
             Text(
                     text = "Settings",
-                    style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
             )
-
-            com.nnoidea.fitnez2.ui.components.PlaceholderTestContent()
         }
     }
 }

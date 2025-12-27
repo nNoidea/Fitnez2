@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
-import com.nnoidea.fitnez2.ui.components.PlaceholderTestContent
 
 @Composable
 fun HomeScreen(onOpenDrawer: () -> Unit) {
@@ -22,9 +21,7 @@ fun HomeScreen(onOpenDrawer: () -> Unit) {
                 modifier = Modifier.align(Alignment.Center),
                 horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium)
-
-            PlaceholderTestContent()
+            Text(text = "Home Page")
         }
     }
 }

@@ -24,7 +24,7 @@ fun FoodPrepScreen(onOpenDrawer: () -> Unit) {
                     "Salmon with Asparagus"
             )
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
                     modifier =
@@ -56,12 +56,7 @@ fun FoodPrepScreen(onOpenDrawer: () -> Unit) {
 
                 items(dummyMeals) { meal ->
                     Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors =
-                                    CardDefaults.cardColors(
-                                            containerColor =
-                                                    MaterialTheme.colorScheme.surfaceVariant
-                                    )
+                            modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(text = meal, style = MaterialTheme.typography.titleMedium)
