@@ -4,22 +4,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
 
 @Composable
 fun SettingsScreen(onOpenDrawer: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        HamburgerMenu(
-                onClick = onOpenDrawer,
-                modifier = Modifier.align(Alignment.TopStart).padding(start = 16.dp, top = 16.dp)
-        )
+        HamburgerMenu(onClick = onOpenDrawer, modifier = Modifier.align(Alignment.TopStart))
 
         Column(
                 modifier = Modifier.align(Alignment.Center),

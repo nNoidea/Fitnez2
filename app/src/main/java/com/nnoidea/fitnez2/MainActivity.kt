@@ -52,40 +52,41 @@ class MainActivity : ComponentActivity() {
                                             items = AppPage.entries,
                                             currentRoute = currentPage.route,
                                             onItemClick = { clickedRoute ->
-                                                scope.launch { drawerState.close() }
-
                                                 if (clickedRoute != currentPage.route) {
                                                     if (clickedRoute == AppPage.Home.route) {
-                                                        // We are on a sub-activity (like Settings).
-                                                        // To go back to Home with a "back"
-                                                        // animation, just finish.
                                                         if (currentPage != AppPage.Home) {
-                                                            finish()
+                                                            scope.launch {
+                                                                drawerState.snapTo(
+                                                                        DrawerValue.Closed
+                                                                )
+                                                                finish()
+                                                            }
                                                         }
                                                     } else {
-                                                        // Navigating to a different sub-page
-                                                        val intent =
-                                                                Intent(
-                                                                                this@MainActivity,
-                                                                                MainActivity::class
-                                                                                        .java
-                                                                        )
-                                                                        .apply {
-                                                                            putExtra(
-                                                                                    EXTRA_PAGE_ROUTE,
-                                                                                    clickedRoute
-                                                                            )
-                                                                        }
-                                                        startActivity(intent)
+                                                        scope.launch {
+                                                            drawerState.snapTo(DrawerValue.Closed)
 
-                                                        // If we were already in a sub-page, finish
-                                                        // it so we don't
-                                                        // stack sub-pages indefinitely (Home ->
-                                                        // NewPage)
-                                                        if (currentPage != AppPage.Home) {
-                                                            finish()
+                                                            val intent =
+                                                                    Intent(
+                                                                                    this@MainActivity,
+                                                                                    MainActivity::class
+                                                                                            .java
+                                                                            )
+                                                                            .apply {
+                                                                                putExtra(
+                                                                                        EXTRA_PAGE_ROUTE,
+                                                                                        clickedRoute
+                                                                                )
+                                                                            }
+                                                            startActivity(intent)
+
+                                                            if (currentPage != AppPage.Home) {
+                                                                finish()
+                                                            }
                                                         }
                                                     }
+                                                } else {
+                                                    scope.launch { drawerState.close() }
                                                 }
                                             }
                                     )

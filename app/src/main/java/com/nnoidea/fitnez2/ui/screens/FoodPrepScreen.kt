@@ -27,12 +27,18 @@ fun FoodPrepScreen(onOpenDrawer: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier =
+                            Modifier.fillMaxWidth()
+                                    .padding(bottom = 16.dp), // Removed top/start padding here
                     verticalAlignment = Alignment.CenterVertically
             ) {
                 HamburgerMenu(onClick = onOpenDrawer)
                 Spacer(modifier = Modifier.width(16.dp))
-                Text(text = "Weekly Meal Prep", style = MaterialTheme.typography.headlineMedium)
+                Text(
+                        text = "Weekly Meal Prep",
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.statusBarsPadding() // Align title with icon text-level
+                )
             }
 
             LazyColumn(
