@@ -12,6 +12,11 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import com.nnoidea.fitnez2.ui.common.GlobalUiState
+import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
+import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import androidx.compose.ui.Modifier
 import com.nnoidea.fitnez2.ui.animations.predictiveSidePanelContainer
 import com.nnoidea.fitnez2.ui.components.SidePanel
@@ -39,9 +44,16 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                     val scope = rememberCoroutineScope()
+                    val globalUiState = rememberGlobalUiState()
 
-                    ModalNavigationDrawer(
-                        drawerState = drawerState,
+                    // Sync Drawer State to Global UI State
+                    LaunchedEffect(drawerState.isOpen) {
+                        globalUiState.isOverlayOpen = drawerState.isOpen
+                    }
+
+                    CompositionLocalProvider(LocalGlobalUiState provides globalUiState) {
+                        ModalNavigationDrawer(
+                            drawerState = drawerState,
 
                         drawerContent = {
                             predictiveSidePanelContainer(
@@ -89,8 +101,10 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) {
-                        currentPage.content { scope.launch { drawerState.open() } }
+                            currentPage.content { scope.launch { drawerState.open() } }
+                        }
                     }
+
                 }
             }
         }
