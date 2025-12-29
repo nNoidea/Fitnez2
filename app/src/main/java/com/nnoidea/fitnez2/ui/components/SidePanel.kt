@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -33,7 +34,7 @@ fun SidePanel(
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ModalDrawerSheet {
+    ModalDrawerSheet(modifier = modifier.width(360.dp)) {
         Column(
             modifier =
                 Modifier.fillMaxHeight()

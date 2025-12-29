@@ -13,7 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import com.nnoidea.fitnez2.ui.animations.PredictiveSidePanelContainer
+import com.nnoidea.fitnez2.ui.animations.predictiveSidePanelContainer
 import com.nnoidea.fitnez2.ui.components.SidePanel
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
@@ -35,8 +35,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             Fitnez2Theme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                     val scope = rememberCoroutineScope()
@@ -45,7 +44,7 @@ class MainActivity : ComponentActivity() {
                         drawerState = drawerState,
 
                         drawerContent = {
-                            PredictiveSidePanelContainer(
+                            predictiveSidePanelContainer(
                                 drawerState = drawerState,
                                 scope = scope
                             ) {
