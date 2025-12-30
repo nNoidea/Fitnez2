@@ -1,0 +1,59 @@
+package com.nnoidea.fitnez2.core.localization
+
+import java.util.Locale
+
+/**
+ * Base class for all language implementations.
+ * Using a sealed class allows for automatic language registration in LocalizationManager.
+ */
+sealed class EnStrings(
+    open val appLocale: Locale,
+    open val languageName: String,
+    open val labelSystemLanguage: String = "System Language"
+) {
+    open val labelLanguage: String = "Language"
+
+    open val errorExerciseNameBlank: String = "Exercise name cannot be empty or blank"
+    open val errorExerciseAlreadyExists: String = "Exercise with this name already exists."
+    open val errorExerciseRenameConflict: String = "This name is already used by another exercise."
+    open val errorExerciseNotFound: String = "Exercise not found."
+
+    open val errorIdMustBeZero: String = "New exercises must have an ID of 0. Use update() for existing exercises."
+    open val errorIdMustNotBeZero: String = "Records to update must have a non-zero ID. Use create() for new exercises."
+
+    open fun errorExerciseAlreadyExists(name: String): String = "Exercise with name '$name' already exists."
+    open fun errorExerciseRenameConflict(name: String): String = "Exercise name '$name' is already used by another exercise."
+    open fun errorExerciseNotFoundById(id: Int): String = "Exercise with ID $id does not exist."
+
+    open val labelAddExercise: String = "Add Exercise"
+    open val labelExerciseName: String = "Exercise Name"
+    open val labelSave: String = "Save"
+    open val labelCancel: String = "Cancel"
+    open val labelDelete: String = "Delete"
+    open val labelSwitchLanguage: String = "Switch Language"
+
+    open val labelHome: String = "Home"
+    open val labelFoodPrep: String = "Food Prep"
+    open val labelSettings: String = "Settings"
+
+    open val labelSets: String = "Sets"
+    open val labelReps: String = "Reps"
+    open val labelWeight: String = "Weight"
+
+    // UI - BottomSheet
+    open val labelBottomSheetTitle: String = "Custom Draggable Sheet"
+    open val labelBottomSheetDesc: String = "Full control over animation."
+    open val labelSayHello: String = "Say Hello"
+    open val labelHelloTitle: String = "Hello"
+    open val labelHelloText: String = "Hello there!"
+    open val labelOkay: String = "Okay"
+}
+
+/**
+ * Default English implementation.
+ */
+object EnglishStrings : EnStrings(
+    appLocale = Locale.ENGLISH,
+    languageName = "English",
+    labelSystemLanguage = "System Language"
+)

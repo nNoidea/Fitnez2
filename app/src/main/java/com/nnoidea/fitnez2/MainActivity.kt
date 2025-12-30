@@ -14,8 +14,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import com.nnoidea.fitnez2.ui.common.GlobalUiState
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
+import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
 import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import androidx.compose.ui.Modifier
 import com.nnoidea.fitnez2.ui.animations.predictiveSidePanelContainer
@@ -51,7 +53,7 @@ class MainActivity : ComponentActivity() {
                         globalUiState.isOverlayOpen = drawerState.isOpen
                     }
 
-                    CompositionLocalProvider(LocalGlobalUiState provides globalUiState) {
+                    ProvideGlobalUiState(globalUiState) {
                         ModalNavigationDrawer(
                             drawerState = drawerState,
 

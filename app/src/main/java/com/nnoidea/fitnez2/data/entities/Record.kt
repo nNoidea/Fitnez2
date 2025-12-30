@@ -1,0 +1,32 @@
+package com.nnoidea.fitnez2.data.entities
+
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
+
+@Entity(
+    tableName = "record",
+    foreignKeys = [
+        ForeignKey(
+            entity = Exercise::class,
+            parentColumns = ["id"],
+            childColumns = ["exerciseId"],
+            onDelete = ForeignKey.RESTRICT // Logic handled manually in Dao (soft delete)
+        )
+    ],
+    indices = [
+        Index(value = ["exerciseId"]), // For faster foreign key lookups
+        Index(value = ["date", "id"]) // For sorting requirements
+    ]
+)
+data class Record(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val exerciseId: Int,
+    val sets: Double,
+    val reps: Double,
+    val weight: Double,
+    val date: Long,
+    val isDeleted: Boolean = false
+)

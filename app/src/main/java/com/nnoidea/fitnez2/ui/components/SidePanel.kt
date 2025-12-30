@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -59,13 +60,13 @@ fun SidePanel(
             Spacer(modifier = Modifier.height(16.dp))
 
             item(
-                label = AppPage.Home.label,
+                label = AppPage.Home.label(),
                 icon = AppPage.Home.icon,
                 selected = currentRoute == AppPage.Home.route,
                 onClick = { onItemClick(AppPage.Home.route) }
             )
             item(
-                label = AppPage.FoodPrep.label,
+                label = AppPage.FoodPrep.label(),
                 icon = AppPage.FoodPrep.icon,
                 selected = currentRoute == AppPage.FoodPrep.route,
                 onClick = { onItemClick(AppPage.FoodPrep.route) }
@@ -79,18 +80,11 @@ fun SidePanel(
             )
 
             item(
-                label = AppPage.Settings.label,
+                label = AppPage.Settings.label(),
                 icon = AppPage.Settings.icon,
                 selected = currentRoute == AppPage.Settings.route,
                 onClick = { onItemClick(AppPage.Settings.route) }
             )
-
-            item(
-                label = "Help & Feedback",
-                icon = Icons.AutoMirrored.Filled.Help,
-                onClick = { /* Handle help */ }
-            )
-
             item(
                 label = "1.0.0",
                 icon = Icons.Default.Info,

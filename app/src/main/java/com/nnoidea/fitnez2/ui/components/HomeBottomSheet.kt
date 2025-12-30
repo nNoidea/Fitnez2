@@ -44,6 +44,7 @@ import kotlin.math.roundToInt
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.DrawerValue
+import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.AlertDialog
@@ -199,20 +200,20 @@ fun HomeBottomSheet(
                 androidx.compose.foundation.layout.Column(
                      horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                     Text("Custom Draggable Sheet\nFull control over animation.")
+                     Text("${globalLocalization.labelBottomSheetTitle}\n${globalLocalization.labelBottomSheetDesc}")
                      Button(onClick = { showDialog = true }) {
-                         Text("Say Hello")
+                         Text(globalLocalization.labelSayHello)
                      }
                 }
                 
                 if (showDialog) {
                     AlertDialog(
                         onDismissRequest = { showDialog = false },
-                        title = { Text("Hello") },
-                        text = { Text("Hello there!") },
+                        title = { Text(globalLocalization.labelHelloTitle) },
+                        text = { Text(globalLocalization.labelHelloText) },
                         confirmButton = {
                             TextButton(onClick = { showDialog = false }) {
-                                Text("Okay")
+                                Text(globalLocalization.labelOkay)
                             }
                         }
                     )
