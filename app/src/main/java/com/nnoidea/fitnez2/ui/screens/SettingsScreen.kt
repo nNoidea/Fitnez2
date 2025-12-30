@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.ui.geometry.Rect
-import com.nnoidea.fitnez2.ui.components.capturePosition
 import com.nnoidea.fitnez2.ui.components.PredictiveDialog
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -30,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
@@ -42,7 +39,6 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     val supportedLanguages = LocalizationManager.supportedLanguages
 
     var showLanguageDialog by remember { mutableStateOf(false) }
-    var itemRect by remember { mutableStateOf<Rect?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -69,10 +65,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             SettingsItem(
                 label = globalLocalization.labelLanguage,
                 value = globalState.selectedLanguage?.languageName ?: globalLocalization.labelSystemLanguage,
-                onClick = { showLanguageDialog = true },
-                modifier = Modifier
-                    .capturePosition { if (!showLanguageDialog) itemRect = it }
-                    .graphicsLayer { alpha = if (showLanguageDialog) 0f else 1f }
+                onClick = { showLanguageDialog = true }
             )
         }
     }
@@ -80,8 +73,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     if (showLanguageDialog) {
         PredictiveDialog(
             show = showLanguageDialog,
-            onDismissRequest = { showLanguageDialog = false },
-            sourceRect = itemRect
+            onDismissRequest = { showLanguageDialog = false }
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
@@ -133,11 +125,10 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
 fun SettingsItem(
     label: String,
     value: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(16.dp),

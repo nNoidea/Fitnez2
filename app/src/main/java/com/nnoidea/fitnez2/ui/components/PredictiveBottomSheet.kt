@@ -48,8 +48,7 @@ import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.AlertDialog
-import androidx.compose.ui.geometry.Rect
-import com.nnoidea.fitnez2.ui.components.capturePosition
+import com.nnoidea.fitnez2.ui.components.PredictiveDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
@@ -87,9 +86,9 @@ fun PredictiveBottomSheet(
         val offsetY = remember { Animatable(maxOffset) } // Start collapsed
         
         // Predictive Back State
+        // Predictive Back State
         var predictiveProgress by remember { mutableFloatStateOf(0f) }
         var showDialog by remember { mutableStateOf(false) }
-        var buttonRect by remember { mutableStateOf<Rect?>(null) }
         
         val isExpanded by remember {
             derivedStateOf { offsetY.value < maxOffset / 2 }
@@ -203,12 +202,7 @@ fun PredictiveBottomSheet(
                      horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                      Text("${globalLocalization.labelBottomSheetTitle}\n${globalLocalization.labelBottomSheetDesc}")
-                     Button(
-                         onClick = { showDialog = true },
-                         modifier = Modifier
-                             .capturePosition { if (!showDialog) buttonRect = it }
-                             .graphicsLayer { alpha = if (showDialog) 0f else 1f }
-                     ) {
+                     Button(onClick = { showDialog = true }) {
                          Text(globalLocalization.labelSayHello)
                      }
                 }
@@ -216,8 +210,7 @@ fun PredictiveBottomSheet(
                 if (showDialog) {
                     PredictiveDialog(
                         show = showDialog,
-                        onDismissRequest = { showDialog = false },
-                        sourceRect = buttonRect
+                        onDismissRequest = { showDialog = false }
                     ) {
                         androidx.compose.foundation.layout.Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
