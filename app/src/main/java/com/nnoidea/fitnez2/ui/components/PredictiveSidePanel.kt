@@ -30,12 +30,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 
 @Composable
-fun SidePanel(
+fun PredictiveSidePanel(
     currentRoute: String?,
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ModalDrawerSheet(modifier = modifier.width(360.dp)) {
+    ModalDrawerSheet(modifier = modifier.width(320.dp)) {
         Column(
             modifier =
                 Modifier.fillMaxHeight()

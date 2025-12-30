@@ -48,13 +48,14 @@ import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.AlertDialog
+import com.nnoidea.fitnez2.ui.components.PredictiveDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeBottomSheet(
+fun PredictiveBottomSheet(
     modifier: Modifier = Modifier
 ) {
     val globalUiState = LocalGlobalUiState.current
@@ -207,16 +208,34 @@ fun HomeBottomSheet(
                 }
                 
                 if (showDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDialog = false },
-                        title = { Text(globalLocalization.labelHelloTitle) },
-                        text = { Text(globalLocalization.labelHelloText) },
-                        confirmButton = {
-                            TextButton(onClick = { showDialog = false }) {
+                    PredictiveDialog(
+                        show = showDialog,
+                        onDismissRequest = { showDialog = false }
+                    ) {
+                        androidx.compose.foundation.layout.Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = globalLocalization.labelHelloTitle,
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = globalLocalization.labelHelloText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(24.dp))
+                            TextButton(
+                                onClick = { showDialog = false },
+                                modifier = Modifier.align(Alignment.End)
+                            ) {
                                 Text(globalLocalization.labelOkay)
                             }
                         }
-                    )
+                    }
                 }
                 }
             }

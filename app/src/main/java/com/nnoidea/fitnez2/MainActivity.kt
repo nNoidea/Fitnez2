@@ -21,7 +21,7 @@ import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
 import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import androidx.compose.ui.Modifier
 import com.nnoidea.fitnez2.ui.animations.predictiveSidePanelContainer
-import com.nnoidea.fitnez2.ui.components.SidePanel
+import com.nnoidea.fitnez2.ui.components.PredictiveSidePanel
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
 import kotlinx.coroutines.launch
@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
                                 drawerState = drawerState,
                                 scope = scope
                             ) {
-                                SidePanel(
+                                PredictiveSidePanel(
                                     currentRoute = currentPage.route,
                                     onItemClick = { clickedRoute ->
                                         if (clickedRoute != currentPage.route) {

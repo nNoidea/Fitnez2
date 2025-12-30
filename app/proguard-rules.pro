@@ -5,17 +5,10 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep the localization classes for reflection-based auto-discovery
+-keep class com.nnoidea.fitnez2.core.localization.EnStrings { *; }
+-keep class * extends com.nnoidea.fitnez2.core.localization.EnStrings { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep kotlin-reflect metadata if needed (though keeping the classes above usually suffices)
+-keepattributes RuntimeVisibleAnnotations,AnnotationDefault,EnclosingMethod,InnerClasses,Signature
+-keep class kotlin.reflect.jvm.internal.** { *; }

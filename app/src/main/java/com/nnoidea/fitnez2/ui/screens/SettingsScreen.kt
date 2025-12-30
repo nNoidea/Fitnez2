@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import com.nnoidea.fitnez2.ui.components.PredictiveDialog
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -69,10 +71,17 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     }
 
     if (showLanguageDialog) {
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            title = { Text(text = globalLocalization.labelLanguage) },
-            text = {
+        PredictiveDialog(
+            show = showLanguageDialog,
+            onDismissRequest = { showLanguageDialog = false }
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = globalLocalization.labelLanguage,
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     // Option: System Language
                     LanguageOption(
@@ -98,13 +107,17 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                         )
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
+
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                TextButton(
+                    onClick = { showLanguageDialog = false },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
                     Text(globalLocalization.labelCancel)
                 }
             }
-        )
+        }
     }
 }
 

@@ -9,7 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
-import com.nnoidea.fitnez2.ui.components.HomeBottomSheet
+import com.nnoidea.fitnez2.ui.components.PredictiveBottomSheet
 
 @Composable
 fun HomeScreen(onOpenDrawer: () -> Unit) {
@@ -24,7 +24,7 @@ fun HomeScreen(onOpenDrawer: () -> Unit) {
             Text(text = globalLocalization.labelHome)
         }
         
-        // Just drop the BottomSheet in here, it handles its own interaction and "dragging" logic
-        HomeBottomSheet(modifier = Modifier.fillMaxSize())
+        // Just drop the PredictiveBottomSheet in here, it handles its own interaction and "dragging" logic
+        PredictiveBottomSheet(modifier = Modifier.fillMaxSize())
     }
 }
