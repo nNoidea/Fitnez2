@@ -1,10 +1,5 @@
 package com.nnoidea.fitnez2.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -29,10 +24,8 @@ import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.graphicsLayer
@@ -91,30 +84,26 @@ fun PredictiveDialog(
                 ) { onDismissRequest() }, // Dismiss on outside click
             contentAlignment = Alignment.Center
         ) {
-            AnimatedVisibility(
-                visible = show,
-            ) {
-                Surface(
-                    modifier = modifier
-                        .padding(horizontal = 24.dp)
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .graphicsLayer {
-                            // Apply visual scale-down during predictive back
-                            val scale = 1f - (predictiveProgress * 0.2f)
-                            scaleX = scale
-                            scaleY = scale
-                        }
-                        .clip(RoundedCornerShape(28.dp))
-                        .clickable(enabled = false) { } // Prevent clicks through to background box
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    tonalElevation = 6.dp
-                ) {
-                    Box(modifier = Modifier.padding(24.dp)) {
-                        content()
+            Surface(
+                modifier = modifier
+                    .padding(horizontal = 24.dp)
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .graphicsLayer {
+                        // Apply visual scale-down during predictive back
+                        val scale = 1f - (predictiveProgress * 0.2f)
+                        scaleX = scale
+                        scaleY = scale
                     }
+                    .clip(RoundedCornerShape(28.dp))
+                    .clickable(enabled = false) { } // Prevent clicks through to background box
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                tonalElevation = 6.dp
+            ) {
+                Box(modifier = Modifier.padding(24.dp)) {
+                    content()
                 }
             }
         }
