@@ -69,10 +69,8 @@ fun PredictiveDialog(
                     predictiveProgress = progressAnim.value
                 }
                 
-                if (progressAnim.value > 0.1f) {
-                    // Commit: Dismiss
-                    onDismissRequest()
-                }
+                // Commit: Dismiss
+                onDismissRequest()
                 
                 // Reset visual distortion
                 progressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow)) {
@@ -95,8 +93,6 @@ fun PredictiveDialog(
         ) {
             AnimatedVisibility(
                 visible = show,
-                enter = fadeIn() + scaleIn(initialScale = 0.9f),
-                exit = fadeOut() + scaleOut(targetScale = 0.5f)
             ) {
                 Surface(
                     modifier = modifier
@@ -105,7 +101,7 @@ fun PredictiveDialog(
                         .wrapContentHeight()
                         .graphicsLayer {
                             // Apply visual scale-down during predictive back
-                            val scale = 1f - (predictiveProgress * 0.1f)
+                            val scale = 1f - (predictiveProgress * 0.2f)
                             scaleX = scale
                             scaleY = scale
                         }

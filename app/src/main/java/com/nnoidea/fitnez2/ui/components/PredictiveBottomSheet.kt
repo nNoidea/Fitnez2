@@ -116,23 +116,14 @@ fun PredictiveBottomSheet(
                     predictiveProgress = progressAnim.value
                 }
                 // Determine completion
-                if (progressAnim.value > 0.1f) {
-                     // Commit: Collapse (Layout) AND Revert Distortion (Visual)
-                     scope.launch { 
-                         offsetY.animateTo(maxOffset, spring(stiffness = Spring.StiffnessMediumLow)) 
-                     }
-                     scope.launch {
-                         progressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow)) {
-                             predictiveProgress = value
-                         }
-                     }
-                } else {
-                     // Cancel: Revert Distortion only
-                     scope.launch {
-                         progressAnim.animateTo(0f) {
-                             predictiveProgress = value
-                         }
-                     }
+                // Commit: Collapse (Layout) AND Revert Distortion (Visual)
+                scope.launch { 
+                    offsetY.animateTo(maxOffset, spring(stiffness = Spring.StiffnessMediumLow)) 
+                }
+                scope.launch {
+                    progressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow)) {
+                        predictiveProgress = value
+                    }
                 }
             } catch (e: Exception) {
                 scope.launch {
@@ -155,10 +146,10 @@ fun PredictiveBottomSheet(
                 // Apply Predictive Animation Logic MANUALLY here to combine with drag
                 .graphicsLayer {
                      if (predictiveProgress > 0f) {
-                         val scale = 1f - (predictiveProgress * 0.1f)
+                         val scale = 1f - (predictiveProgress * 0.2f)
                          scaleX = scale
                          scaleY = scale
-                         translationY = size.height * predictiveProgress * 0.1f
+                         translationY = size.height * predictiveProgress * 0.2f
                      }
                 }
                 .background(
