@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.nnoidea.fitnez2.core.localization.globalLocalization
 
 @Entity(
     tableName = "record",
@@ -24,9 +25,14 @@ data class Record(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val exerciseId: Int,
-    val sets: Double,
-    val reps: Double,
+    val sets: Int,
+    val reps: Int,
     val weight: Double,
     val date: Long,
     val isDeleted: Boolean = false
-)
+) {
+    init {
+        require(sets >= 0) { globalLocalization.errorSetsInputInvalid }
+        require(reps >= 0) { globalLocalization.errorRepsInputInvalid }
+    }
+}

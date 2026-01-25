@@ -9,8 +9,8 @@ import java.util.Locale
 sealed class EnStrings(
     open val appLocale: Locale,
     open val languageName: String,
-    open val labelSystemLanguage: String = "System Language"
 ) {
+    open val labelSystemLanguage: String = "System Language" // I would've prefered to always display this system language button in the system's language, but we might not support some languages and that migh cause problems.
     open val labelLanguage: String = "Language"
 
     open val errorExerciseNameBlank: String = "Exercise name cannot be empty or blank"
@@ -20,6 +20,9 @@ sealed class EnStrings(
 
     open val errorIdMustBeZero: String = "New exercises must have an ID of 0. Use update() for existing exercises."
     open val errorIdMustNotBeZero: String = "Records to update must have a non-zero ID. Use create() for new exercises."
+
+    open val errorSetsInputInvalid: String = "Sets must be non-negative and limited to 2 decimal places."
+    open val errorRepsInputInvalid: String = "Reps must be non-negative and limited to 2 decimal places."
 
     open fun errorExerciseAlreadyExists(name: String): String = "Exercise with name '$name' already exists."
     open fun errorExerciseRenameConflict(name: String): String = "Exercise name '$name' is already used by another exercise."
@@ -55,5 +58,4 @@ sealed class EnStrings(
 object EnglishStrings : EnStrings(
     appLocale = Locale.ENGLISH,
     languageName = "English",
-    labelSystemLanguage = "System Language"
 )

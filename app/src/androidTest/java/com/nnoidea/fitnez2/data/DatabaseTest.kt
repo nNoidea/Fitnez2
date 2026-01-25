@@ -149,11 +149,11 @@ class DatabaseTest {
         val now = 10000L
         
         // Older
-        recordDao.create(Record(exerciseId = exerciseId, sets = 1.0, reps = 5.0, weight = 10L.toDouble(), date = now - 1000L))
+        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 10L.toDouble(), date = now - 1000L))
         // Newer (Base)
-        recordDao.create(Record(exerciseId = exerciseId, sets = 1.0, reps = 5.0, weight = 20L.toDouble(), date = now))
+        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 20L.toDouble(), date = now))
         // Same Time as Base, but created later -> Should be first in list
-        recordDao.create(Record(exerciseId = exerciseId, sets = 1.0, reps = 5.0, weight = 30L.toDouble(), date = now))
+        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 30L.toDouble(), date = now))
 
         val sorted = recordDao.getSortedOne(exerciseId)
         

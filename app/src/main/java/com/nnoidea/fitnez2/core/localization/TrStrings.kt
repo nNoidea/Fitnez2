@@ -5,8 +5,8 @@ import java.util.Locale
 object TrStrings : EnStrings(
     appLocale = Locale.forLanguageTag("tr"),
     languageName = "Türkçe",
-    labelSystemLanguage = "Sistem Dili"
 ) {
+    override val labelSystemLanguage = "Sistem Dili" 
     override val labelLanguage = "Dil"
 
     override val errorExerciseNameBlank = "Egzersiz adı boş olamaz"
@@ -16,6 +16,9 @@ object TrStrings : EnStrings(
 
     override val errorIdMustBeZero = "Yeni egzersizler için ID 0 olmalıdır. Varolan egzersizler için update() kullanın."
     override val errorIdMustNotBeZero = "Güncellenecek kayıtların ID'si sıfırdan farklı olmalıdır. Yeni egzersizler için create() kullanın."
+
+    override val errorSetsInputInvalid = "Setler negatif olamaz ve en fazla 2 ondalık basamaklı olabilir."
+    override val errorRepsInputInvalid = "Tekrarlar negatif olamaz ve en fazla 2 ondalık basamaklı olabilir."
 
     override fun errorExerciseAlreadyExists(name: String) = "'$name' adında bir egzersiz zaten mevcut."
     override fun errorExerciseRenameConflict(name: String) = "'$name' ismi başka bir egzersiz tarafından kullanılıyor."

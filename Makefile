@@ -10,9 +10,9 @@ prod:
 	./gradlew assembleRelease
 	cp app/build/outputs/apk/release/app-release.apk ~/Desktop/app-release.apk
 
-# Installs the built APK to a connected device or emulator
+# Builds and installs the built APK to a connected device or emulator
 install:
-	@echo "Installing to device..."
+	@echo "Building and installing to device..."
 	./gradlew installDebug
 
 # Cleans the build directory to save disk space
