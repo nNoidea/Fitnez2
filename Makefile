@@ -23,3 +23,7 @@ clean:
 stop:
 	@echo "Stopping gradle daemon..."
 	./gradlew --stop
+
+test:
+	@echo "Testing..."
+	./gradlew connectedAndroidTest --rerun-tasks

@@ -29,9 +29,6 @@ abstract class ExerciseDao {
     @Query("DELETE FROM exercise WHERE id = :exerciseId")
     abstract suspend fun deleteExerciseInternal(exerciseId: Int)
 
-    @Query("DELETE FROM record WHERE exerciseId = :exerciseId")
-    abstract suspend fun deleteLinkedRecordsInternal(exerciseId: Int)
-
     private fun validateAndPrepare(exercise: Exercise): Exercise {
         val trimmedName = exercise.name.trim()
         if (trimmedName.isBlank()) {
@@ -95,7 +92,6 @@ abstract class ExerciseDao {
      */
     @Transaction
     open suspend fun delete(exerciseId: Int) {
-        deleteLinkedRecordsInternal(exerciseId) // Delete children first
         deleteExerciseInternal(exerciseId)
     }
 }

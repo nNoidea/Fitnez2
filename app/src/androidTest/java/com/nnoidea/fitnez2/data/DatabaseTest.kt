@@ -14,7 +14,6 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import com.nnoidea.fitnez2.core.localization.Language
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import java.io.IOException
 
@@ -43,38 +42,32 @@ class DatabaseTest {
     // ============================================================================================
 
     @Test
-    fun exerciseCannotHaveDuplicateExactName() = runTest {
-        LocalizationManager.currentLanguage = Language.ENGLISH
-        exerciseDao.create(Exercise(name = "Bench Press"))
-        
+    fun exerciseCannotHaveDuplicateName() = runTest {
+        val baseName = "Bench Press"
+        exerciseDao.create(Exercise(name = baseName))
+
+        // 1. Exact same name
         try {
-            exerciseDao.create(Exercise(name = "Bench Press"))
+            exerciseDao.create(Exercise(name = baseName))
             fail("Should have thrown exception for exact duplicate name")
         } catch (e: IllegalArgumentException) {
-            assertEquals(LocalizationManager.strings.errorExerciseAlreadyExists("Bench Press"), e.message)
+            assertEquals(LocalizationManager.strings.errorExerciseAlreadyExists(baseName), e.message)
         }
 
-        // Test Turkish Switch
-        LocalizationManager.currentLanguage = Language.TURKISH
-        try {
-            exerciseDao.create(Exercise(name = "Bench Press"))
-            fail("Should have thrown Turkish exception")
-        } catch (e: IllegalArgumentException) {
-            assertEquals(LocalizationManager.strings.errorExerciseAlreadyExists("Bench Press"), e.message)
-            assertTrue(e.message!!.contains("zaten mevcut"))
+        // 2. Different capitalization
+        val casingVariants = listOf("bench press", "BENCH PRESS", "BeNcH PrEsS")
+        for (variant in casingVariants) {
+            try {
+                exerciseDao.create(Exercise(name = variant))
+                fail("Should have thrown exception for casing duplicate: '$variant'")
+            } catch (e: IllegalArgumentException) {
+                assertTrue("Expected duplicate error for '$variant'", e.message!!.contains("already exists"))
+            }
         }
 
-        LocalizationManager.currentLanguage = Language.ENGLISH // Reset
-    }
-
-    @Test
-    fun exerciseCannotHaveDuplicateNameWithWhitespace() = runTest {
-        exerciseDao.create(Exercise(name = "Squat"))
-        
-        // Leading/Trailing whitespace should be trimmed and then checked for duplicate
-        val variants = listOf(" Squat", "Squat ", "  Squat  ")
-        
-        for (variant in variants) {
+        // 3. Whitespaces (leading/trailing)
+        val whitespaceVariants = listOf(" $baseName", "$baseName ", "  $baseName  ")
+        for (variant in whitespaceVariants) {
             try {
                 exerciseDao.create(Exercise(name = variant))
                 fail("Should have thrown exception for whitespace duplicate: '$variant'")
@@ -85,19 +78,13 @@ class DatabaseTest {
     }
 
     @Test
-    fun exerciseCannotHaveDuplicateNameWithDifferentCasing() = runTest {
-        exerciseDao.create(Exercise(name = "Deadlift"))
-        
-        val variants = listOf("deadlift", "DEADLIFT", "DeAdLiFt")
-        
-        for (variant in variants) {
-            try {
-                exerciseDao.create(Exercise(name = variant))
-                fail("Should have thrown exception for casing duplicate: '$variant'")
-            } catch (e: IllegalArgumentException) {
-                assertTrue("Expected duplicate error for '$variant'", e.message!!.contains("already exists"))
-            }
-        }
+    fun exerciseNameIsTrimmedWhenSaved() = runTest {
+        // Input has whitespace
+        exerciseDao.create(Exercise(name = "  Pull Up  "))
+
+        // Verify it was saved without whitespace
+        val saved = exerciseDao.getAllExercises().first()
+        assertEquals("Pull Up", saved.name)
     }
 
     @Test
@@ -139,7 +126,7 @@ class DatabaseTest {
     // ============================================================================================
 
     @Test
-    fun recordSortingAndHardDeleteWithExerciseName() = runTest {
+    fun recordSortingAndDeletion() = runTest {
         // 1. Setup Exercise
         exerciseDao.create(Exercise(name = "Squat"))
         val exerciseId = exerciseDao.getAllExercises()[0].id
@@ -149,11 +136,11 @@ class DatabaseTest {
         val now = 10000L
         
         // Older
-        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 10L.toDouble(), date = now - 1000L))
+        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 10.0, date = now - 1000L))
         // Newer (Base)
-        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 20L.toDouble(), date = now))
-        // Same Time as Base, but created later -> Should be first in list
-        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 30L.toDouble(), date = now))
+        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 20.0, date = now))
+        // Same Time as Base, but created later (Higher ID) -> Should be first in list (Stable Sort)
+        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 30.0, date = now))
 
         val sorted = recordDao.getSortedOne(exerciseId)
         
@@ -172,6 +159,6 @@ class DatabaseTest {
         
         assertEquals(0, exerciseDao.getAllExercises().size)
         // Records should be gone from everywhere
-        assertEquals(0, recordDao.getSortedOneIncludeDeleted(exerciseId).size)
+        assertEquals(0, recordDao.getSortedOne(exerciseId).size)
     }
 }

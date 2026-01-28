@@ -1,0 +1,74 @@
+package com.nnoidea.fitnez2.data
+
+import android.util.Log
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
+import com.nnoidea.fitnez2.data.entities.Exercise
+import com.nnoidea.fitnez2.data.entities.Record
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+class DatabaseSeeder(
+    private val databaseProvider: () -> AppDatabase,
+    private val applicationScope: CoroutineScope
+) : RoomDatabase.Callback() {
+
+    override fun onOpen(db: SupportSQLiteDatabase) {
+        super.onOpen(db)
+        Log.d("DatabaseSeeder", "Database opened. Checking if seeding is needed...")
+        // Comment out the block below to stop seeding
+        applicationScope.launch(Dispatchers.IO) {
+            populateDatabase(databaseProvider())
+        }
+    }
+
+    private suspend fun populateDatabase(database: AppDatabase) {
+        val exerciseDao = database.exerciseDao()
+        val recordDao = database.recordDao()
+
+        val initialExercises = listOf(
+            "Squat",
+            "Bench Press",
+            "Deadlift",
+            "Overhead Press",
+            "Barbell Row",
+            "Pull Up",
+            "Dips"
+        )
+
+        initialExercises.forEach { name ->
+            exerciseDao.create(Exercise(name = name))
+        }
+
+        val exercises = exerciseDao.getAllExercises()
+        if (exercises.isEmpty()) return
+
+        val now = System.currentTimeMillis()
+        val oneHour = 3600000L
+        val oneDay = 86400000L
+        val oneWeek = 604800000L
+
+        val timePoints = listOf(
+            now - oneHour,       // Today (1 hour ago)
+            now - oneDay,        // Yesterday
+            now - (2 * oneDay),  // Day before that
+            now - oneWeek        // 1 week ago
+        )
+
+        timePoints.forEach { timestamp ->
+            repeat(5) { i ->
+                val exercise = exercises[i % exercises.size]
+                recordDao.create(
+                    Record(
+                        exerciseId = exercise.id,
+                        date = timestamp,
+                        weight = 20.0 + (i * 2.5),
+                        sets = 1,
+                        reps = 5 + i
+                    )
+                )
+            }
+        }
+    }
+}

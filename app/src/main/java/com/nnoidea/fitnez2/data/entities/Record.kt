@@ -13,7 +13,7 @@ import com.nnoidea.fitnez2.core.localization.globalLocalization
             entity = Exercise::class,
             parentColumns = ["id"],
             childColumns = ["exerciseId"],
-            onDelete = ForeignKey.RESTRICT // Logic handled manually in Dao (soft delete)
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
@@ -28,8 +28,7 @@ data class Record(
     val sets: Int,
     val reps: Int,
     val weight: Double,
-    val date: Long,
-    val isDeleted: Boolean = false
+    val date: Long
 ) {
     init {
         require(sets >= 0) { globalLocalization.errorSetsInputInvalid }

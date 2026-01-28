@@ -47,7 +47,7 @@ abstract class RecordDao {
         SELECT record.*, exercise.name as exerciseName 
         FROM record 
         JOIN exercise ON record.exerciseId = exercise.id 
-        WHERE record.exerciseId = :exerciseId AND record.isDeleted = 0 
+        WHERE record.exerciseId = :exerciseId 
         ORDER BY record.date DESC, record.id DESC
     """)
     abstract suspend fun getSortedOne(exerciseId: Int): List<RecordWithExercise>
@@ -56,16 +56,6 @@ abstract class RecordDao {
         SELECT record.*, exercise.name as exerciseName 
         FROM record 
         JOIN exercise ON record.exerciseId = exercise.id 
-        WHERE record.exerciseId = :exerciseId 
-        ORDER BY record.date DESC, record.id DESC
-    """)
-    abstract suspend fun getSortedOneIncludeDeleted(exerciseId: Int): List<RecordWithExercise>
-
-    @Query("""
-        SELECT record.*, exercise.name as exerciseName 
-        FROM record 
-        JOIN exercise ON record.exerciseId = exercise.id 
-        WHERE record.isDeleted = 0 
         ORDER BY record.date DESC, record.id DESC
     """)
     abstract suspend fun getSortedAll(): List<RecordWithExercise>
@@ -83,15 +73,6 @@ abstract class RecordDao {
 
     // --- DELETE ---
 
-    /**
-     * Soft deletes a record by setting isDeleted = 1.
-     */
-    @Query("UPDATE record SET isDeleted = 1 WHERE id = :recordId")
-    abstract suspend fun softDelete(recordId: Int)
-
-    /**
-     * Permanently deletes a record from the database.
-     */
     @Query("DELETE FROM record WHERE id = :recordId")
-    abstract suspend fun hardDelete(recordId: Int)
+    abstract suspend fun delete(recordId: Int)
 }
