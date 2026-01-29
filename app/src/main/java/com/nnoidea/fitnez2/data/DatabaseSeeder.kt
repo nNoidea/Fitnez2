@@ -24,6 +24,7 @@ class DatabaseSeeder(
     }
 
     private suspend fun populateDatabase(database: AppDatabase) {
+        database.clearAllTables()
         val exerciseDao = database.exerciseDao()
         val recordDao = database.recordDao()
 

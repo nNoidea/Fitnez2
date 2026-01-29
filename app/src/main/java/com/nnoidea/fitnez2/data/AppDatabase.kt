@@ -16,4 +16,23 @@ import com.nnoidea.fitnez2.data.entities.Record
 abstract class AppDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
     abstract fun recordDao(): RecordDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getDatabase(context: android.content.Context, scope: kotlinx.coroutines.CoroutineScope): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = androidx.room.Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "fitnez2_database"
+                )
+                .addCallback(DatabaseSeeder({ INSTANCE!! }, scope))
+                .build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
 }
