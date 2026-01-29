@@ -15,27 +15,10 @@ import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.components.ExerciseHistoryList
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import com.nnoidea.fitnez2.data.AppDatabase
 import com.nnoidea.fitnez2.ui.components.PredictiveBottomSheet
 
 @Composable
 fun HomeScreen(onOpenDrawer: () -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val database = remember { AppDatabase.getDatabase(context, scope) }
-    var history by remember { mutableStateOf(emptyList<RecordWithExercise>()) }
-
-    LaunchedEffect(Unit) {
-        history = database.recordDao().getSortedAll()
-    }
-
     Box(modifier = Modifier.fillMaxSize()) {
         // HamburgerMenu now handles its own statusBarsPadding and proper M3 offset
         HamburgerMenu(onClick = onOpenDrawer, modifier = Modifier.align(Alignment.TopStart))
@@ -53,7 +36,6 @@ fun HomeScreen(onOpenDrawer: () -> Unit) {
             )
             
             ExerciseHistoryList(
-                history = history,
                 modifier = Modifier.weight(1f)
             )
         }

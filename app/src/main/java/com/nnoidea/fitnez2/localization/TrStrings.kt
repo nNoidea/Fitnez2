@@ -45,4 +45,6 @@ object TrStrings : EnStrings(
     override val labelHelloTitle = "Merhaba"
     override val labelHelloText = "Selamlar!"
     override val labelOkay = "Tamam"
+
+    override fun labelEdit(target: String): String = "$target Düzenle"
 }

@@ -50,6 +50,12 @@ sealed class EnStrings(
     open val labelHelloTitle: String = "Hello"
     open val labelHelloText: String = "Hello there!"
     open val labelOkay: String = "Okay"
+    open fun formatDate(timestamp: Long): String {
+        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy - EEEE", appLocale)
+        return sdf.format(java.util.Date(timestamp)).lowercase()
+    }
+
+    open fun labelEdit(target: String): String = "Edit $target"
 }
 
 /**

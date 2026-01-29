@@ -24,9 +24,14 @@ class DatabaseSeeder(
     }
 
     private suspend fun populateDatabase(database: AppDatabase) {
-        database.clearAllTables()
         val exerciseDao = database.exerciseDao()
         val recordDao = database.recordDao()
+
+        // Check if database is already populated
+        if (exerciseDao.getAllExercises().isNotEmpty()) {
+            Log.d("DatabaseSeeder", "Database already populated. Skipping seeding.")
+            return
+        }
 
         val initialExercises = listOf(
             "Squat",

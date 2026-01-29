@@ -64,10 +64,6 @@ abstract class RecordDao {
 
     @Transaction
     open suspend fun update(record: Record) {
-        val count = checkExerciseExists(record.exerciseId)
-        if (count == 0) {
-           throw IllegalArgumentException(LocalizationManager.strings.errorExerciseNotFoundById(record.exerciseId))
-        }
         updateInternal(record)
     }
 
