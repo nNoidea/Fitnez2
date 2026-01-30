@@ -32,7 +32,7 @@ object TrStrings : EnStrings(
     override val labelSwitchLanguage = "Dili Değiştir"
 
     override val labelHome = "Ana Sayfa"
-    override val labelFoodPrep = "Yemek Hazırlığı"
+    override val labelProgram = "Programlar"
     override val labelSettings = "Ayarlar"
 
     override val labelSets = "Setler"
@@ -47,4 +47,7 @@ object TrStrings : EnStrings(
     override val labelOkay = "Tamam"
 
     override fun labelEdit(target: String): String = "$target Düzenle"
+
+    override val labelSelectExercise: String = "Egzersiz Adı"
+    override val labelWeightUnit: String = "Ağırlık Birimi"
 }

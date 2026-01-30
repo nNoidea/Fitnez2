@@ -66,10 +66,10 @@ fun PredictiveSidePanel(
                 onClick = { onItemClick(AppPage.Home.route) }
             )
             item(
-                label = AppPage.FoodPrep.label(),
-                icon = AppPage.FoodPrep.icon,
-                selected = currentRoute == AppPage.FoodPrep.route,
-                onClick = { onItemClick(AppPage.FoodPrep.route) }
+                label = AppPage.Program.label(),
+                icon = AppPage.Program.icon,
+                selected = currentRoute == AppPage.Program.route,
+                onClick = { onItemClick(AppPage.Program.route) }
             )
 
             Spacer(modifier = Modifier.weight(1f))

@@ -130,7 +130,7 @@ private fun ExerciseHistoryListContent(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             groupedHistory.forEach { (dateString, records) ->
-                stickyHeader {
+                item {
                     HistoryDateHeader(dateString)
                 }
                 items(records, key = { it.record.id }) { recordItem ->
@@ -183,37 +183,44 @@ private fun HistoryRecordCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
+        // Single Row for everything: Exercise Name | Sets | Reps | Weight
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 20.dp)
+                .padding(horizontal = 16.dp, vertical = 20.dp), // Adjust padding if needed
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Title
+            // 1. Exercise Name (Weight 1f to take available space)
             Text(
                 text = item.exerciseName,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium), // Bigger, bolder
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1.5f)
             )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // "Expressive" Single Line Stats
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "${item.record.sets} ${globalLocalization.labelSets}  •  ${item.record.reps} ${globalLocalization.labelReps}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                Spacer(modifier = Modifier.weight(1f))
-                
-                // Weight Highlight
-                Text(
-                    text = "${item.record.weight} kg",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+
+            // 2. Sets -> "5 Sets" or just "5"
+            Text(
+                text = "${item.record.sets} ${globalLocalization.labelSets}", 
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(0.8f) // Fixed width-ish via weight
+            )
+
+            // 3. Reps -> "10 Reps" or just "10"
+            Text(
+                text = "${item.record.reps} ${globalLocalization.labelReps}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(0.8f) 
+            )
+
+            // 4. Weight -> "20.0 kg"
+            Text(
+                text = "${item.record.weight} ${com.nnoidea.fitnez2.ui.common.LocalGlobalUiState.current.weightUnit}", 
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.primary,
+                 modifier = Modifier.weight(0.9f)
+            )
         }
     }
 }
@@ -241,7 +248,7 @@ private fun EditRecordDialog(
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 EditFieldRow(label = globalLocalization.labelSets, value = sets, onValueChange = { sets = it })
                 EditFieldRow(label = globalLocalization.labelReps, value = reps, onValueChange = { reps = it })
-                EditFieldRow(label = globalLocalization.labelWeight, value = weight, onValueChange = { weight = it }, isDecimal = true)
+                EditFieldRow(label = "${globalLocalization.labelWeight} (${com.nnoidea.fitnez2.ui.common.LocalGlobalUiState.current.weightUnit})", value = weight, onValueChange = { weight = it }, isDecimal = true)
             }
         },
         confirmButton = {

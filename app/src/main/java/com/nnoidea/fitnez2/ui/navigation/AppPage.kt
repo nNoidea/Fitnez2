@@ -2,11 +2,11 @@ package com.nnoidea.fitnez2.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.nnoidea.fitnez2.ui.screens.FoodPrepScreen
+import com.nnoidea.fitnez2.ui.screens.ProgramScreen
 import com.nnoidea.fitnez2.ui.screens.HomeScreen
 import com.nnoidea.fitnez2.ui.screens.SettingsScreen
 import com.nnoidea.fitnez2.core.localization.globalLocalization
@@ -23,11 +23,11 @@ enum class AppPage(
             icon = Icons.Default.Home,
             content = { HomeScreen(onOpenDrawer = it) }
     ),
-    FoodPrep(
-            route = "food_prep",
-            label = { globalLocalization.labelFoodPrep },
-            icon = Icons.Default.Restaurant,
-            content = { FoodPrepScreen(onOpenDrawer = it) }
+    Program(
+            route = "program",
+            label = { globalLocalization.labelProgram },
+            icon = Icons.Default.List,
+            content = { ProgramScreen(onOpenDrawer = it) }
     ),
     Settings(
             route = "settings",

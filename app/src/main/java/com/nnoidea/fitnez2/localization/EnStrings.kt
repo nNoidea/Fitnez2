@@ -36,7 +36,7 @@ sealed class EnStrings(
     open val labelSwitchLanguage: String = "Switch Language"
 
     open val labelHome: String = "Home"
-    open val labelFoodPrep: String = "Food Prep"
+    open val labelProgram: String = "Programs"
     open val labelSettings: String = "Settings"
 
     open val labelSets: String = "Sets"
@@ -55,7 +55,11 @@ sealed class EnStrings(
         return sdf.format(java.util.Date(timestamp)).lowercase()
     }
 
+
     open fun labelEdit(target: String): String = "Edit $target"
+
+    open val labelSelectExercise: String = "Exercise Name"
+    open val labelWeightUnit: String = "Weight Unit"
 }
 
 /**

@@ -39,6 +39,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     val supportedLanguages = LocalizationManager.supportedLanguages
 
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showWeightUnitDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -67,6 +68,52 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 value = globalState.selectedLanguage?.languageName ?: globalLocalization.labelSystemLanguage,
                 onClick = { showLanguageDialog = true }
             )
+
+            HorizontalDivider()
+
+            // Weight Unit Setting
+            SettingsItem(
+                label = globalLocalization.labelWeightUnit, // Use the new string
+                value = globalState.weightUnit,
+                onClick = { showWeightUnitDialog = true }
+            )
+        }
+    }
+
+    if (showWeightUnitDialog) {
+        PredictiveDialog(
+            show = showWeightUnitDialog,
+            onDismissRequest = { showWeightUnitDialog = false }
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = globalLocalization.labelWeightUnit,
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    listOf("kg", "lb").forEach { unit ->
+                        LanguageOption(
+                            text = unit,
+                            selected = globalState.weightUnit == unit,
+                            onClick = {
+                                globalState.switchWeightUnit(unit)
+                                showWeightUnitDialog = false
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                TextButton(
+                    onClick = { showWeightUnitDialog = false },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(globalLocalization.labelCancel)
+                }
+            }
         }
     }
 

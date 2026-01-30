@@ -26,7 +26,8 @@ sealed interface UiSignal {
 }
 
 class GlobalUiState(
-    private val onLanguageChanged: ((EnStrings?) -> Unit)? = null
+    private val onLanguageChanged: ((EnStrings?) -> Unit)? = null,
+    private val onWeightUnitChanged: ((String) -> Unit)? = null
 ) {
     // State: Is any overlay (Drawer, Dialog, etc.) currently masking the main content?
     var isOverlayOpen by mutableStateOf(false)
@@ -42,9 +43,17 @@ class GlobalUiState(
         LocalizationManager.strings
     }
 
+    // State: Weight Unit
+    var weightUnit by mutableStateOf("kg")
+
     fun switchLanguage(newLanguage: EnStrings?) {
         LocalizationManager.setLanguage(newLanguage)
         onLanguageChanged?.invoke(newLanguage)
+    }
+
+    fun switchWeightUnit(unit: String) {
+        weightUnit = unit
+        onWeightUnitChanged?.invoke(unit)
     }
 
     // Signals: One-off events (e.g. ScrollToTop)
@@ -65,25 +74,39 @@ fun rememberGlobalUiState(): GlobalUiState {
     val settingsRepository = remember { SettingsRepository(context) }
     val scope = rememberCoroutineScope()
 
-    // Sync persistence -> LocalizationManager (Read)
-    LaunchedEffect(Unit) {
-        settingsRepository.languageCodeFlow.collect { code ->
-            val lang = if (code != null) LocalizationManager.getLanguageByCode(code) else null
-            if (LocalizationManager.selectedLanguage != lang) {
-                LocalizationManager.setLanguage(lang)
-            }
-        }
-    }
-
-    return remember(settingsRepository, scope) {
+    val state = remember(settingsRepository, scope) {
         GlobalUiState(
             onLanguageChanged = { lang ->
                 scope.launch {
                     settingsRepository.setLanguageCode(lang?.appLocale?.language)
                 }
+            },
+            onWeightUnitChanged = { unit ->
+                scope.launch {
+                    settingsRepository.setWeightUnit(unit)
+                }
             }
         )
     }
+
+    // Sync persistence -> State / LocalizationManager
+    LaunchedEffect(state) {
+        launch {
+            settingsRepository.languageCodeFlow.collect { code ->
+                val lang = if (code != null) LocalizationManager.getLanguageByCode(code) else null
+                if (LocalizationManager.selectedLanguage != lang) {
+                    LocalizationManager.setLanguage(lang)
+                }
+            }
+        }
+        launch {
+            settingsRepository.weightUnitFlow.collect { unit ->
+                state.weightUnit = unit
+            }
+        }
+    }
+
+    return state
 }
 
 @Composable

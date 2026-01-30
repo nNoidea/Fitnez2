@@ -19,6 +19,19 @@ class SettingsRepository(private val context: Context) {
             preferences[LANGUAGE_KEY]
         }
 
+    private val WEIGHT_UNIT_KEY = stringPreferencesKey("weight_unit")
+
+    val weightUnitFlow: Flow<String> = context.dataStore.data
+        .map { preferences ->
+            preferences[WEIGHT_UNIT_KEY] ?: "kg"
+        }
+
+    suspend fun setWeightUnit(unit: String) {
+        context.dataStore.edit { preferences ->
+            preferences[WEIGHT_UNIT_KEY] = unit
+        }
+    }
+
     suspend fun setLanguageCode(code: String?) {
         context.dataStore.edit { preferences ->
             if (code == null) {
