@@ -70,6 +70,9 @@ sealed class EnStrings(
     open val labelEditExercise: String = "Edit Exercise"
 
     open fun labelWeightWithUnit(unit: String): String = "$labelWeight ($unit)"
+
+    open val labelRecordDeleted: String = "Record deleted"
+    open val labelUndo: String = "Undo"
 }
 
 /**

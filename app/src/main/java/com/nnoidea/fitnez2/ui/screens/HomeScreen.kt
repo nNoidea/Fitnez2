@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.SnackbarHost
+import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.components.ExerciseHistoryList
@@ -38,5 +40,17 @@ fun HomeScreen(onOpenDrawer: () -> Unit) {
         
         // Just drop the PredictiveBottomSheet in here, it handles its own interaction and "dragging" logic
         PredictiveBottomSheet(modifier = Modifier.fillMaxSize())
+
+        val snackbarHostState = LocalGlobalUiState.current.snackbarHostState
+        val snackbarBottomPadding = LocalGlobalUiState.current.bottomSheetSnackbarOffset
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                // Intelligently position based on bottom sheet state
+                // Add a little padding (16.dp) when above sheet so it doesn't touch exactly
+                .padding(bottom = snackbarBottomPadding + 16.dp)
+        )
     }
 }

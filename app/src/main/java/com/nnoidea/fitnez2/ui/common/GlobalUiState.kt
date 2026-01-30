@@ -11,11 +11,18 @@ import androidx.compose.runtime.setValue
 import com.nnoidea.fitnez2.core.localization.EnStrings
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.core.localization.TrStrings
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.data.SettingsRepository
 import kotlinx.coroutines.launch
 
@@ -26,6 +33,7 @@ sealed interface UiSignal {
 }
 
 class GlobalUiState(
+    val scope: CoroutineScope? = null,
     private val onLanguageChanged: ((EnStrings?) -> Unit)? = null,
     private val onWeightUnitChanged: ((String) -> Unit)? = null
 ) {
@@ -46,6 +54,9 @@ class GlobalUiState(
     // State: Weight Unit
     var weightUnit by mutableStateOf("kg")
 
+    // State: BottomSheet Offset for Snackbars
+    var bottomSheetSnackbarOffset by mutableStateOf(0.dp)
+
     fun switchLanguage(newLanguage: EnStrings?) {
         LocalizationManager.setLanguage(newLanguage)
         onLanguageChanged?.invoke(newLanguage)
@@ -63,6 +74,31 @@ class GlobalUiState(
     suspend fun emitSignal(signal: UiSignal) {
         _signalChannel.send(signal)
     }
+
+    // Snackbar State
+    val snackbarHostState = SnackbarHostState()
+    private var currentSnackbarJob: Job? = null
+
+    fun showSnackbar(
+        message: String,
+        actionLabel: String? = null,
+        withDismissAction: Boolean = false,
+        duration: SnackbarDuration = SnackbarDuration.Short,
+        onActionPerformed: () -> Unit = {}
+    ) {
+        currentSnackbarJob?.cancel()
+        currentSnackbarJob = scope?.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = message,
+                actionLabel = actionLabel,
+                withDismissAction = withDismissAction,
+                duration = duration
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                onActionPerformed()
+            }
+        }
+    }
 }
 
 val LocalGlobalUiState = compositionLocalOf { GlobalUiState() }
@@ -76,6 +112,7 @@ fun rememberGlobalUiState(): GlobalUiState {
 
     val state = remember(settingsRepository, scope) {
         GlobalUiState(
+            scope = scope,
             onLanguageChanged = { lang ->
                 scope.launch {
                     settingsRepository.setLanguageCode(lang?.appLocale?.language)

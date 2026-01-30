@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -80,6 +81,8 @@ fun ExerciseHistoryList(
     var editingRecord by remember { mutableStateOf<Record?>(null) }
 
     // Content Display
+    val globalUiState = LocalGlobalUiState.current
+
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -90,6 +93,23 @@ fun ExerciseHistoryList(
             groupedHistory = groupedHistory,
             onEditRequest = { record ->
                 editingRecord = record
+            },
+            onDeleteRequest = { record ->
+                scope.launch {
+                    // 1. Delete
+                    dao.delete(record.id)
+
+                    // 2. Show Snackbar with Undo
+                    globalUiState.showSnackbar(
+                        message = globalLocalization.labelRecordDeleted,
+                        actionLabel = globalLocalization.labelUndo,
+                        onActionPerformed = {
+                            scope.launch {
+                                dao.create(record)
+                            }
+                        }
+                    )
+                }
             }
         )
     }
@@ -118,7 +138,8 @@ fun ExerciseHistoryList(
 private fun ExerciseHistoryListContent(
     modifier: Modifier,
     groupedHistory: Map<String, List<RecordWithExercise>>,
-    onEditRequest: (Record) -> Unit
+    onEditRequest: (Record) -> Unit,
+    onDeleteRequest: (Record) -> Unit
 ) {
     if (groupedHistory.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -138,10 +159,14 @@ private fun ExerciseHistoryListContent(
                     HistoryDateHeader(dateString)
                 }
                 items(records, key = { it.record.id }) { recordItem ->
-                    HistoryRecordCard(
-                        item = recordItem,
-                        onClick = { onEditRequest(recordItem.record) }
-                    )
+                    SwipeToDeleteContainer(
+                        onDelete = { onDeleteRequest(recordItem.record) }
+                    ) {
+                        HistoryRecordCard(
+                            item = recordItem,
+                            onClick = { onEditRequest(recordItem.record) }
+                        )
+                    }
                 }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))

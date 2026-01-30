@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -131,6 +132,13 @@ fun PredictiveBottomSheet(
                      offsetY.snapTo(newOffset)
                  }
              }
+        }
+
+        // Update GlobalUiState for Snackbar positioning
+        // If expanded (open), offset is 0 (bottom of screen)
+        // If collapsed (peek), offset is peekHeight (above the sheet)
+        LaunchedEffect(isExpanded, peekHeight) {
+            globalUiState.bottomSheetSnackbarOffset = if (isExpanded) 0.dp else peekHeight
         }
 
         // Predictive Back Handler
