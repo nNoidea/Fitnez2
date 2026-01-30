@@ -9,6 +9,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.nnoidea.fitnez2.core.localization.globalLocalization
 
 @Composable
 fun HamburgerMenu(onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -17,8 +18,8 @@ fun HamburgerMenu(onClick: () -> Unit, modifier: Modifier = Modifier) {
     // and use the standard Material 3 navigation icon offset.
     IconButton(
         onClick = onClick,
-        modifier =
-            modifier.statusBarsPadding()
-                .padding(start = 8.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
-    ) { Icon(imageVector = Icons.Default.Menu, contentDescription = "Open Navigation Drawer") }
+        modifier = modifier
+            .statusBarsPadding()
+            .padding(start = 8.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
+    ) { Icon(imageVector = Icons.Default.Menu, contentDescription = globalLocalization.labelOpenDrawer) }
 }

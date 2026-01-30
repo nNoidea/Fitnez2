@@ -60,6 +60,15 @@ sealed class EnStrings(
 
     open val labelSelectExercise: String = "Exercise Name"
     open val labelWeightUnit: String = "Weight Unit"
+    open val labelProgramPlaceholder: String = "Program Page Placeholder"
+    open val labelHistoryListPlaceholder: String = "History List Placeholder"
+    open val labelOpenDrawer: String = "Open Navigation Drawer"
+    open val labelHistoryEmpty: String = "No history yet."
+    open val labelAppName: String = "Fitnez2"
+    open val labelVersion: String = "1.0.0"
+    open val labelEditExercise: String = "Edit Exercise"
+
+    open fun labelWeightWithUnit(unit: String): String = "$labelWeight ($unit)"
 }
 
 /**

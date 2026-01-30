@@ -73,99 +73,40 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
 
             // Weight Unit Setting
             SettingsItem(
-                label = globalLocalization.labelWeightUnit, // Use the new string
+                label = globalLocalization.labelWeightUnit,
                 value = globalState.weightUnit,
                 onClick = { showWeightUnitDialog = true }
             )
         }
     }
 
-    if (showWeightUnitDialog) {
-        PredictiveDialog(
-            show = showWeightUnitDialog,
-            onDismissRequest = { showWeightUnitDialog = false }
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = globalLocalization.labelWeightUnit,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+    SelectionDialog(
+        show = showWeightUnitDialog,
+        title = globalLocalization.labelWeightUnit,
+        options = listOf("kg", "lb"),
+        selectedValue = globalState.weightUnit,
+        onValueSelected = {
+            globalState.switchWeightUnit(it)
+            showWeightUnitDialog = false
+        },
+        onDismissRequest = { showWeightUnitDialog = false },
+        labelProvider = { it }
+    )
 
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    listOf("kg", "lb").forEach { unit ->
-                        LanguageOption(
-                            text = unit,
-                            selected = globalState.weightUnit == unit,
-                            onClick = {
-                                globalState.switchWeightUnit(unit)
-                                showWeightUnitDialog = false
-                            }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                TextButton(
-                    onClick = { showWeightUnitDialog = false },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text(globalLocalization.labelCancel)
-                }
-            }
-        }
-    }
-
-    if (showLanguageDialog) {
-        PredictiveDialog(
-            show = showLanguageDialog,
-            onDismissRequest = { showLanguageDialog = false }
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = globalLocalization.labelLanguage,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    // Option: System Language
-                    LanguageOption(
-                        text = globalLocalization.labelSystemLanguage,
-                        selected = globalState.selectedLanguage == null,
-                        onClick = {
-                            globalState.switchLanguage(null)
-                            showLanguageDialog = false
-                        }
-                    )
-                    
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                    // Options: Supported Languages
-                    supportedLanguages.forEach { lang ->
-                        LanguageOption(
-                            text = lang.languageName,
-                            selected = globalState.selectedLanguage == lang,
-                            onClick = {
-                                globalState.switchLanguage(lang)
-                                showLanguageDialog = false
-                            }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                TextButton(
-                    onClick = { showLanguageDialog = false },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text(globalLocalization.labelCancel)
-                }
-            }
-        }
-    }
+    // Prepare language options with "System Default" (null) at the top
+    val languageOptions = listOf<com.nnoidea.fitnez2.core.localization.EnStrings?>(null) + supportedLanguages
+    SelectionDialog(
+        show = showLanguageDialog,
+        title = globalLocalization.labelLanguage,
+        options = languageOptions,
+        selectedValue = globalState.selectedLanguage,
+        onValueSelected = {
+            globalState.switchLanguage(it)
+            showLanguageDialog = false
+        },
+        onDismissRequest = { showLanguageDialog = false },
+        labelProvider = { it?.languageName ?: globalLocalization.labelSystemLanguage }
+    )
 }
 
 @Composable
@@ -192,7 +133,52 @@ fun SettingsItem(
 }
 
 @Composable
-fun LanguageOption(
+fun <T> SelectionDialog(
+    show: Boolean,
+    title: String,
+    options: List<T>,
+    selectedValue: T,
+    onValueSelected: (T) -> Unit,
+    onDismissRequest: () -> Unit,
+    labelProvider: (T) -> String
+) {
+    if (show) {
+        PredictiveDialog(
+            show = show,
+            onDismissRequest = onDismissRequest
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    options.forEach { option ->
+                        RadioOption(
+                            text = labelProvider(option),
+                            selected = option == selectedValue,
+                            onClick = { onValueSelected(option) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                TextButton(
+                    onClick = onDismissRequest,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(globalLocalization.labelCancel)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RadioOption(
     text: String,
     selected: Boolean,
     onClick: () -> Unit

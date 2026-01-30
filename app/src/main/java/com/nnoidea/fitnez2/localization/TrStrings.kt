@@ -50,4 +50,13 @@ object TrStrings : EnStrings(
 
     override val labelSelectExercise: String = "Egzersiz Adı"
     override val labelWeightUnit: String = "Ağırlık Birimi"
+    override val labelProgramPlaceholder: String = "Program Sayfası Yer Tutucusu"
+    override val labelHistoryListPlaceholder: String = "Geçmiş Listesi Yer Tutucusu"
+    override val labelOpenDrawer: String = "Navigasyon Menüsünü Aç"
+    override val labelHistoryEmpty: String = "Henüz geçmiş yok."
+    override val labelAppName: String = "Fitnez2" // Usually brand names don't change, but good to have control
+    override val labelVersion: String = "1.0.0"
+    override val labelEditExercise: String = "Egzersizi Düzenle"
+
+    override fun labelWeightWithUnit(unit: String): String = "$labelWeight ($unit)"
 }

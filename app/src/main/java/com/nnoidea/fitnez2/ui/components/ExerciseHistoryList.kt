@@ -45,6 +45,7 @@ import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.AppDatabase
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
+import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import kotlinx.coroutines.launch
 
 // -----------------------------------------------------------------------------
@@ -119,7 +120,7 @@ private fun ExerciseHistoryListContent(
     if (groupedHistory.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text = "No history yet.",
+                text = globalLocalization.labelHistoryEmpty,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -216,10 +217,10 @@ private fun HistoryRecordCard(
 
             // 4. Weight -> "20.0 kg"
             Text(
-                text = "${item.record.weight} ${com.nnoidea.fitnez2.ui.common.LocalGlobalUiState.current.weightUnit}", 
+                text = "${item.record.weight} ${LocalGlobalUiState.current.weightUnit}", 
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.primary,
-                 modifier = Modifier.weight(0.9f)
+                modifier = Modifier.weight(0.9f)
             )
         }
     }
@@ -242,13 +243,13 @@ private fun EditRecordDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(globalLocalization.labelEdit(globalLocalization.labelExerciseName)) // Just generic "Edit" would be better but reusing existing loc function
+            Text(globalLocalization.labelEditExercise)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 EditFieldRow(label = globalLocalization.labelSets, value = sets, onValueChange = { sets = it })
                 EditFieldRow(label = globalLocalization.labelReps, value = reps, onValueChange = { reps = it })
-                EditFieldRow(label = "${globalLocalization.labelWeight} (${com.nnoidea.fitnez2.ui.common.LocalGlobalUiState.current.weightUnit})", value = weight, onValueChange = { weight = it }, isDecimal = true)
+                EditFieldRow(label = globalLocalization.labelWeightWithUnit(LocalGlobalUiState.current.weightUnit), value = weight, onValueChange = { weight = it }, isDecimal = true)
             }
         },
         confirmButton = {

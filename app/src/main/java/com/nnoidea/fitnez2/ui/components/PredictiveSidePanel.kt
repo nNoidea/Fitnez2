@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 
 @Composable
@@ -46,7 +47,7 @@ fun PredictiveSidePanel(
             Spacer(modifier = Modifier.height(32.dp))
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
                 Text(
-                    text = "Fitnez2",
+                    text = globalLocalization.labelAppName,
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Black,
                     letterSpacing = (-1).sp
@@ -86,7 +87,7 @@ fun PredictiveSidePanel(
                 onClick = { onItemClick(AppPage.Settings.route) }
             )
             item(
-                label = "1.0.0",
+                label = globalLocalization.labelVersion,
                 icon = Icons.Default.Info,
                 onClick = {}
             )

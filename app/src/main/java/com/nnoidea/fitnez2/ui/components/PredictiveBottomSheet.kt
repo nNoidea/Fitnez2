@@ -206,7 +206,7 @@ fun PredictiveBottomSheet(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Button 2: Sets
-                        InputButon(
+                        InputButton(
                             label = globalLocalization.labelSets,
                             value = "", 
                             placeholder = "3",
@@ -214,7 +214,7 @@ fun PredictiveBottomSheet(
                         )
 
                         // Button 3: Reps
-                        InputButon(
+                        InputButton(
                             label = globalLocalization.labelReps,
                             value = "", 
                             placeholder = "10",
@@ -222,8 +222,8 @@ fun PredictiveBottomSheet(
                         )
 
                         // Button 4: Weight
-                        InputButon(
-                            label = "${globalLocalization.labelWeight} (${globalUiState.weightUnit})",
+                        InputButton(
+                            label = globalLocalization.labelWeightWithUnit(globalUiState.weightUnit),
                             value = "", 
                             placeholder = "20",
                             modifier = Modifier.weight(1.2f) // Slightly wider for unit
@@ -253,7 +253,7 @@ fun PredictiveBottomSheet(
                 ) {
                    // Placeholder for list
                    Text(
-                       text = "History List Placeholder", 
+                       text = globalLocalization.labelHistoryListPlaceholder, 
                        modifier = Modifier.align(Alignment.Center),
                        color = MaterialTheme.colorScheme.onSurfaceVariant
                    )
@@ -264,7 +264,7 @@ fun PredictiveBottomSheet(
 }
 
 @Composable
-private fun InputButon(
+private fun InputButton(
     label: String,
     value: String,
     placeholder: String,
