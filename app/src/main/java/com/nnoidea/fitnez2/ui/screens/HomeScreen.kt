@@ -29,11 +29,7 @@ fun HomeScreen(onOpenDrawer: () -> Unit) {
                 .statusBarsPadding()
                 .padding(top = 56.dp) // Offset for HamburgerMenu
         ) {
-            Text(
-                text = globalLocalization.labelHome,
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+
             
             ExerciseHistoryList(
                 modifier = Modifier.weight(1f)

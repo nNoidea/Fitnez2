@@ -25,6 +25,7 @@ object TrStrings : EnStrings(
     override fun errorExerciseNotFoundById(id: Int) = "$id ID'li egzersiz bulunamadı."
 
     override val labelAddExercise = "Egzersiz Ekle"
+    override val labelAdd = "Ekle"
     override val labelExerciseName = "Egzersiz Adı"
     override val labelSave = "Kaydet"
     override val labelCancel = "İptal"

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -66,6 +67,7 @@ import com.nnoidea.fitnez2.data.AppDatabase
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
 import androidx.compose.runtime.collectAsState
+import com.nnoidea.fitnez2.ui.components.ExerciseHistoryList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,9 +97,9 @@ fun PredictiveBottomSheet(
         var weightValue by remember { mutableStateOf("") }
 
         // --- LAYOUT CONSTANTS ---
-        // Peek height must be enough to show the input row (~220dp)
-        // Drag Handle (30) + Title/Exercise (60) + Inputs (70) + Add Button (60)
-        val peekHeight = 270.dp
+        // Peek height must be enough to show the input row (~160dp)
+        // Drag Handle (30) + Title/Exercise/Add (60) + Inputs (70)
+        val peekHeight = 210.dp
 
         val peekHeightPx = with(density) { peekHeight.toPx() }
         val screenHeightPx = constraints.maxHeight.toFloat()
@@ -207,24 +209,73 @@ fun PredictiveBottomSheet(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
 
-                    // Button 1: Exercise Selector
-                    FilledTonalButton(
-                        onClick = { showExerciseSelection = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp)
+                    // Row: Exercise Selector + Add Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                        // Button 1: Exercise Selector
+                        FilledTonalButton(
+                            onClick = { showExerciseSelection = true },
+                            modifier = Modifier
+                                .weight(2f)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(24.dp)
                         ) {
-                            Text(
-                                text = selectedExercise ?: globalLocalization.labelSelectExercise,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = selectedExercise ?: globalLocalization.labelSelectExercise,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                            }
+                        }
+
+                        // Button 5: Add Button
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    try {
+                                        val exerciseId = selectedExerciseId
+                                        val sets = setsValue.toIntOrNull()
+                                        val reps = repsValue.toIntOrNull()
+                                        val weight = weightValue.toDoubleOrNull()
+
+                                        if (exerciseId != null && sets != null && reps != null && weight != null) {
+                                            val record = Record(
+                                                exerciseId = exerciseId,
+                                                sets = sets,
+                                                reps = reps,
+                                                weight = weight,
+                                                date = System.currentTimeMillis()
+                                            )
+                                            recordDao.create(record)
+
+                                            // Clear form after successful save
+                                            selectedExercise = null
+                                            selectedExerciseId = null
+                                            setsValue = ""
+                                            repsValue = ""
+                                            weightValue = ""
+                                        }
+                                    } catch (e: Exception) {
+                                        // Handle error - could show toast or snackbar
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(24.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(globalLocalization.labelAdd, maxLines = 1)
                         }
                     }
 
@@ -253,55 +304,15 @@ fun PredictiveBottomSheet(
 
                         // Button 4: Weight
                         InputButton(
-                            label = globalLocalization.labelWeightWithUnit(globalUiState.weightUnit),
+                            label = globalLocalization.labelWeight,
                             value = weightValue,
                             placeholder = "20",
                             onValueChange = { weightValue = it },
-                            modifier = Modifier.weight(1.2f) // Slightly wider for unit
+                            modifier = Modifier.weight(1f)
                         )
                     }
 
-                    // Button 5: Add Button
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                try {
-                                    val exerciseId = selectedExerciseId
-                                    val sets = setsValue.toIntOrNull()
-                                    val reps = repsValue.toIntOrNull()
-                                    val weight = weightValue.toDoubleOrNull()
 
-                                    if (exerciseId != null && sets != null && reps != null && weight != null) {
-                                        val record = Record(
-                                            exerciseId = exerciseId,
-                                            sets = sets,
-                                            reps = reps,
-                                            weight = weight,
-                                            date = System.currentTimeMillis()
-                                        )
-                                        recordDao.create(record)
-                                        
-                                        // Clear form after successful save
-                                        selectedExercise = null
-                                        selectedExerciseId = null
-                                        setsValue = ""
-                                        repsValue = ""
-                                        weightValue = ""
-                                    }
-                                } catch (e: Exception) {
-                                    // Handle error - could show toast or snackbar
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(32.dp) // Fully rounded
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(globalLocalization.labelAddExercise)
-                    }
                 }
 
                 // 3. Expanded Content (Only Visible when pulled up)
@@ -311,12 +322,9 @@ fun PredictiveBottomSheet(
                         .weight(1f) // Takes remaining space
                         .padding(top = 24.dp)
                 ) {
-                   // Placeholder for list
-                   Text(
-                       text = globalLocalization.labelHistoryListPlaceholder,
-                       modifier = Modifier.align(Alignment.Center),
-                       color = MaterialTheme.colorScheme.onSurfaceVariant
-                   )
+                    ExerciseHistoryList(
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
         }
@@ -353,7 +361,7 @@ private fun InputButton(
             label = { Text(label, style = MaterialTheme.typography.labelSmall) },
             placeholder = { Text(placeholder) },
             singleLine = true,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent

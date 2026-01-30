@@ -49,6 +49,8 @@ import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import kotlinx.coroutines.launch
 
+import androidx.compose.material3.Surface
+
 // -----------------------------------------------------------------------------
 // Public Smart Component
 // -----------------------------------------------------------------------------
@@ -78,13 +80,19 @@ fun ExerciseHistoryList(
     var editingRecord by remember { mutableStateOf<Record?>(null) }
 
     // Content Display
-    ExerciseHistoryListContent(
+    Surface(
         modifier = modifier,
-        groupedHistory = groupedHistory,
-        onEditRequest = { record ->
-            editingRecord = record
-        }
-    )
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = RoundedCornerShape(28.dp)
+    ) {
+        ExerciseHistoryListContent(
+            modifier = Modifier.fillMaxSize(),
+            groupedHistory = groupedHistory,
+            onEditRequest = { record ->
+                editingRecord = record
+            }
+        )
+    }
 
     // Edit Dialog (Unified)
     editingRecord?.let { record ->
@@ -149,7 +157,6 @@ private fun HistoryDateHeader(dateString: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
             .padding(horizontal = 24.dp, vertical = 12.dp)
     ) {
         Text(
