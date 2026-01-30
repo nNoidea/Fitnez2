@@ -3,6 +3,7 @@ package com.nnoidea.fitnez2.data.repositories
 import com.nnoidea.fitnez2.data.dao.RecordDao
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
+import kotlinx.coroutines.flow.Flow
 
 class RecordRepository(private val recordDao: RecordDao) {
 
@@ -22,7 +23,7 @@ class RecordRepository(private val recordDao: RecordDao) {
         return recordDao.getSortedOne(exerciseId)
     }
 
-    suspend fun getAllHistory(): List<RecordWithExercise> {
+    fun getAllHistory(): Flow<List<RecordWithExercise>> {
         return recordDao.getSortedAll()
     }
 }

@@ -3,10 +3,16 @@ package com.nnoidea.fitnez2.data.repositories
 import com.nnoidea.fitnez2.data.dao.ExerciseDao
 import com.nnoidea.fitnez2.data.entities.Exercise
 
+import kotlinx.coroutines.flow.Flow
+
 class ExerciseRepository(private val exerciseDao: ExerciseDao) {
 
     suspend fun getAllExercises(): List<Exercise> {
         return exerciseDao.getAllExercises()
+    }
+
+    fun getAllExercisesFlow(): Flow<List<Exercise>> {
+        return exerciseDao.getAllExercisesFlow()
     }
 
     suspend fun getExerciseById(id: Int): Exercise? {

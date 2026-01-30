@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
@@ -58,7 +59,7 @@ abstract class RecordDao {
         JOIN exercise ON record.exerciseId = exercise.id 
         ORDER BY record.date DESC, record.id DESC
     """)
-    abstract suspend fun getSortedAll(): List<RecordWithExercise>
+    abstract fun getSortedAll(): Flow<List<RecordWithExercise>>
 
     // --- UPDATE ---
 

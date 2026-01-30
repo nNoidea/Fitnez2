@@ -64,6 +64,9 @@ abstract class ExerciseDao {
     @Query("SELECT * FROM exercise ORDER BY name ASC")
     abstract suspend fun getAllExercises(): List<Exercise>
 
+    @Query("SELECT * FROM exercise ORDER BY name ASC")
+    abstract fun getAllExercisesFlow(): kotlinx.coroutines.flow.Flow<List<Exercise>>
+
     @Query("SELECT * FROM exercise WHERE id = :id")
     abstract suspend fun getExerciseById(id: Int): Exercise?
 

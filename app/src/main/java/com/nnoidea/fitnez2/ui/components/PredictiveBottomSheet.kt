@@ -64,7 +64,8 @@ import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import androidx.compose.ui.platform.LocalContext
 import com.nnoidea.fitnez2.data.AppDatabase
 import com.nnoidea.fitnez2.data.entities.Exercise
-import androidx.compose.runtime.LaunchedEffect
+import com.nnoidea.fitnez2.data.entities.Record
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,11 +83,16 @@ fun PredictiveBottomSheet(
         // DB Access
         val database = remember { AppDatabase.getDatabase(context, scope) }
         val exerciseDao = database.exerciseDao()
-        var dbExercises by remember { mutableStateOf(emptyList<Exercise>()) }
+        val recordDao = database.recordDao()
+        
+        val dbExercises by exerciseDao.getAllExercisesFlow().collectAsState(initial = emptyList())
 
-        LaunchedEffect(Unit) {
-            dbExercises = exerciseDao.getAllExercises()
-        }
+        // Form state
+        var selectedExerciseId by remember { mutableStateOf<Int?>(null) }
+        var selectedExercise by remember { mutableStateOf<String?>(null) }
+        var setsValue by remember { mutableStateOf("") }
+        var repsValue by remember { mutableStateOf("") }
+        var weightValue by remember { mutableStateOf("") }
 
         // --- LAYOUT CONSTANTS ---
         // Peek height must be enough to show the input row (~220dp)
@@ -110,7 +116,6 @@ fun PredictiveBottomSheet(
         var predictiveProgress by remember { mutableFloatStateOf(0f) }
 
         var showExerciseSelection by remember { mutableStateOf(false) }
-        var selectedExercise by remember { mutableStateOf<String?>(null) }
 
         val isExpanded by remember {
             derivedStateOf { offsetY.value < maxOffset / 2 }
@@ -231,31 +236,63 @@ fun PredictiveBottomSheet(
                         // Button 2: Sets
                         InputButton(
                             label = globalLocalization.labelSets,
-                            value = "",
+                            value = setsValue,
                             placeholder = "3",
+                            onValueChange = { setsValue = it },
                             modifier = Modifier.weight(1f)
                         )
 
                         // Button 3: Reps
                         InputButton(
                             label = globalLocalization.labelReps,
-                            value = "",
+                            value = repsValue,
                             placeholder = "10",
+                            onValueChange = { repsValue = it },
                             modifier = Modifier.weight(1f)
                         )
 
                         // Button 4: Weight
                         InputButton(
                             label = globalLocalization.labelWeightWithUnit(globalUiState.weightUnit),
-                            value = "",
+                            value = weightValue,
                             placeholder = "20",
+                            onValueChange = { weightValue = it },
                             modifier = Modifier.weight(1.2f) // Slightly wider for unit
                         )
                     }
 
                     // Button 5: Add Button
                     Button(
-                        onClick = { /* TODO: Add to DB */ },
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    val exerciseId = selectedExerciseId
+                                    val sets = setsValue.toIntOrNull()
+                                    val reps = repsValue.toIntOrNull()
+                                    val weight = weightValue.toDoubleOrNull()
+
+                                    if (exerciseId != null && sets != null && reps != null && weight != null) {
+                                        val record = Record(
+                                            exerciseId = exerciseId,
+                                            sets = sets,
+                                            reps = reps,
+                                            weight = weight,
+                                            date = System.currentTimeMillis()
+                                        )
+                                        recordDao.create(record)
+                                        
+                                        // Clear form after successful save
+                                        selectedExercise = null
+                                        selectedExerciseId = null
+                                        setsValue = ""
+                                        repsValue = ""
+                                        weightValue = ""
+                                    }
+                                } catch (e: Exception) {
+                                    // Handle error - could show toast or snackbar
+                                }
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -290,6 +327,7 @@ fun PredictiveBottomSheet(
             onDismissRequest = { showExerciseSelection = false },
             onExerciseSelected = { exercise ->
                 selectedExercise = exercise.name
+                selectedExerciseId = exercise.id
                 showExerciseSelection = false
             }
         )
@@ -301,6 +339,7 @@ private fun InputButton(
     label: String,
     value: String,
     placeholder: String,
+    onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Using OutlinedButton look-alike for inputs to match the requested "Button" style
@@ -310,7 +349,7 @@ private fun InputButton(
     Column(modifier = modifier) {
         TextField(
             value = value,
-            onValueChange = {},
+            onValueChange = onValueChange,
             label = { Text(label, style = MaterialTheme.typography.labelSmall) },
             placeholder = { Text(placeholder) },
             singleLine = true,

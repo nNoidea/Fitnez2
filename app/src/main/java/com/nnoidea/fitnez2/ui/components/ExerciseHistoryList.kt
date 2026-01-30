@@ -27,6 +27,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,12 +63,7 @@ fun ExerciseHistoryList(
     val database = remember { AppDatabase.getDatabase(context, scope) }
     val dao = database.recordDao()
 
-    var history by remember { mutableStateOf(emptyList<RecordWithExercise>()) }
-
-    // Load Data
-    LaunchedEffect(Unit) {
-        history = dao.getSortedAll()
-    }
+    val history by dao.getSortedAll().collectAsState(initial = emptyList())
 
     // Grouping Logic - derived state handles language changes gracefully
     val groupedHistory by remember(history) {
@@ -98,7 +94,6 @@ fun ExerciseHistoryList(
             onConfirm = { updatedRecord ->
                 scope.launch {
                     dao.update(updatedRecord)
-                    history = dao.getSortedAll()
                 }
                 editingRecord = null
             }
@@ -201,7 +196,7 @@ private fun HistoryRecordCard(
 
             // 2. Sets -> "5 Sets" or just "5"
             Text(
-                text = "${item.record.sets} ${globalLocalization.labelSets}", 
+                text = item.formattedSets, 
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(0.8f) // Fixed width-ish via weight
@@ -209,7 +204,7 @@ private fun HistoryRecordCard(
 
             // 3. Reps -> "10 Reps" or just "10"
             Text(
-                text = "${item.record.reps} ${globalLocalization.labelReps}",
+                text = item.formattedReps,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(0.8f) 
@@ -217,7 +212,7 @@ private fun HistoryRecordCard(
 
             // 4. Weight -> "20.0 kg"
             Text(
-                text = "${item.record.weight} ${LocalGlobalUiState.current.weightUnit}", 
+                text = item.formattedWeight(LocalGlobalUiState.current.weightUnit), 
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(0.9f)
@@ -239,6 +234,7 @@ private fun EditRecordDialog(
     var sets by remember { mutableStateOf(record.sets.toString()) }
     var reps by remember { mutableStateOf(record.reps.toString()) }
     var weight by remember { mutableStateOf(record.weight.toString()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -250,17 +246,30 @@ private fun EditRecordDialog(
                 EditFieldRow(label = globalLocalization.labelSets, value = sets, onValueChange = { sets = it })
                 EditFieldRow(label = globalLocalization.labelReps, value = reps, onValueChange = { reps = it })
                 EditFieldRow(label = globalLocalization.labelWeightWithUnit(LocalGlobalUiState.current.weightUnit), value = weight, onValueChange = { weight = it }, isDecimal = true)
+                
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    val updatedRecord = record.copy(
-                        sets = sets.toIntOrNull() ?: record.sets,
-                        reps = reps.toIntOrNull() ?: record.reps,
-                        weight = weight.toDoubleOrNull() ?: record.weight
-                    )
-                    onConfirm(updatedRecord)
+                    try {
+                        val updatedRecord = record.copy(
+                            sets = sets.toIntOrNull() ?: record.sets,
+                            reps = reps.toIntOrNull() ?: record.reps,
+                            weight = weight.toDoubleOrNull() ?: record.weight
+                        )
+                        updatedRecord.validate() // SSOT: Use Entity validation
+                        onConfirm(updatedRecord)
+                    } catch (e: IllegalArgumentException) {
+                        errorMessage = e.message
+                    }
                 }
             ) {
                 Text(globalLocalization.labelSave)
