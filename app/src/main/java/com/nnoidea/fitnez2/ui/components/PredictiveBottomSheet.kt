@@ -24,6 +24,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,46 +61,64 @@ import androidx.compose.runtime.setValue
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 
+import androidx.compose.ui.platform.LocalContext
+import com.nnoidea.fitnez2.data.AppDatabase
+import com.nnoidea.fitnez2.data.entities.Exercise
+import androidx.compose.runtime.LaunchedEffect
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PredictiveBottomSheet(
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val globalUiState = LocalGlobalUiState.current
     val isOverlayOpen = globalUiState.isOverlayOpen
-    
+
     BoxWithConstraints(modifier = modifier) {
         val density = LocalDensity.current
         val scope = rememberCoroutineScope()
-        
+
+        // DB Access
+        val database = remember { AppDatabase.getDatabase(context, scope) }
+        val exerciseDao = database.exerciseDao()
+        var dbExercises by remember { mutableStateOf(emptyList<Exercise>()) }
+
+        LaunchedEffect(Unit) {
+            dbExercises = exerciseDao.getAllExercises()
+        }
+
         // --- LAYOUT CONSTANTS ---
         // Peek height must be enough to show the input row (~220dp)
         // Drag Handle (30) + Title/Exercise (60) + Inputs (70) + Add Button (60)
-        val peekHeight = 270.dp 
-        
+        val peekHeight = 270.dp
+
         val peekHeightPx = with(density) { peekHeight.toPx() }
         val screenHeightPx = constraints.maxHeight.toFloat()
-        
+
         // Use full screen height for expanded state
         val expandedHeightPx = screenHeightPx
         val expandedHeight = with(density) { screenHeightPx.toDp() }
-        
+
         // 0 = Expanded, maxOffset = Collapsed
         val maxOffset = expandedHeightPx - peekHeightPx
         val minOffset = 0f
-        
+
         val offsetY = remember { Animatable(maxOffset) }
-        
+
         // Predictive Back State
         var predictiveProgress by remember { mutableFloatStateOf(0f) }
-        
+
+        var showExerciseSelection by remember { mutableStateOf(false) }
+        var selectedExercise by remember { mutableStateOf<String?>(null) }
+
         val isExpanded by remember {
             derivedStateOf { offsetY.value < maxOffset / 2 }
         }
 
         // Draggable State
         val draggableState = rememberDraggableState { delta ->
-             if (!isOverlayOpen) { 
+             if (!isOverlayOpen) {
                  scope.launch {
                      val newOffset = (offsetY.value + delta).coerceIn(minOffset, maxOffset)
                      offsetY.snapTo(newOffset)
@@ -111,8 +134,8 @@ fun PredictiveBottomSheet(
                     progressAnim.snapTo(backEvent.progress)
                     predictiveProgress = progressAnim.value
                 }
-                scope.launch { 
-                    offsetY.animateTo(maxOffset, spring(stiffness = Spring.StiffnessMediumLow)) 
+                scope.launch {
+                    offsetY.animateTo(maxOffset, spring(stiffness = Spring.StiffnessMediumLow))
                 }
                 scope.launch {
                     progressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow)) {
@@ -170,7 +193,7 @@ fun PredictiveBottomSheet(
             ) {
                 // 1. Drag Handle
                 BottomSheetDefaults.DragHandle()
-                
+
                 // 2. Persistent Content (Always Visible in Peek)
                 Column(
                     modifier = Modifier
@@ -178,10 +201,10 @@ fun PredictiveBottomSheet(
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    
+
                     // Button 1: Exercise Selector
                     FilledTonalButton(
-                        onClick = { /* TODO: Open selection */ },
+                        onClick = { showExerciseSelection = true },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -192,7 +215,7 @@ fun PredictiveBottomSheet(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = globalLocalization.labelSelectExercise,
+                                text = selectedExercise ?: globalLocalization.labelSelectExercise,
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.weight(1f)
                             )
@@ -208,7 +231,7 @@ fun PredictiveBottomSheet(
                         // Button 2: Sets
                         InputButton(
                             label = globalLocalization.labelSets,
-                            value = "", 
+                            value = "",
                             placeholder = "3",
                             modifier = Modifier.weight(1f)
                         )
@@ -216,7 +239,7 @@ fun PredictiveBottomSheet(
                         // Button 3: Reps
                         InputButton(
                             label = globalLocalization.labelReps,
-                            value = "", 
+                            value = "",
                             placeholder = "10",
                             modifier = Modifier.weight(1f)
                         )
@@ -224,7 +247,7 @@ fun PredictiveBottomSheet(
                         // Button 4: Weight
                         InputButton(
                             label = globalLocalization.labelWeightWithUnit(globalUiState.weightUnit),
-                            value = "", 
+                            value = "",
                             placeholder = "20",
                             modifier = Modifier.weight(1.2f) // Slightly wider for unit
                         )
@@ -253,13 +276,23 @@ fun PredictiveBottomSheet(
                 ) {
                    // Placeholder for list
                    Text(
-                       text = globalLocalization.labelHistoryListPlaceholder, 
+                       text = globalLocalization.labelHistoryListPlaceholder,
                        modifier = Modifier.align(Alignment.Center),
                        color = MaterialTheme.colorScheme.onSurfaceVariant
                    )
                 }
             }
         }
+
+        PredictiveExerciseSelectionDialog(
+            show = showExerciseSelection,
+            exercises = dbExercises,
+            onDismissRequest = { showExerciseSelection = false },
+            onExerciseSelected = { exercise ->
+                selectedExercise = exercise.name
+                showExerciseSelection = false
+            }
+        )
     }
 }
 
@@ -271,9 +304,9 @@ private fun InputButton(
     modifier: Modifier = Modifier
 ) {
     // Using OutlinedButton look-alike for inputs to match the requested "Button" style
-    // But conceptually these are inputs. 
+    // But conceptually these are inputs.
     // For now, making them look like visual containers.
-    
+
     Column(modifier = modifier) {
         TextField(
             value = value,
@@ -289,5 +322,64 @@ private fun InputButton(
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
+    }
+}
+
+@Composable
+private fun PredictiveExerciseSelectionDialog(
+    show: Boolean,
+    exercises: List<Exercise>,
+    onDismissRequest: () -> Unit,
+    onExerciseSelected: (Exercise) -> Unit
+) {
+    val globalLocalization = com.nnoidea.fitnez2.core.localization.globalLocalization
+
+    PredictiveDialog(
+        show = show,
+        onDismissRequest = onDismissRequest
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = globalLocalization.labelSelectExercise,
+                style = MaterialTheme.typography.headlineSmall
+            )
+
+            // List - Sorted alphabetically (case-insensitive)
+            val sortedExercises = remember(exercises) {
+                exercises.sortedBy { it.name.lowercase() }
+            }
+
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 300.dp)
+            ) {
+                items(sortedExercises) { exercise ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onExerciseSelected(exercise) }
+                            .padding(vertical = 12.dp, horizontal = 8.dp)
+                    ) {
+                        Text(
+                            text = exercise.name,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+
+                if (sortedExercises.isEmpty()) {
+                     item {
+                         Text(
+                             text = "No exercises found",
+                             style = MaterialTheme.typography.bodyMedium,
+                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                             modifier = Modifier.padding(16.dp)
+                         )
+                     }
+                }
+            }
+        }
     }
 }
