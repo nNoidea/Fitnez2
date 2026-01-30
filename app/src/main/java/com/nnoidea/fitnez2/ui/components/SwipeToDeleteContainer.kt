@@ -1,7 +1,7 @@
 package com.nnoidea.fitnez2.ui.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.background
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -72,19 +73,23 @@ fun SwipeToDeleteContainer(
                 label = "IconScale"
             )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color)
-                    .padding(horizontal = 24.dp), 
-                contentAlignment = Alignment.CenterEnd
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = color,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete", 
-                    tint = MaterialTheme.colorScheme.onErrorContainer,
-                    modifier = Modifier.scale(scale)
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        modifier = Modifier.scale(scale)
+                    )
+                }
             }
         },
         content = { content() },

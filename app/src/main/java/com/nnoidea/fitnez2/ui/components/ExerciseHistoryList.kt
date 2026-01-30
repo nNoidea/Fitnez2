@@ -222,7 +222,6 @@ private fun HistoryRecordCard(
             Text(
                 text = item.exerciseName,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1.5f)
             )
 
@@ -230,7 +229,6 @@ private fun HistoryRecordCard(
             Text(
                 text = item.formattedSets, 
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(0.8f) // Fixed width-ish via weight
             )
 
@@ -238,7 +236,6 @@ private fun HistoryRecordCard(
             Text(
                 text = item.formattedReps,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(0.8f) 
             )
 

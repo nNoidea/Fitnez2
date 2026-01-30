@@ -126,8 +126,7 @@ fun SettingsItem(
         Text(text = label, style = MaterialTheme.typography.bodyLarge)
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }

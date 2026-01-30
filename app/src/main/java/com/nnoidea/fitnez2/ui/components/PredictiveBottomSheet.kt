@@ -429,7 +429,6 @@ private fun PredictiveExerciseSelectionDialog(
                          Text(
                              text = "No exercises found",
                              style = MaterialTheme.typography.bodyMedium,
-                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                              modifier = Modifier.padding(16.dp)
                          )
                      }

@@ -77,7 +77,7 @@ fun PredictiveDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)) // Dim background
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)) // Dim background
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
