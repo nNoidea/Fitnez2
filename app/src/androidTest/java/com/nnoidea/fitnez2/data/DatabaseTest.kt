@@ -8,6 +8,7 @@ import com.nnoidea.fitnez2.data.dao.ExerciseDao
 import com.nnoidea.fitnez2.data.dao.RecordDao
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.*
@@ -142,7 +143,8 @@ class DatabaseTest {
         // Same Time as Base, but created later (Higher ID) -> Should be first in list (Stable Sort)
         recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 30.0, date = now))
 
-        val sorted = recordDao.getSortedOne(exerciseId)
+        // Updated to use Flow
+        val sorted = recordDao.getRecordsByExerciseId(exerciseId).first()
         
         assertEquals(3, sorted.size)
         
@@ -159,6 +161,6 @@ class DatabaseTest {
         
         assertEquals(0, exerciseDao.getAllExercises().size)
         // Records should be gone from everywhere
-        assertEquals(0, recordDao.getSortedOne(exerciseId).size)
+        assertEquals(0, recordDao.getRecordsByExerciseId(exerciseId).first().size)
     }
 }
