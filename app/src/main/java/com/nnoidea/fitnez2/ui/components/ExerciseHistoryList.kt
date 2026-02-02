@@ -280,12 +280,9 @@ private fun HistoryInput(
     modifier: Modifier = Modifier,
     isDecimal: Boolean = false
 ) {
-    // Local state to hold the edits before commit
-    var currentValue by remember(value) { mutableStateOf(value) }
-
     com.nnoidea.fitnez2.ui.common.SmartInputLogic(
-        value = currentValue,
-        onValueChange = { currentValue = it },
+        value = value,
+        onValueChange = { },
         onFocusLost = { finalVal ->
              if (finalVal != value) {
                  onUpdate(finalVal)

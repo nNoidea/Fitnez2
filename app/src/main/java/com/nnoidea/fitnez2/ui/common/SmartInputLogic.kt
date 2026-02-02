@@ -31,6 +31,9 @@ fun SmartInputLogic(
     onValueChange: (String) -> Unit,
     onFocusLost: (String) -> Unit = {},
     validate: (String) -> Boolean = { true },
+    areEquivalent: (String, String) -> Boolean = { a, b -> 
+        a == b || (a.toDoubleOrNull() != null && a.toDoubleOrNull() == b.toDoubleOrNull()) 
+    },
     content: @Composable (
         displayValue: String,
         placeholder: String,
@@ -40,6 +43,9 @@ fun SmartInputLogic(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+
+    // Internal state to hold the text value (preserves formatting like "01" or ".00")
+    var internalValue by remember { mutableStateOf(value) }
 
     val focusManager = LocalFocusManager.current
     val density = LocalDensity.current
@@ -61,24 +67,81 @@ fun SmartInputLogic(
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Behavior Logic
+    // -------------------------------------------------------------------------
+
+    // 1. Upstream Sync
+    // Sync internal state when the external value changes.
+    // We treat the external 'value' as the source of truth, but we must be careful
+    // not to overwrite the user's ongoing input with an "old" value during async updates.
+    LaunchedEffect(value) {
+        // If we are focused, we assume the user is typing. We only sync if the value
+        // is drastically different (not just an formatting diff) or if it seems to be a new external value.
+        // For simple cases (Bottom Sheet), 'value' echoes 'internalValue', so this is a no-op.
+        // For async cases (History), 'value' assumes the committed state. 
+        if (!isFocused) {
+            internalValue = value
+        } else {
+             // While focused, if the upstream value changes to something that isn't equivalent 
+             // to what we are typing, it's likely an external event (e.g. data refresh).
+             if (!areEquivalent(internalValue, value)) {
+                 internalValue = value
+             }
+        }
+    }
+
+    // 2. Focus Management (Clear-on-focus, Restore-on-blur, Canonicalize)
     LaunchedEffect(isFocused) {
         if (isFocused) {
-            // Event: Focus Gained
-            savedValue = value
+            // ---> Focus Gained
+            // Save current state to allow restoration if aborted (left empty)
+            savedValue = internalValue
+            
+            // Clear the field for fresh input (Design Requirement)
+            internalValue = ""
             onValueChange("")
             wasFocused = true
         } else {
             if (wasFocused) {
-                // Event: Focus Lost
-                val finalValue = if (value.isEmpty()) savedValue else value
+                // <--- Focus Lost
+                var effectiveValue = if (internalValue.isEmpty()) savedValue else internalValue
                 
-                // Restore if empty
-                if (value.isEmpty()) {
-                    onValueChange(savedValue)
+                // Feature: Canonicalize / Format (Omit leading zeros)
+                // We parse the string and re-format it to remove artifacts like "01" -> "1"
+                effectiveValue.toDoubleOrNull()?.let { num ->
+                    val canonical = if (num % 1.0 == 0.0) {
+                        num.toInt().toString()
+                    } else {
+                        num.toString()
+                    }
+                    if (canonical != effectiveValue) {
+                        effectiveValue = canonical
+                    }
+                }
+
+                // Logic:
+                // 1. If user left it empty -> Restore saved value.
+                // 2. If user typed something -> Commit effective (canonical) value.
+                
+                if (internalValue.isEmpty()) {
+                    // Restore case
+                    internalValue = savedValue
+                    if (savedValue != value) {
+                        onValueChange(savedValue)
+                    }
+                } else {
+                    // Commit case
+                    // Update internal view immediately (Prevent snap-back for async parents)
+                    internalValue = effectiveValue
+                    
+                    // Propagate changes
+                    onValueChange(effectiveValue)
                 }
                 
-                // Notify parent of commit with the final effective value
-                onFocusLost(finalValue)
+                // Final "Commit" event for Logic that relies on Blur (History List)
+                onFocusLost(effectiveValue)
+                
                 wasFocused = false
             }
         }
@@ -87,12 +150,13 @@ fun SmartInputLogic(
     // Wrapper for value change involving validation or formatting hooks
     val onValueChangeWrapper: (String) -> Unit = { newValue ->
         if (validate(newValue)) {
+             internalValue = newValue
              onValueChange(newValue)
         }
     }
 
     content(
-        value,
+        internalValue,
         savedValue,
         interactionSource,
         onValueChangeWrapper
