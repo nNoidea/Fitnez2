@@ -70,6 +70,9 @@ abstract class RecordDao {
     """)
     abstract suspend fun getLatestRecord(): RecordWithExercise?
 
+    @Query("SELECT * FROM record WHERE id = :recordId")
+    abstract suspend fun getById(recordId: Int): Record?
+
     // --- UPDATE ---
 
     @Transaction

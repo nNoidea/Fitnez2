@@ -16,7 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,6 +51,7 @@ import com.nnoidea.fitnez2.data.AppDatabase
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
+import com.nnoidea.fitnez2.data.SettingsRepository
 import kotlinx.coroutines.launch
 
 import androidx.compose.material3.Surface
@@ -67,6 +71,8 @@ fun ExerciseHistoryList(
     val dao = database.recordDao()
 
     val history by dao.getSortedAll().collectAsState(initial = emptyList())
+    val settingsRepository = remember { SettingsRepository(context) }
+    val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
 
     // Grouping Logic - derived state handles language changes gracefully
     val groupedHistory by remember(history) {
@@ -76,9 +82,6 @@ fun ExerciseHistoryList(
             }
         }
     }
-
-    // Editing State (Simply holds reference to the record being edited)
-    var editingRecord by remember { mutableStateOf<Record?>(null) }
 
     // Content Display
     val globalUiState = LocalGlobalUiState.current
@@ -91,39 +94,36 @@ fun ExerciseHistoryList(
         ExerciseHistoryListContent(
             modifier = Modifier.fillMaxSize(),
             groupedHistory = groupedHistory,
-            onEditRequest = { record ->
-                editingRecord = record
+            weightUnit = weightUnit,
+            onUpdateRequest = { updatedRecord ->
+                scope.launch {
+                     try {
+                         updatedRecord.validate()
+                         dao.update(updatedRecord)
+                     } catch (e: Exception) {
+                         // Ideally show snackbar error
+                     }
+                }
             },
             onDeleteRequest = { record ->
                 scope.launch {
-                    // 1. Delete
+                    // 1. Fetch latest state for Undo (SSOT)
+                    val freshRecord = dao.getById(record.id) ?: record
+
+                    // 2. Delete
                     dao.delete(record.id)
 
-                    // 2. Show Snackbar with Undo
+                    // 3. Show Snackbar with Undo using fresh data
                     globalUiState.showSnackbar(
                         message = globalLocalization.labelRecordDeleted,
                         actionLabel = globalLocalization.labelUndo,
                         onActionPerformed = {
                             scope.launch {
-                                dao.create(record)
+                                dao.create(freshRecord)
                             }
                         }
                     )
                 }
-            }
-        )
-    }
-
-    // Edit Dialog (Unified)
-    editingRecord?.let { record ->
-        EditRecordDialog(
-            record = record,
-            onDismiss = { editingRecord = null },
-            onConfirm = { updatedRecord ->
-                scope.launch {
-                    dao.update(updatedRecord)
-                }
-                editingRecord = null
             }
         )
     }
@@ -137,8 +137,10 @@ fun ExerciseHistoryList(
 @Composable
 private fun ExerciseHistoryListContent(
     modifier: Modifier,
+
     groupedHistory: Map<String, List<RecordWithExercise>>,
-    onEditRequest: (Record) -> Unit,
+    weightUnit: String,
+    onUpdateRequest: (Record) -> Unit,
     onDeleteRequest: (Record) -> Unit
 ) {
     if (groupedHistory.isEmpty()) {
@@ -164,7 +166,8 @@ private fun ExerciseHistoryListContent(
                     ) {
                         HistoryRecordCard(
                             item = recordItem,
-                            onClick = { onEditRequest(recordItem.record) }
+                            weightUnit = weightUnit,
+                            onUpdate = onUpdateRequest
                         )
                     }
                 }
@@ -184,24 +187,27 @@ private fun HistoryDateHeader(dateString: String) {
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 12.dp)
     ) {
-        Text(
-            text = dateString,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            ),
-            color = MaterialTheme.colorScheme.primary
-        )
+        Column {
+            Text(
+                text = dateString,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                ),
+                color = MaterialTheme.colorScheme.primary
+            )
+            // Optional: Legend could go here if we wanted column headers like Fitnez 1
+        }
     }
 }
 
 @Composable
 private fun HistoryRecordCard(
     item: RecordWithExercise,
-    onClick: () -> Unit
+    weightUnit: String,
+    onUpdate: (Record) -> Unit
 ) {
     Card(
-        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
@@ -215,8 +221,9 @@ private fun HistoryRecordCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp), // Adjust padding if needed
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // 1. Exercise Name (Weight 1f to take available space)
             Text(
@@ -225,116 +232,119 @@ private fun HistoryRecordCard(
                 modifier = Modifier.weight(1.5f)
             )
 
-            // 2. Sets -> "5 Sets" or just "5"
-            Text(
-                text = item.formattedSets, 
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(0.8f) // Fixed width-ish via weight
+            // 2. Sets Input
+            HistoryInput(
+                value = item.record.sets.toString(),
+                label = "Sets",
+                onUpdate = { newVal ->
+                    newVal.toIntOrNull()?.let { 
+                        onUpdate(item.record.copy(sets = it)) 
+                    }
+                },
+                modifier = Modifier.width(60.dp)
             )
 
-            // 3. Reps -> "10 Reps" or just "10"
-            Text(
-                text = item.formattedReps,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(0.8f) 
+            // 3. Reps Input
+            HistoryInput(
+                value = item.record.reps.toString(),
+                label = "Reps", // Fitnez 1 style label
+                onUpdate = { newVal ->
+                     newVal.toIntOrNull()?.let {
+                         onUpdate(item.record.copy(reps = it))
+                     }
+                },
+                modifier = Modifier.width(60.dp)
             )
 
-            // 4. Weight -> "20.0 kg"
-            Text(
-                text = item.formattedWeight(LocalGlobalUiState.current.weightUnit), 
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(0.9f)
+            // 4. Weight Input
+            HistoryInput(
+                value = item.record.weight.toString().removeSuffix(".0"),
+                label = weightUnit,
+                onUpdate = { newVal ->
+                    newVal.toDoubleOrNull()?.let {
+                        onUpdate(item.record.copy(weight = it))
+                    }
+                },
+                modifier = Modifier.width(70.dp),
+                isDecimal = true
             )
         }
     }
 }
 
-// -----------------------------------------------------------------------------
-// Unified Edit Dialog
-// -----------------------------------------------------------------------------
-
 @Composable
-private fun EditRecordDialog(
-    record: Record,
-    onDismiss: () -> Unit,
-    onConfirm: (Record) -> Unit
-) {
-    var sets by remember { mutableStateOf(record.sets.toString()) }
-    var reps by remember { mutableStateOf(record.reps.toString()) }
-    var weight by remember { mutableStateOf(record.weight.toString()) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(globalLocalization.labelEditExercise)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                EditFieldRow(label = globalLocalization.labelSets, value = sets, onValueChange = { sets = it })
-                EditFieldRow(label = globalLocalization.labelReps, value = reps, onValueChange = { reps = it })
-                EditFieldRow(label = globalLocalization.labelWeightWithUnit(LocalGlobalUiState.current.weightUnit), value = weight, onValueChange = { weight = it }, isDecimal = true)
-                
-                if (errorMessage != null) {
-                    Text(
-                        text = errorMessage!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    try {
-                        val updatedRecord = record.copy(
-                            sets = sets.toIntOrNull() ?: record.sets,
-                            reps = reps.toIntOrNull() ?: record.reps,
-                            weight = weight.toDoubleOrNull() ?: record.weight
-                        )
-                        updatedRecord.validate() // SSOT: Use Entity validation
-                        onConfirm(updatedRecord)
-                    } catch (e: IllegalArgumentException) {
-                        errorMessage = e.message
-                    }
-                }
-            ) {
-                Text(globalLocalization.labelSave)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(globalLocalization.labelCancel)
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(28.dp)
-    )
-}
-
-@Composable
-private fun EditFieldRow(
-    label: String,
+private fun HistoryInput(
     value: String,
-    onValueChange: (String) -> Unit,
+    label: String,
+    onUpdate: (String) -> Unit,
+    modifier: Modifier = Modifier,
     isDecimal: Boolean = false
 ) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Number
-        ),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent
-        ),
-        modifier = Modifier.fillMaxWidth()
-    )
+    // Local state to hold the edits before commit
+    var currentValue by remember(value) { mutableStateOf(value) }
+
+    com.nnoidea.fitnez2.ui.common.SmartInputLogic(
+        value = currentValue,
+        onValueChange = { currentValue = it },
+        onFocusLost = { finalVal ->
+             if (finalVal != value) {
+                 onUpdate(finalVal)
+             }
+        },
+        validate = {
+            if (it.isEmpty()) true
+            else if (isDecimal) it.toDoubleOrNull() != null
+            else it.toIntOrNull() != null
+        }
+    ) { displayValue, placeholder, interactionSource, onWrappedValueChange ->
+        
+        // Visuals similar to Fitnez 1 "Pill" but using Fitnez 2 token style?
+        // User said: "need to look visually different" from bottom sheet.
+        // Bottom sheet is Colored Container.
+        // Here let's use a subtle outline or filled background differently.
+        // Fitnez 1 uses: backgroundColor = MaterialTheme.colorScheme.errorContainer (etc) w/ RoundedCorner 20.dp
+        
+        // Let's use SurfaceContainerHigh for a subtle input look
+        Box(
+            modifier = modifier
+                .height(44.dp)
+                .background(
+                    MaterialTheme.colorScheme.surfaceContainerHigh, 
+                    RoundedCornerShape(12.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            BasicTextField(
+                value = displayValue,
+                onValueChange = onWrappedValueChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                interactionSource = interactionSource,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                decorationBox = { innerTextField ->
+                     if (displayValue.isEmpty()) {
+                         Text(
+                            text = placeholder,
+                             style = MaterialTheme.typography.bodyLarge.copy(
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                         )
+                     }
+                     innerTextField()
+                }
+            )
+        }
+    }
 }
+
 
 
