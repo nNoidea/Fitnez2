@@ -105,6 +105,19 @@ fun PredictiveBottomSheet(
         var repsValue by remember { mutableStateOf("") }
         var weightValue by remember { mutableStateOf("") }
 
+        // Prefill with latest record
+        LaunchedEffect(Unit) {
+            val latest = recordDao.getLatestRecord()
+            if (latest != null) {
+                selectedExercise = latest.exerciseName
+                selectedExerciseId = latest.record.exerciseId
+                setsValue = latest.record.sets.toString()
+                repsValue = latest.record.reps.toString()
+                // Remove trailing .0 for cleaner display
+                weightValue = latest.record.weight.toString().removeSuffix(".0")
+            }
+        }
+
         // --- LAYOUT CONSTANTS ---
         // Peek height must be enough to show the input row (~160dp)
         // Drag Handle (30) + Title/Exercise/Add (60) + Inputs (70)
@@ -277,12 +290,7 @@ fun PredictiveBottomSheet(
                                             )
                                             recordDao.create(record)
 
-                                            // Clear form after successful save
-                                            selectedExercise = null
-                                            selectedExerciseId = null
-                                            setsValue = ""
-                                            repsValue = ""
-                                            weightValue = ""
+                                            // Form values are preserved for multiple entries
                                         }
                                     } catch (e: Exception) {
                                         // Handle error - could show toast or snackbar

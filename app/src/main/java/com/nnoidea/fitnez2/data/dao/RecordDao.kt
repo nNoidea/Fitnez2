@@ -61,6 +61,15 @@ abstract class RecordDao {
     """)
     abstract fun getSortedAll(): Flow<List<RecordWithExercise>>
 
+    @Query("""
+        SELECT record.*, exercise.name as exerciseName 
+        FROM record 
+        JOIN exercise ON record.exerciseId = exercise.id 
+        ORDER BY record.date DESC, record.id DESC
+        LIMIT 1
+    """)
+    abstract suspend fun getLatestRecord(): RecordWithExercise?
+
     // --- UPDATE ---
 
     @Transaction
