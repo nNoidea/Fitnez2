@@ -42,10 +42,13 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,8 +61,13 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.fillMaxSize
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 
@@ -100,7 +108,11 @@ fun PredictiveBottomSheet(
         // --- LAYOUT CONSTANTS ---
         // Peek height must be enough to show the input row (~160dp)
         // Drag Handle (30) + Title/Exercise/Add (60) + Inputs (70)
-        val peekHeight = 210.dp
+        val buttonHeight = 40.dp
+        
+        // Peek height = DragHandle + TopPadding + ButtonRow1 + Spacing + ButtonRow2 + BottomPadding
+        // Drag Handle area is approx 32dp, plus we have 24dp vertical padding around the columns
+        val peekHeight = buttonHeight * 2  + 70.dp + 15.dp
 
         val peekHeightPx = with(density) { peekHeight.toPx() }
         val screenHeightPx = constraints.maxHeight.toFloat()
@@ -217,6 +229,7 @@ fun PredictiveBottomSheet(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
 
+
                     // Row: Exercise Selector + Add Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -227,7 +240,7 @@ fun PredictiveBottomSheet(
                             onClick = { showExerciseSelection = true },
                             modifier = Modifier
                                 .weight(2f)
-                                .height(56.dp),
+                                .height(buttonHeight),
                             shape = RoundedCornerShape(24.dp)
                         ) {
                             Row(
@@ -278,7 +291,7 @@ fun PredictiveBottomSheet(
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(56.dp),
+                                .height(buttonHeight),
                             shape = RoundedCornerShape(24.dp)
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
@@ -298,7 +311,9 @@ fun PredictiveBottomSheet(
                             value = setsValue,
                             placeholder = "3",
                             onValueChange = { setsValue = it },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(buttonHeight)
                         )
 
                         // Button 3: Reps
@@ -307,7 +322,9 @@ fun PredictiveBottomSheet(
                             value = repsValue,
                             placeholder = "10",
                             onValueChange = { repsValue = it },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(buttonHeight)
                         )
 
                         // Button 4: Weight
@@ -316,7 +333,9 @@ fun PredictiveBottomSheet(
                             value = weightValue,
                             placeholder = "20",
                             onValueChange = { weightValue = it },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(buttonHeight)
                         )
                     }
 
@@ -362,22 +381,60 @@ private fun InputButton(
     // But conceptually these are inputs.
     // For now, making them look like visual containers.
 
-    Column(modifier = modifier) {
-        TextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-            placeholder = { Text(placeholder) },
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-    }
+    // Custom Expressive Input Button
+    // Uses BasicTextField to allow arbitrary sizing (e.g. 30dp) without M3 TextField constraints.
+    // Behaves like a button that turns into an input.
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    // Animate container color on focus
+    val containerColor by animateColorAsState(
+        targetValue = if (isFocused) 
+            MaterialTheme.colorScheme.secondaryContainer 
+        else 
+            MaterialTheme.colorScheme.surfaceContainer,
+        label = "InputBackground"
+    )
+    
+    val textColor = if (isFocused) 
+        MaterialTheme.colorScheme.onSecondaryContainer 
+    else 
+        MaterialTheme.colorScheme.onSurface
+
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        interactionSource = interactionSource,
+        textStyle = MaterialTheme.typography.labelLarge.copy(
+            color = textColor,
+            textAlign = TextAlign.Center
+        ),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        cursorBrush = SolidColor(textColor),
+        decorationBox = { innerTextField ->
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(containerColor, RoundedCornerShape(24.dp))
+            ) {
+                if (value.isEmpty()) {
+                    // Show Label as placeholder when empty for a clean "Button" look
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                innerTextField()
+            }
+        }
+    )
 }
 
 @Composable
