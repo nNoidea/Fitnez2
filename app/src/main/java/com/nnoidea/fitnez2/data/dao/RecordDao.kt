@@ -51,7 +51,7 @@ abstract class RecordDao {
         WHERE record.exerciseId = :exerciseId 
         ORDER BY record.date DESC, record.id DESC
     """)
-    abstract suspend fun getSortedOne(exerciseId: Int): List<RecordWithExercise>
+    abstract fun getRecordsByExerciseId(exerciseId: Int): Flow<List<RecordWithExercise>>
 
     @Query("""
         SELECT record.*, exercise.name as exerciseName 
@@ -59,7 +59,7 @@ abstract class RecordDao {
         JOIN exercise ON record.exerciseId = exercise.id 
         ORDER BY record.date DESC, record.id DESC
     """)
-    abstract fun getSortedAll(): Flow<List<RecordWithExercise>>
+    abstract fun getAllRecordsFlow(): Flow<List<RecordWithExercise>>
 
     @Query("""
         SELECT record.*, exercise.name as exerciseName 
@@ -71,7 +71,7 @@ abstract class RecordDao {
     abstract suspend fun getLatestRecord(): RecordWithExercise?
 
     @Query("SELECT * FROM record WHERE id = :recordId")
-    abstract suspend fun getById(recordId: Int): Record?
+    abstract suspend fun getRecordById(recordId: Int): Record?
 
     // --- UPDATE ---
 

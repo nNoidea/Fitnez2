@@ -70,7 +70,7 @@ fun ExerciseHistoryList(
     val database = remember { AppDatabase.getDatabase(context, scope) }
     val dao = database.recordDao()
 
-    val history by dao.getSortedAll().collectAsState(initial = emptyList())
+    val history by dao.getAllRecordsFlow().collectAsState(initial = emptyList())
     val settingsRepository = remember { SettingsRepository(context) }
     val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
 
@@ -108,7 +108,7 @@ fun ExerciseHistoryList(
             onDeleteRequest = { record ->
                 scope.launch {
                     // 1. Fetch latest state for Undo (SSOT)
-                    val freshRecord = dao.getById(record.id) ?: record
+                    val freshRecord = dao.getRecordById(record.id) ?: record
 
                     // 2. Delete
                     dao.delete(record.id)

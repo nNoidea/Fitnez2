@@ -19,11 +19,11 @@ class RecordRepository(private val recordDao: RecordDao) {
         recordDao.delete(recordId)
     }
 
-    suspend fun getHistoryForExercise(exerciseId: Int): List<RecordWithExercise> {
-        return recordDao.getSortedOne(exerciseId)
+    fun getHistoryForExercise(exerciseId: Int): Flow<List<RecordWithExercise>> {
+        return recordDao.getRecordsByExerciseId(exerciseId)
     }
 
     fun getAllHistory(): Flow<List<RecordWithExercise>> {
-        return recordDao.getSortedAll()
+        return recordDao.getAllRecordsFlow()
     }
 }
