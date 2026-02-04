@@ -14,11 +14,14 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -132,10 +135,14 @@ fun PredictiveBottomSheet(
 
         val peekHeightPx = with(density) { peekHeight.toPx() }
         val screenHeightPx = constraints.maxHeight.toFloat()
+        
+        // Respect status bar insets
+        val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val topPaddingPx = with(density) { topPadding.toPx() }
 
-        // Use full screen height for expanded state
-        val expandedHeightPx = screenHeightPx
-        val expandedHeight = with(density) { screenHeightPx.toDp() }
+        // Use full screen height minus status bar for expanded state
+        val expandedHeightPx = screenHeightPx - topPaddingPx
+        val expandedHeight = with(density) { expandedHeightPx.toDp() }
 
         // 0 = Expanded, maxOffset = Collapsed
         val maxOffset = expandedHeightPx - peekHeightPx

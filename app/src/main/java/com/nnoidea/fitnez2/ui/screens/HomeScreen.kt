@@ -50,7 +50,7 @@ fun HomeScreen(onOpenDrawer: () -> Unit) {
                 .align(Alignment.BottomCenter)
                 // Intelligently position based on bottom sheet state
                 // Add a little padding (16.dp) when above sheet so it doesn't touch exactly
-                .padding(bottom = snackbarBottomPadding + 16.dp)
+                .padding(bottom = snackbarBottomPadding)
         )
     }
 }
