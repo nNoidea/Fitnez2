@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,6 +37,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -43,6 +46,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -380,6 +386,7 @@ fun PredictiveBottomSheet(
         PredictiveExerciseSelectionDialog(
             show = showExerciseSelection,
             exercises = dbExercises,
+            exerciseDao = exerciseDao,
             onDismissRequest = { showExerciseSelection = false },
             onExerciseSelected = { exercise ->
                 selectedExercise = exercise.name
@@ -458,10 +465,17 @@ private fun InputButton(
 private fun PredictiveExerciseSelectionDialog(
     show: Boolean,
     exercises: List<Exercise>,
+    exerciseDao: com.nnoidea.fitnez2.data.dao.ExerciseDao,
     onDismissRequest: () -> Unit,
     onExerciseSelected: (Exercise) -> Unit
 ) {
     val globalLocalization = com.nnoidea.fitnez2.core.localization.globalLocalization
+
+    val scope = rememberCoroutineScope()
+    
+    var exerciseToDelete by remember { mutableStateOf<Exercise?>(null) }
+    var exerciseToEdit by remember { mutableStateOf<Exercise?>(null) }
+    var editName by remember { mutableStateOf("") }
 
     PredictiveDialog(
         show = show,
@@ -489,12 +503,37 @@ private fun PredictiveExerciseSelectionDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onExerciseSelected(exercise) }
-                            .padding(vertical = 12.dp, horizontal = 8.dp)
+                            .padding(vertical = 4.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = exercise.name,
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
                         )
+                        
+                        IconButton(
+                            onClick = { 
+                                exerciseToEdit = exercise
+                                editName = exercise.name
+                            },
+                        ) {
+                            Icon(
+                                Icons.Default.Edit, 
+                                contentDescription = globalLocalization.labelEdit(exercise.name),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            )
+                        }
+                        
+                        IconButton(
+                            onClick = { exerciseToDelete = exercise },
+                        ) {
+                            Icon(
+                                Icons.Default.Delete, 
+                                contentDescription = globalLocalization.labelDelete,
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                            )
+                        }
                     }
                 }
 
@@ -506,6 +545,105 @@ private fun PredictiveExerciseSelectionDialog(
                              modifier = Modifier.padding(16.dp)
                          )
                      }
+                }
+            }
+        }
+    }
+
+    // Delete Confirmation Dialog
+    PredictiveDialog(
+        show = exerciseToDelete != null,
+        onDismissRequest = { exerciseToDelete = null }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = globalLocalization.labelDelete,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            
+            Text(
+                text = globalLocalization.labelDeleteExerciseWarning,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { exerciseToDelete = null }) {
+                    Text(globalLocalization.labelCancel)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = {
+                        exerciseToDelete?.let { exercise ->
+                            scope.launch {
+                                exerciseDao.delete(exercise.id)
+                                exerciseToDelete = null
+                            }
+                        }
+                    },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(globalLocalization.labelDelete)
+                }
+            }
+        }
+    }
+
+    // Edit Dialog
+    PredictiveDialog(
+        show = exerciseToEdit != null,
+        onDismissRequest = { exerciseToEdit = null }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = globalLocalization.labelEditExercise,
+                style = MaterialTheme.typography.headlineSmall
+            )
+            
+            TextField(
+                value = editName,
+                onValueChange = { editName = it },
+                label = { Text(globalLocalization.labelExerciseName) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { exerciseToEdit = null }) {
+                    Text(globalLocalization.labelCancel)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = {
+                        exerciseToEdit?.let { exercise ->
+                            scope.launch {
+                                try {
+                                    exerciseDao.update(exercise.copy(name = editName))
+                                    exerciseToEdit = null
+                                } catch (e: Exception) {
+                                    // Error handling could be added here
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    Text(globalLocalization.labelSave)
                 }
             }
         }
