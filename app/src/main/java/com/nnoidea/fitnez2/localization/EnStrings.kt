@@ -73,6 +73,9 @@ sealed class EnStrings(
 
     open val labelRecordDeleted: String = "Record deleted"
     open val labelUndo: String = "Undo"
+
+    open val labelToday: String = "Today"
+    open val labelYesterday: String = "Yesterday"
 }
 
 /**

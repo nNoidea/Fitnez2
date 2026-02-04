@@ -63,4 +63,7 @@ object TrStrings : EnStrings(
 
     override val labelRecordDeleted: String = "Kayıt silindi"
     override val labelUndo: String = "Geri Al"
+
+    override val labelToday: String = "Bugün"
+    override val labelYesterday: String = "Dün"
 }

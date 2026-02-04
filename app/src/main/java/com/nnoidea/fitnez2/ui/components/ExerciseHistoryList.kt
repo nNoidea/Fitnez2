@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -55,6 +56,10 @@ import com.nnoidea.fitnez2.data.SettingsRepository
 import kotlinx.coroutines.launch
 
 import androidx.compose.material3.Surface
+
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 // -----------------------------------------------------------------------------
 // Public Smart Component
@@ -158,7 +163,11 @@ private fun ExerciseHistoryListContent(
         ) {
             groupedHistory.forEach { (dateString, records) ->
                 item {
-                    HistoryDateHeader(dateString)
+                    val date = records.firstOrNull()?.record?.date ?: 0L
+                    HistoryDateHeader(
+                        date = date,
+                        weightUnit = weightUnit
+                    )
                 }
                 items(records, key = { it.record.id }) { recordItem ->
                     SwipeToDeleteContainer(
@@ -180,25 +189,116 @@ private fun ExerciseHistoryListContent(
 }
 
 @Composable
-private fun HistoryDateHeader(dateString: String) {
-    // "Sticky" header needs a background to cover items scrolling under it
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+private fun HistoryGridRow(
+    modifier: Modifier = Modifier,
+    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
+    col1: @Composable BoxScope.() -> Unit,
+    col2: @Composable BoxScope.() -> Unit,
+    col3: @Composable BoxScope.() -> Unit,
+    col4: @Composable BoxScope.() -> Unit
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = verticalAlignment,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column {
-            Text(
-                text = dateString,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                ),
-                color = MaterialTheme.colorScheme.primary
-            )
-            // Optional: Legend could go here if we wanted column headers like Fitnez 1
+        // Col 1: Date/Name (Flexible)
+        // If we want to change the width ratio simply change this weight!
+        Box(modifier = Modifier.weight(1.5f)) {
+            col1()
+        }
+
+        // Col 2: Sets (Fixed)
+        Box(modifier = Modifier.width(60.dp), contentAlignment = Alignment.Center) {
+            col2()
+        }
+
+        // Col 3: Reps (Fixed)
+        Box(modifier = Modifier.width(60.dp), contentAlignment = Alignment.Center) {
+            col3()
+        }
+
+        // Col 4: Weight (Fixed)
+        Box(modifier = Modifier.width(70.dp), contentAlignment = Alignment.Center) {
+            col4()
         }
     }
+}
+
+@Composable
+private fun HistoryDateHeader(
+    date: Long,
+    weightUnit: String
+) {
+    val dateObj = remember(date) { Date(date) }
+    // User requested format: 4/2/2025 (d/M/yyyy)
+    val currentLocale = globalLocalization.appLocale
+    val isToday = remember(date) { android.text.format.DateUtils.isToday(date) }
+    val isYesterday = remember(date) {
+        android.text.format.DateUtils.isToday(date + android.text.format.DateUtils.DAY_IN_MILLIS)
+    }
+
+    val dateFormat = remember(currentLocale) { SimpleDateFormat("d/M/yyyy", currentLocale) }
+    val dayFormat = remember(currentLocale) { SimpleDateFormat("EEEE", currentLocale) }
+
+    val dateString = remember(dateObj, currentLocale) { 
+        dateFormat.format(dateObj) 
+    }
+    
+    val dayName = remember(dateObj, currentLocale, isToday, isYesterday) {
+        if (isToday) globalLocalization.labelToday
+        else if (isYesterday) globalLocalization.labelYesterday
+        else dayFormat.format(dateObj)
+    }
+
+    // Aligned with the content inside the cards
+    // Card Padding (16) + Card Internal Padding (16) = 32dp start offset
+    HistoryGridRow(
+        modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.Bottom,
+        col1 = {
+            Column {
+                // First: Numerical Date (smaller)
+                Text(
+                    text = dateString,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+                // Second: Day Name (bigger)
+                Text(
+                    text = dayName,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+        },
+        col2 = {
+            HeaderLabel(globalLocalization.labelSets)
+        },
+        col3 = {
+            HeaderLabel(globalLocalization.labelReps)
+        },
+        col4 = {
+            HeaderLabel(weightUnit)
+        }
+    )
+}
+
+@Composable
+private fun HeaderLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall.copy(
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable
@@ -217,58 +317,54 @@ private fun HistoryRecordCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        // Single Row for everything: Exercise Name | Sets | Reps | Weight
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+        HistoryGridRow(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // 1. Exercise Name (Weight 1f to take available space)
-            Text(
-                text = item.exerciseName,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier.weight(1.5f)
-            )
-
-            // 2. Sets Input
-            HistoryInput(
-                value = item.record.sets.toString(),
-                label = "Sets",
-                onUpdate = { newVal ->
-                    newVal.toIntOrNull()?.let { 
-                        onUpdate(item.record.copy(sets = it)) 
-                    }
-                },
-                modifier = Modifier.width(60.dp)
-            )
-
-            // 3. Reps Input
-            HistoryInput(
-                value = item.record.reps.toString(),
-                label = "Reps", // Fitnez 1 style label
-                onUpdate = { newVal ->
-                     newVal.toIntOrNull()?.let {
-                         onUpdate(item.record.copy(reps = it))
-                     }
-                },
-                modifier = Modifier.width(60.dp)
-            )
-
-            // 4. Weight Input
-            HistoryInput(
-                value = item.record.weight.toString().removeSuffix(".0"),
-                label = weightUnit,
-                onUpdate = { newVal ->
-                    newVal.toDoubleOrNull()?.let {
-                        onUpdate(item.record.copy(weight = it))
-                    }
-                },
-                modifier = Modifier.width(70.dp),
-                isDecimal = true
-            )
-        }
+            col1 = {
+                Text(
+                    text = item.exerciseName,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            col2 = {
+                HistoryInput(
+                    value = item.record.sets.toString(),
+                    label = globalLocalization.labelSets,
+                    onUpdate = { newVal ->
+                        newVal.toIntOrNull()?.let {
+                            onUpdate(item.record.copy(sets = it))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            col3 = {
+                HistoryInput(
+                    value = item.record.reps.toString(),
+                    label = globalLocalization.labelReps,
+                    onUpdate = { newVal ->
+                        newVal.toIntOrNull()?.let {
+                            onUpdate(item.record.copy(reps = it))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            col4 = {
+                HistoryInput(
+                    value = item.record.weight.toString().removeSuffix(".0"),
+                    label = weightUnit,
+                    onUpdate = { newVal ->
+                        newVal.toDoubleOrNull()?.let {
+                            onUpdate(item.record.copy(weight = it))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    isDecimal = true
+                )
+            }
+        )
     }
 }
 
