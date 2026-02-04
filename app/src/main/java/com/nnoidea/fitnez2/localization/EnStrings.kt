@@ -29,6 +29,7 @@ sealed class EnStrings(
     open fun errorExerciseNotFoundById(id: Int): String = "Exercise with ID $id does not exist."
 
     open val labelAddExercise: String = "Add Exercise"
+    open val labelCreateExercise: String = "Create an exercise"
     open val labelAdd: String = "Add"
     open val labelExerciseName: String = "Exercise Name"
     open val labelSave: String = "Save"

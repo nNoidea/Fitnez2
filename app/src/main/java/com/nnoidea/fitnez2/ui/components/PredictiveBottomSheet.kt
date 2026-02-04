@@ -475,7 +475,9 @@ private fun PredictiveExerciseSelectionDialog(
     
     var exerciseToDelete by remember { mutableStateOf<Exercise?>(null) }
     var exerciseToEdit by remember { mutableStateOf<Exercise?>(null) }
+    var showCreateDialog by remember { mutableStateOf(false) }
     var editName by remember { mutableStateOf("") }
+    var createName by remember { mutableStateOf("") }
 
     PredictiveDialog(
         show = show,
@@ -498,6 +500,37 @@ private fun PredictiveExerciseSelectionDialog(
             LazyColumn(
                 modifier = Modifier.heightIn(max = 300.dp)
             ) {
+                // ADDED: Create Button at the top
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { 
+                                createName = ""
+                                showCreateDialog = true 
+                            }
+                            .padding(vertical = 12.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Add, 
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(end = 12.dp)
+                        )
+                        Text(
+                            text = globalLocalization.labelCreateExercise,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+                    }
+                    androidx.compose.material3.HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+                }
+
                 items(sortedExercises) { exercise ->
                     Row(
                         modifier = Modifier
@@ -644,6 +677,60 @@ private fun PredictiveExerciseSelectionDialog(
                     }
                 ) {
                     Text(globalLocalization.labelSave)
+                }
+            }
+        }
+    }
+
+    // Create Dialog
+    PredictiveDialog(
+        show = showCreateDialog,
+        onDismissRequest = { showCreateDialog = false }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = globalLocalization.labelCreateExercise,
+                style = MaterialTheme.typography.headlineSmall
+            )
+            
+            TextField(
+                value = createName,
+                onValueChange = { createName = it },
+                label = { Text(globalLocalization.labelExerciseName) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = { Text("e.g. Bench Press") }
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { showCreateDialog = false }) {
+                    Text(globalLocalization.labelCancel)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = {
+                        if (createName.isNotBlank()) {
+                            scope.launch {
+                                try {
+                                    val newExercise = Exercise(name = createName)
+                                    exerciseDao.create(newExercise)
+                                    showCreateDialog = false
+                                } catch (e: Exception) {
+                                    // Handle existing name error if needed
+                                }
+                            }
+                        }
+                    },
+                    enabled = createName.isNotBlank()
+                ) {
+                    Text(globalLocalization.labelAdd)
                 }
             }
         }
