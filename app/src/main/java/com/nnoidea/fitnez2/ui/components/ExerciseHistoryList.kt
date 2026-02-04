@@ -162,16 +162,18 @@ private fun ExerciseHistoryListContent(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             groupedHistory.forEach { (dateString, records) ->
-                item {
+                item(key = "header_$dateString") {
                     val date = records.firstOrNull()?.record?.date ?: 0L
                     HistoryDateHeader(
                         date = date,
-                        weightUnit = weightUnit
+                        weightUnit = weightUnit,
+                        modifier = Modifier.animateItem()
                     )
                 }
                 items(records, key = { it.record.id }) { recordItem ->
                     SwipeToDeleteContainer(
-                        onDelete = { onDeleteRequest(recordItem.record) }
+                        onDelete = { onDeleteRequest(recordItem.record) },
+                        modifier = Modifier.animateItem()
                     ) {
                         HistoryRecordCard(
                             item = recordItem,
@@ -180,8 +182,8 @@ private fun ExerciseHistoryListContent(
                         )
                     }
                 }
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
+                item(key = "spacer_$dateString") {
+                    Spacer(modifier = Modifier.height(16.dp).animateItem())
                 }
             }
         }
@@ -228,7 +230,8 @@ private fun HistoryGridRow(
 @Composable
 private fun HistoryDateHeader(
     date: Long,
-    weightUnit: String
+    weightUnit: String,
+    modifier: Modifier = Modifier
 ) {
     val dateObj = remember(date) { Date(date) }
     // User requested format: 4/2/2025 (d/M/yyyy)
@@ -254,7 +257,7 @@ private fun HistoryDateHeader(
     // Aligned with the content inside the cards
     // Card Padding (16) + Card Internal Padding (16) = 32dp start offset
     HistoryGridRow(
-        modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp),
+        modifier = modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp),
         verticalAlignment = Alignment.Bottom,
         col1 = {
             Column {
