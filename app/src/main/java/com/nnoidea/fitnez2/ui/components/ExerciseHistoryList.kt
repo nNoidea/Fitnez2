@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -79,7 +80,8 @@ private const val HistoryInputBackgroundAlpha = 0.1f
 
 @Composable
 fun ExerciseHistoryList(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    extraBottomPadding: Dp = 0.dp
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -124,6 +126,7 @@ fun ExerciseHistoryList(
             modifier = Modifier.fillMaxSize(),
             groupedHistory = groupedHistory,
             weightUnit = weightUnit,
+            extraBottomPadding = extraBottomPadding,
             onUpdateRequest = { updatedRecord ->
                 scope.launch {
                      try {
@@ -169,6 +172,7 @@ private fun ExerciseHistoryListContent(
 
     groupedHistory: Map<String, List<Pair<RecordWithExercise, Boolean>>>,
     weightUnit: String,
+    extraBottomPadding: Dp,
     onUpdateRequest: (Record) -> Unit,
     onDeleteRequest: (Record) -> Unit
 ) {
@@ -183,7 +187,7 @@ private fun ExerciseHistoryListContent(
     } else {
         LazyColumn(
             modifier = modifier,
-            contentPadding = PaddingValues(bottom = 80.dp)
+            contentPadding = PaddingValues(bottom = 80.dp + extraBottomPadding)
         ) {
             groupedHistory.forEach { (dateString, records) ->
                 item(key = "header_$dateString") {

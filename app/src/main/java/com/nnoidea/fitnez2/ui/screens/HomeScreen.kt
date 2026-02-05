@@ -20,6 +20,7 @@ import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.components.ExerciseHistoryList
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
 import com.nnoidea.fitnez2.ui.components.PredictiveBottomSheet
+import com.nnoidea.fitnez2.ui.components.PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP
 import com.nnoidea.fitnez2.ui.components.TopHeader
 
 @Composable
@@ -36,7 +37,8 @@ fun HomeScreen(onOpenDrawer: () -> Unit) {
             }
 
             ExerciseHistoryList(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp
             )
         }
         
