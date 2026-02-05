@@ -127,6 +127,9 @@ fun PredictiveBottomSheet(
         
         val dbExercises by exerciseDao.getAllExercisesFlow().collectAsState(initial = emptyList())
         val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
+        val defaultSets by settingsRepository.defaultSetsFlow.collectAsState(initial = "3")
+        val defaultReps by settingsRepository.defaultRepsFlow.collectAsState(initial = "10")
+        val defaultWeight by settingsRepository.defaultWeightFlow.collectAsState(initial = "20")
 
         // Form state
         var selectedExerciseId by remember { mutableStateOf<Int?>(null) }
@@ -137,28 +140,52 @@ fun PredictiveBottomSheet(
 
 
 
-        // Prefill with latest record
-        LaunchedEffect(Unit) {
+
+        // Helper Functions for Categorized Logic
+        suspend fun loadInputsForExercise(exerciseId: Int) {
+            val latestForExercise = recordDao.getLatestRecordByExerciseId(exerciseId)
+            if (latestForExercise != null) {
+                setsValue = latestForExercise.record.sets.toString()
+                repsValue = latestForExercise.record.reps.toString()
+                weightValue = latestForExercise.record.weight.toString().removeSuffix(".0")
+            } else {
+                // Use default values if no history for this exercise
+                setsValue = defaultSets
+                repsValue = defaultReps
+                weightValue = defaultWeight
+            }
+        }
+
+        suspend fun initializeSession() {
             val latest = recordDao.getLatestRecord()
             if (latest != null) {
                 selectedExercise = latest.exerciseName
                 selectedExerciseId = latest.record.exerciseId
-                setsValue = latest.record.sets.toString()
-                repsValue = latest.record.reps.toString()
-                // Remove trailing .0 for cleaner display
-                weightValue = latest.record.weight.toString().removeSuffix(".0")
             }
         }
 
-        // --- GHOST VALUES (Placeholder Fallbacks) ---
-        // These track the last valid inputs to use as fallbacks when fields are empty (e.g. during focus)
-        var setsGhost by remember { mutableStateOf("") }
-        var repsGhost by remember { mutableStateOf("") }
-        var weightGhost by remember { mutableStateOf("") }
+        // 1. App Start: Run startup function
+        LaunchedEffect(Unit) {
+            initializeSession()
+        }
 
-        LaunchedEffect(setsValue) { if (setsValue.isNotEmpty()) setsGhost = setsValue }
-        LaunchedEffect(repsValue) { if (repsValue.isNotEmpty()) repsGhost = repsValue }
-        LaunchedEffect(weightValue) { if (weightValue.isNotEmpty()) weightGhost = weightValue }
+        // 2. Exercise Selection: Set inputs
+        LaunchedEffect(selectedExerciseId) {
+            val id = selectedExerciseId
+            if (id != null) {
+                loadInputsForExercise(id)
+            }
+        }
+
+        // --- FALLBACK VALUES (Placeholder Fallbacks) ---
+        // These track the last valid inputs to use as fallbacks when fields are empty (e.g. during focus)
+        var setsFallback by remember { mutableStateOf("") }
+        var repsFallback by remember { mutableStateOf("") }
+        var weightFallback by remember { mutableStateOf("") }
+
+        LaunchedEffect(setsValue) { if (setsValue.isNotEmpty()) setsFallback = setsValue }
+        LaunchedEffect(repsValue) { if (repsValue.isNotEmpty()) repsFallback = repsValue }
+        LaunchedEffect(weightValue) { if (weightValue.isNotEmpty()) weightFallback = weightValue }
 
         // --- LAYOUT CONSTANTS ---
         // Peek height must be enough to show the input row (~160dp)
@@ -363,9 +390,9 @@ fun PredictiveBottomSheet(
                                 scope.launch {
                                     try {
                                         val exerciseId = selectedExerciseId
-                                        val sets = setsValue.ifEmpty { setsGhost }.toIntOrNull()
-                                        val reps = repsValue.ifEmpty { repsGhost }.toIntOrNull()
-                                        val weight = weightValue.ifEmpty { weightGhost }.toDoubleOrNull()
+                                        val sets = setsValue.ifEmpty { setsFallback }.toIntOrNull()
+                                        val reps = repsValue.ifEmpty { repsFallback }.toIntOrNull()
+                                        val weight = weightValue.ifEmpty { weightFallback }.toDoubleOrNull()
 
                                         if (exerciseId != null && 
                                             sets != null && sets > 0 && 

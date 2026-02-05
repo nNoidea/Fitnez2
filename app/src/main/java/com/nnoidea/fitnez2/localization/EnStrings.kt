@@ -80,6 +80,10 @@ sealed class EnStrings(
     open val labelDeleteExerciseWarning: String = "This action will delete all records and cannot be undone"
     
     open val labelExerciseNamePlaceholder: String = "e.g. Bench Press"
+    
+    open val labelDefaultSets: String = "Default Sets"
+    open val labelDefaultReps: String = "Default Reps"
+    open val labelDefaultWeight: String = "Default Weight"
 
 }
 

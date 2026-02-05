@@ -41,4 +41,29 @@ class SettingsRepository(private val context: Context) {
             }
         }
     }
+
+    private val DEFAULT_SETS_KEY = stringPreferencesKey("default_sets")
+    private val DEFAULT_REPS_KEY = stringPreferencesKey("default_reps")
+    private val DEFAULT_WEIGHT_KEY = stringPreferencesKey("default_weight")
+
+    val defaultSetsFlow: Flow<String> = context.dataStore.data
+        .map { preferences -> preferences[DEFAULT_SETS_KEY] ?: "3" }
+
+    val defaultRepsFlow: Flow<String> = context.dataStore.data
+        .map { preferences -> preferences[DEFAULT_REPS_KEY] ?: "10" }
+
+    val defaultWeightFlow: Flow<String> = context.dataStore.data
+        .map { preferences -> preferences[DEFAULT_WEIGHT_KEY] ?: "20" }
+
+    suspend fun setDefaultSets(value: String) {
+        context.dataStore.edit { it[DEFAULT_SETS_KEY] = value }
+    }
+
+    suspend fun setDefaultReps(value: String) {
+        context.dataStore.edit { it[DEFAULT_REPS_KEY] = value }
+    }
+
+    suspend fun setDefaultWeight(value: String) {
+        context.dataStore.edit { it[DEFAULT_WEIGHT_KEY] = value }
+    }
 }

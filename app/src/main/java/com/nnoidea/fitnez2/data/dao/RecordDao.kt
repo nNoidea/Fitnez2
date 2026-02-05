@@ -60,6 +60,9 @@ abstract class RecordDao {
         ORDER BY record.date DESC, record.id DESC
     """)
     abstract fun getAllRecordsFlow(): Flow<List<RecordWithExercise>>
+    
+    @Query("SELECT * FROM record WHERE id = :recordId")
+    abstract suspend fun getRecordById(recordId: Int): Record?
 
     @Query("""
         SELECT record.*, exercise.name as exerciseName 
@@ -70,8 +73,16 @@ abstract class RecordDao {
     """)
     abstract suspend fun getLatestRecord(): RecordWithExercise?
 
-    @Query("SELECT * FROM record WHERE id = :recordId")
-    abstract suspend fun getRecordById(recordId: Int): Record?
+
+    @Query("""
+        SELECT record.*, exercise.name as exerciseName 
+        FROM record 
+        JOIN exercise ON record.exerciseId = exercise.id 
+        WHERE record.exerciseId = :exerciseId 
+        ORDER BY record.date DESC, record.id DESC
+        LIMIT 1
+    """)
+    abstract suspend fun getLatestRecordByExerciseId(exerciseId: Int): RecordWithExercise?
 
     // --- UPDATE ---
 

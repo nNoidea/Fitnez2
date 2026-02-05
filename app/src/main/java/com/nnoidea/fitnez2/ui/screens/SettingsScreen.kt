@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -36,14 +37,27 @@ import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
 import com.nnoidea.fitnez2.ui.components.TopHeader
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(onOpenDrawer: () -> Unit) {
     val globalState = LocalGlobalUiState.current
     val supportedLanguages = LocalizationManager.supportedLanguages
+    
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val settingsRepository = remember { com.nnoidea.fitnez2.data.SettingsRepository(context) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+    val defaultSets by settingsRepository.defaultSetsFlow.collectAsState(initial = "3")
+    val defaultReps by settingsRepository.defaultRepsFlow.collectAsState(initial = "10")
+    val defaultWeight by settingsRepository.defaultWeightFlow.collectAsState(initial = "20")
 
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showWeightUnitDialog by remember { mutableStateOf(false) }
+    
+    var showSetsDialog by remember { mutableStateOf(false) }
+    var showRepsDialog by remember { mutableStateOf(false) }
+    var showWeightDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -77,11 +91,39 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
 
             HorizontalDivider()
 
+            HorizontalDivider()
+            
             // Weight Unit Setting
             SettingsItem(
                 label = globalLocalization.labelWeightUnit,
                 value = globalState.weightUnit,
                 onClick = { showWeightUnitDialog = true }
+            )
+
+            HorizontalDivider()
+
+            // Default Values Section
+            Text(
+                text = "Defaults", 
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(16.dp),
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            SettingsItem(
+                label = globalLocalization.labelDefaultSets,
+                value = defaultSets,
+                onClick = { showSetsDialog = true }
+            )
+            SettingsItem(
+                label = globalLocalization.labelDefaultReps,
+                value = defaultReps,
+                onClick = { showRepsDialog = true }
+            )
+            SettingsItem(
+                label = globalLocalization.labelDefaultWeight,
+                value = defaultWeight,
+                onClick = { showWeightDialog = true }
             )
 
             HorizontalDivider()
@@ -117,6 +159,96 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         onDismissRequest = { showLanguageDialog = false },
         labelProvider = { it?.languageName ?: globalLocalization.labelSystemLanguage }
     )
+    
+    // Default Values Dialogs
+    SettingsInputDialog(
+        show = showSetsDialog,
+        title = globalLocalization.labelDefaultSets,
+        initialValue = defaultSets,
+        onDismissRequest = { showSetsDialog = false },
+        onConfirm = { 
+            scope.launch { 
+                settingsRepository.setDefaultSets(it) 
+                showSetsDialog = false
+            }
+        }
+    )
+
+    SettingsInputDialog(
+        show = showRepsDialog,
+        title = globalLocalization.labelDefaultReps,
+        initialValue = defaultReps,
+        onDismissRequest = { showRepsDialog = false },
+        onConfirm = { 
+            scope.launch { 
+                settingsRepository.setDefaultReps(it) 
+                showRepsDialog = false
+            }
+        }
+    )
+
+    SettingsInputDialog(
+        show = showWeightDialog,
+        title = globalLocalization.labelDefaultWeight,
+        initialValue = defaultWeight,
+        onDismissRequest = { showWeightDialog = false },
+        onConfirm = { 
+            scope.launch { 
+                settingsRepository.setDefaultWeight(it) 
+                showWeightDialog = false
+            }
+        }
+    )
+}
+
+@Composable
+fun SettingsInputDialog(
+    show: Boolean,
+    title: String,
+    initialValue: String,
+    onDismissRequest: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    if (show) {
+        var text by remember { mutableStateOf(initialValue) }
+        
+        PredictiveModal(
+            show = show,
+            onDismissRequest = onDismissRequest
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                
+                androidx.compose.material3.OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismissRequest) {
+                        Text(globalLocalization.labelCancel)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(onClick = { onConfirm(text) }) {
+                        Text(globalLocalization.labelSave)
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
