@@ -1,6 +1,7 @@
 package com.nnoidea.fitnez2.ui.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
@@ -52,7 +53,9 @@ fun SwipeToDeleteContainer(
     // Thresholds
     // We'll calculate the threshold dynamically based on the layout width
     var itemWidth by remember { mutableStateOf(0f) }
-    val dismissThreshold = itemWidth * 0.4f
+    // User requested "increased travel" to prevent accidental deletes.
+    // 50% is a standard "safe" threshold for destructive actions (like Archive/Delete).
+    val dismissThreshold = itemWidth * 0.5f
 
     Box(
         modifier = modifier
@@ -161,7 +164,15 @@ fun SwipeToDeleteContainer(
                                 // Delete
                                 scope.launch {
                                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    offsetX.animateTo(-itemWidth)
+                                    // Animate away
+                                    // User requested 50% faster animation. Default is usually ~300-400ms.
+                                    // using tween(200) ensures a snappy exit.
+                                    offsetX.animateTo(
+                                        targetValue = -itemWidth,
+                                        animationSpec = tween(durationMillis = 50)
+                                    )
+                                    
+                                    // Trigger callback
                                     onDelete()
                                     offsetX.snapTo(0f)
                                 }
