@@ -101,7 +101,8 @@ import androidx.compose.runtime.collectAsState
 import com.nnoidea.fitnez2.ui.components.ExerciseHistoryList
 import com.nnoidea.fitnez2.data.SettingsRepository
 
-const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 165 // Approximately 40*2 + 70 + 15
+const val BUTTONHEIGHT = 45
+const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2*BUTTONHEIGHT + 70 + 15 // Approximately 40*2 + 70 + 15
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,7 +151,7 @@ fun PredictiveBottomSheet(
         // --- LAYOUT CONSTANTS ---
         // Peek height must be enough to show the input row (~160dp)
         // Drag Handle (30) + Title/Exercise/Add (60) + Inputs (70)
-        val buttonHeight = 40.dp
+        val buttonHeight = BUTTONHEIGHT.dp
         
         // Peek height = DragHandle + TopPadding + ButtonRow1 + Spacing + ButtonRow2 + BottomPadding
         // Drag Handle area is approx 32dp, plus we have 24dp vertical padding around the columns
