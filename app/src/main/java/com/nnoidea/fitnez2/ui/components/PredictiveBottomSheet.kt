@@ -508,7 +508,6 @@ private fun InputButton(
                 textAlign = TextAlign.Start
             ),
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             cursorBrush = SolidColor(contentColor),
             decorationBox = { innerTextField ->
                 Row(
