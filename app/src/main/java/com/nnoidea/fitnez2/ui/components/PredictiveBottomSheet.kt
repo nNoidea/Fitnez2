@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -496,11 +499,24 @@ private fun PredictiveExerciseSelectionDialog(
                 exercises.sortedBy { it.name.lowercase() }
             }
 
-            LazyColumn(
-                modifier = Modifier.heightIn(max = 300.dp)
-            ) {
-                // ADDED: Create Button at the top
-                item {
+            // Custom Scrollbar Logic
+            val scrollState = rememberScrollState()
+            val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+            val screenHeight = configuration.screenHeightDp.dp
+            var columnHeightPx by remember { mutableFloatStateOf(0f) }
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = screenHeight * 0.6f)
+                        .padding(end = 4.dp) // Space for scrollbar
+                        .onGloballyPositioned { coordinates ->
+                             columnHeightPx = coordinates.size.height.toFloat()
+                        }
+                        .verticalScroll(scrollState)
+                ) {
+
+                    // ADDED: Create Button at the top
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -527,54 +543,99 @@ private fun PredictiveExerciseSelectionDialog(
                         modifier = Modifier.padding(vertical = 4.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
-                }
 
-                items(sortedExercises) { exercise ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onExerciseSelected(exercise) }
-                            .padding(vertical = 4.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = exercise.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f)
-                        )
-                        
-                        IconButton(
-                            onClick = { 
-                                exerciseToEdit = exercise
-                            },
+                    sortedExercises.forEach { exercise ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onExerciseSelected(exercise) }
+                                .padding(vertical = 4.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Icons.Default.Edit, 
-                                contentDescription = globalLocalization.labelEdit(exercise.name),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            Text(
+                                text = exercise.name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f)
                             )
-                        }
-                        
-                        IconButton(
-                            onClick = { exerciseToDelete = exercise },
-                        ) {
-                            Icon(
-                                Icons.Default.Delete, 
-                                contentDescription = globalLocalization.labelDelete,
-                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                            )
+                            
+                            IconButton(
+                                onClick = { 
+                                    exerciseToEdit = exercise
+                                },
+                            ) {
+                                Icon(
+                                    Icons.Default.Edit, 
+                                    contentDescription = globalLocalization.labelEdit(exercise.name),
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                                )
+                            }
+                            
+                            IconButton(
+                                onClick = { exerciseToDelete = exercise },
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete, 
+                                    contentDescription = globalLocalization.labelDelete,
+                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                                )
+                            }
                         }
                     }
-                }
-
-                if (sortedExercises.isEmpty()) {
-                     item {
+    
+                    if (sortedExercises.isEmpty()) {
                          Text(
                              text = "No exercises found",
                              style = MaterialTheme.typography.bodyMedium,
                              modifier = Modifier.padding(16.dp)
                          )
-                     }
+                    }
+                }
+
+                // Vertical Scrollbar Overlay
+                // Show ONLY if reached max height (implied by content overflowing -> maxValue > 0)
+                val scrollbarVisible = scrollState.maxValue > 0
+
+                if (scrollbarVisible && columnHeightPx > 0f) {
+                    val scrollbarHeight by remember(scrollState.maxValue, columnHeightPx) {
+                        derivedStateOf {
+                            val viewportHeight = columnHeightPx
+                            val contentHeight = viewportHeight + scrollState.maxValue
+                            // Ratio: Viewport / Content
+                            (viewportHeight * (viewportHeight / contentHeight)).coerceAtLeast(40f) 
+                        }
+                    }
+
+                    val scrollbarOffset by remember(scrollState.value, scrollState.maxValue, columnHeightPx, scrollbarHeight) {
+                        derivedStateOf {
+                            val maxScroll = scrollState.maxValue.toFloat()
+                            if (maxScroll == 0f) return@derivedStateOf 0f
+                            
+                            val availableTrack = columnHeightPx - scrollbarHeight
+                            val scrollProgress = scrollState.value.toFloat() / maxScroll
+                            
+                            availableTrack * scrollProgress
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .width(4.dp)
+                            // Track height = Viewport height
+                            .height(with(LocalDensity.current) { columnHeightPx.toDp() }) 
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh) // Track color
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(4.dp)
+                                .height(with(LocalDensity.current) { scrollbarHeight.toDp() })
+                                .offset(y = with(LocalDensity.current) { scrollbarOffset.toDp() })
+                                .background(
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    RoundedCornerShape(4.dp)
+                                )
+                        )
+                    }
                 }
             }
         }
