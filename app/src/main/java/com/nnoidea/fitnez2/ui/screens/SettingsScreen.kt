@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import com.nnoidea.fitnez2.ui.components.PredictiveModal
 import androidx.compose.foundation.rememberScrollState
@@ -33,6 +34,7 @@ import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
+import com.nnoidea.fitnez2.ui.components.TopHeader
 @Composable
 fun SettingsScreen(onOpenDrawer: () -> Unit) {
     val globalState = LocalGlobalUiState.current
@@ -42,21 +44,23 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     var showWeightUnitDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
             // Header with Hamburger
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
+            TopHeader {
                 HamburgerMenu(
-                    onClick = onOpenDrawer,
-                    modifier = Modifier.align(Alignment.CenterStart)
+                    onClick = onOpenDrawer
                 )
+                // HamburgerMenu has 16dp end padding built-in? No
+                // HamburgerMenu has: start=8, top=8, end=16, bottom=8.
+                // So we don't need a Spacer(16.dp) if we rely on that, but ProgramScreen ADDED a Spacer(16.dp).
+                // If HamburgerMenu has 16dp end padding, adding Spacer(16.dp) makes 32dp gap.
+                // Let's check ProgramScreen again.
+                // ProgramScreen: HamburgerMenu() -> Spacer(16.dp) -> Text.
+                // I should duplicate that structure for consistency.
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = globalLocalization.labelSettings,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.align(Alignment.Center)
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
 

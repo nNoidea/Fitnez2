@@ -19,7 +19,6 @@ fun HamburgerMenu(onClick: () -> Unit, modifier: Modifier = Modifier) {
     IconButton(
         onClick = onClick,
         modifier = modifier
-            .statusBarsPadding()
             .padding(start = 8.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
     ) { Icon(imageVector = Icons.Default.Menu, contentDescription = globalLocalization.labelOpenDrawer) }
 }

@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
+import com.nnoidea.fitnez2.ui.components.TopHeader
 
 @Composable
 fun ProgramScreen(onOpenDrawer: () -> Unit) {
@@ -17,12 +18,7 @@ fun ProgramScreen(onOpenDrawer: () -> Unit) {
             .fillMaxSize()
             .statusBarsPadding()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        TopHeader {
             HamburgerMenu(onClick = onOpenDrawer)
             Spacer(modifier = Modifier.width(16.dp))
             Text(
