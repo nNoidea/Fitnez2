@@ -31,6 +31,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import kotlinx.coroutines.launch
 
 /**
@@ -216,6 +217,7 @@ fun PredictiveInputDialog(
     cancelLabel: String = "Cancel",
     onConfirm: (String) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     var text by remember { androidx.compose.runtime.mutableStateOf(initialValue) }
 
     // Reset state when dialog opens
@@ -232,6 +234,7 @@ fun PredictiveInputDialog(
         confirmButton = {
             androidx.compose.material3.Button(
                 onClick = {
+                    keyboardController?.hide()
                     if (text.isNotBlank()) {
                         onConfirm(text)
                     }

@@ -77,6 +77,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.text.BasicTextField
 
 
@@ -112,6 +113,7 @@ fun PredictiveBottomSheet(
     val context = LocalContext.current
     val globalUiState = LocalGlobalUiState.current
     val isOverlayOpen = globalUiState.isOverlayOpen
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     BoxWithConstraints(modifier = modifier) {
         val density = LocalDensity.current
@@ -147,6 +149,16 @@ fun PredictiveBottomSheet(
                 weightValue = latest.record.weight.toString().removeSuffix(".0")
             }
         }
+
+        // --- GHOST VALUES (Placeholder Fallbacks) ---
+        // These track the last valid inputs to use as fallbacks when fields are empty (e.g. during focus)
+        var setsGhost by remember { mutableStateOf("") }
+        var repsGhost by remember { mutableStateOf("") }
+        var weightGhost by remember { mutableStateOf("") }
+
+        LaunchedEffect(setsValue) { if (setsValue.isNotEmpty()) setsGhost = setsValue }
+        LaunchedEffect(repsValue) { if (repsValue.isNotEmpty()) repsGhost = repsValue }
+        LaunchedEffect(weightValue) { if (weightValue.isNotEmpty()) weightGhost = weightValue }
 
         // --- LAYOUT CONSTANTS ---
         // Peek height must be enough to show the input row (~160dp)
@@ -345,17 +357,20 @@ fun PredictiveBottomSheet(
                             }
                         }
 
-                        // Button 5: Add Button
                         Button(
                             onClick = {
+                                keyboardController?.hide()
                                 scope.launch {
                                     try {
                                         val exerciseId = selectedExerciseId
-                                        val sets = setsValue.toIntOrNull()
-                                        val reps = repsValue.toIntOrNull()
-                                        val weight = weightValue.toDoubleOrNull()
+                                        val sets = setsValue.ifEmpty { setsGhost }.toIntOrNull()
+                                        val reps = repsValue.ifEmpty { repsGhost }.toIntOrNull()
+                                        val weight = weightValue.ifEmpty { weightGhost }.toDoubleOrNull()
 
-                                        if (exerciseId != null && sets != null && reps != null && weight != null) {
+                                        if (exerciseId != null && 
+                                            sets != null && sets > 0 && 
+                                            reps != null && reps > 0 && 
+                                            weight != null) {
                                             val record = Record(
                                                 exerciseId = exerciseId,
                                                 sets = sets,
@@ -424,7 +439,11 @@ fun PredictiveBottomSheet(
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(buttonHeight)
+                                .height(buttonHeight),
+                            keyboardType = KeyboardType.Decimal,
+                            validate = { text ->
+                                text.isEmpty() || text == "-" || text.toDoubleOrNull() != null
+                            }
                         )
                     }
 
@@ -468,12 +487,14 @@ private fun InputButton(
     onValueChange: (String) -> Unit,
     containerColor: Color,
     contentColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Number,
+    validate: (String) -> Boolean = { it.all { char -> char.isDigit() } }
 ) {
     com.nnoidea.fitnez2.ui.common.SmartInputLogic(
         value = value,
         onValueChange = onValueChange,
-        validate = { it.all { char -> char.isDigit() || char == '.' } } // Basic number validation
+        validate = validate 
     ) { displayValue, placeholder, interactionSource, onWrappedValueChange ->
         
         BasicTextField(
@@ -520,7 +541,8 @@ private fun InputButton(
                         innerTextField()
                     }
                 }
-            }
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
         )
     }
 }

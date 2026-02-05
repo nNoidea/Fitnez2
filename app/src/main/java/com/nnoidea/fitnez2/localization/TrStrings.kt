@@ -38,7 +38,7 @@ object TrStrings : EnStrings(
     override val labelSettings = "Ayarlar"
 
     override val labelSets = "Setler"
-    override val labelReps = "Tekrarlar"
+    override val labelReps = "Tekrar"
     override val labelWeight = "Ağırlık"
 
     override val labelBottomSheetTitle = "Özel Kaydırılabilir Sayfa"
