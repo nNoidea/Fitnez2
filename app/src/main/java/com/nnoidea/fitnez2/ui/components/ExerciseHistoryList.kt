@@ -62,6 +62,18 @@ import java.util.Date
 import java.util.Locale
 
 // -----------------------------------------------------------------------------
+// UI Style Constants - Change these to tweak the list's look
+// -----------------------------------------------------------------------------
+
+private val ColorHistoryNeutralContainer @Composable get() = MaterialTheme.colorScheme.surfaceContainer
+private val ColorHistoryNeutralContent @Composable get() = MaterialTheme.colorScheme.onSurface
+
+private val ColorHistoryColoredContainer @Composable get() = MaterialTheme.colorScheme.secondaryContainer
+private val ColorHistoryColoredContent @Composable get() = MaterialTheme.colorScheme.onSecondaryContainer
+
+private const val HistoryInputBackgroundAlpha = 0.1f
+
+// -----------------------------------------------------------------------------
 // Public Smart Component
 // -----------------------------------------------------------------------------
 
@@ -324,14 +336,17 @@ private fun HistoryRecordCard(
     weightUnit: String,
     onUpdate: (Record) -> Unit
 ) {
+    val containerColor = if (isLight) ColorHistoryNeutralContainer else ColorHistoryColoredContainer
+    val contentColor = if (isLight) ColorHistoryNeutralContent else ColorHistoryColoredContent
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
         shape = RoundedCornerShape(26.dp), // Expressive Extra Large Corner
         colors = CardDefaults.cardColors(
-            containerColor = if (isLight) MaterialTheme.colorScheme.surfaceContainer 
-                             else MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = containerColor,
+            contentColor = contentColor
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -341,7 +356,10 @@ private fun HistoryRecordCard(
             col1 = {
                 Text(
                     text = item.exerciseName,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Unspecified // Inherit from Card
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             },
@@ -354,7 +372,8 @@ private fun HistoryRecordCard(
                             onUpdate(item.record.copy(sets = it))
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    contentColor = contentColor
                 )
             },
             col3 = {
@@ -366,7 +385,8 @@ private fun HistoryRecordCard(
                             onUpdate(item.record.copy(reps = it))
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    contentColor = contentColor
                 )
             },
             col4 = {
@@ -379,7 +399,8 @@ private fun HistoryRecordCard(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    isDecimal = true
+                    isDecimal = true,
+                    contentColor = contentColor
                 )
             }
         )
@@ -392,7 +413,8 @@ private fun HistoryInput(
     label: String,
     onUpdate: (String) -> Unit,
     modifier: Modifier = Modifier,
-    isDecimal: Boolean = false
+    isDecimal: Boolean = false,
+    contentColor: Color
 ) {
     com.nnoidea.fitnez2.ui.common.SmartInputLogic(
         value = value,
@@ -415,12 +437,11 @@ private fun HistoryInput(
         // Here let's use a subtle outline or filled background differently.
         // Fitnez 1 uses: backgroundColor = MaterialTheme.colorScheme.errorContainer (etc) w/ RoundedCorner 20.dp
         
-        // Let's use SurfaceContainerHigh for a subtle input look
         Box(
             modifier = modifier
                 .height(44.dp)
                 .background(
-                    MaterialTheme.colorScheme.surfaceContainerHigh, 
+                    contentColor.copy(alpha = HistoryInputBackgroundAlpha), 
                     RoundedCornerShape(12.dp)
                 ),
             contentAlignment = Alignment.Center
@@ -435,20 +456,20 @@ private fun HistoryInput(
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = contentColor
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 decorationBox = { innerTextField ->
                      if (displayValue.isEmpty()) {
-                         Text(
+                          Text(
                             text = placeholder,
                              style = MaterialTheme.typography.bodyLarge.copy(
                                 textAlign = TextAlign.Center,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                color = contentColor.copy(alpha = 0.5f)
                             )
-                         )
+                          )
                      }
                      innerTextField()
                 }
