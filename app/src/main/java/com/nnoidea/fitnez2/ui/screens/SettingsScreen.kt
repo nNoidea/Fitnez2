@@ -45,7 +45,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showWeightUnitDialog by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
             // Header with Hamburger
             TopHeader {
