@@ -458,7 +458,8 @@ fun PredictiveBottomSheet(
                         .padding(top = 24.dp)
                 ) {
                     ExerciseHistoryList(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        selectedExerciseId = selectedExerciseId
                     )
 
 

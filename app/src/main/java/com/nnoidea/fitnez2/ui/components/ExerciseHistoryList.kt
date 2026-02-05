@@ -83,7 +83,8 @@ private const val HistoryInputBackgroundAlpha = 0.1f
 @Composable
 fun ExerciseHistoryList(
     modifier: Modifier = Modifier,
-    extraBottomPadding: Dp = 0.dp
+    extraBottomPadding: Dp = 0.dp,
+    selectedExerciseId: Int? = null
 ) {
 
 
@@ -93,7 +94,13 @@ fun ExerciseHistoryList(
     val database = remember { AppDatabase.getDatabase(context, scope) }
     val dao = database.recordDao()
 
-    val history by dao.getAllRecordsFlow().collectAsState(initial = emptyList())
+    val history by remember(selectedExerciseId) {
+        if (selectedExerciseId == null) {
+            dao.getAllRecordsFlow()
+        } else {
+            dao.getRecordsByExerciseId(selectedExerciseId)
+        }
+    }.collectAsState(initial = emptyList())
     val settingsRepository = remember { SettingsRepository(context) }
     val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
 
