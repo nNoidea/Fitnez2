@@ -82,8 +82,20 @@ fun ExerciseHistoryList(
     // Grouping Logic - derived state handles language changes gracefully
     val groupedHistory by remember(history) {
         derivedStateOf {
-            history.groupBy { record ->
-                globalLocalization.formatDate(record.record.date)
+            var isLight = true
+            var prevName: String? = null
+            
+            // Process from oldest to newest to ensure stability when new records are added at the top
+            val historyWithColor = history.asReversed().map { item ->
+                if (prevName != null && item.exerciseName != prevName) {
+                    isLight = !isLight
+                }
+                prevName = item.exerciseName
+                item to isLight
+            }.reversed()
+
+            historyWithColor.groupBy { (item, _) ->
+                globalLocalization.formatDate(item.record.date)
             }
         }
     }
@@ -143,7 +155,7 @@ fun ExerciseHistoryList(
 private fun ExerciseHistoryListContent(
     modifier: Modifier,
 
-    groupedHistory: Map<String, List<RecordWithExercise>>,
+    groupedHistory: Map<String, List<Pair<RecordWithExercise, Boolean>>>,
     weightUnit: String,
     onUpdateRequest: (Record) -> Unit,
     onDeleteRequest: (Record) -> Unit
@@ -163,20 +175,21 @@ private fun ExerciseHistoryListContent(
         ) {
             groupedHistory.forEach { (dateString, records) ->
                 item(key = "header_$dateString") {
-                    val date = records.firstOrNull()?.record?.date ?: 0L
+                    val date = records.firstOrNull()?.first?.record?.date ?: 0L
                     HistoryDateHeader(
                         date = date,
                         weightUnit = weightUnit,
                         modifier = Modifier.animateItem()
                     )
                 }
-                items(records, key = { it.record.id }) { recordItem ->
+                items(records, key = { it.first.record.id }) { (recordItem, isLight) ->
                     SwipeToDeleteContainer(
                         onDelete = { onDeleteRequest(recordItem.record) },
                         modifier = Modifier.animateItem()
                     ) {
                         HistoryRecordCard(
                             item = recordItem,
+                            isLight = isLight,
                             weightUnit = weightUnit,
                             onUpdate = onUpdateRequest
                         )
@@ -307,6 +320,7 @@ private fun HeaderLabel(text: String) {
 @Composable
 private fun HistoryRecordCard(
     item: RecordWithExercise,
+    isLight: Boolean,
     weightUnit: String,
     onUpdate: (Record) -> Unit
 ) {
@@ -316,7 +330,8 @@ private fun HistoryRecordCard(
             .padding(horizontal = 16.dp, vertical = 4.dp),
         shape = RoundedCornerShape(26.dp), // Expressive Extra Large Corner
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = if (isLight) MaterialTheme.colorScheme.surfaceContainer 
+                             else MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
