@@ -72,6 +72,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -82,6 +86,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.fillMaxSize
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
+import androidx.compose.ui.geometry.Offset
+
 
 import androidx.compose.ui.platform.LocalContext
 import com.nnoidea.fitnez2.data.AppDatabase
@@ -178,6 +184,56 @@ fun PredictiveBottomSheet(
              }
         }
 
+        // Unified Settle Logic
+        val settleSpring: suspend (Float) -> Unit = { velocity ->
+            val targetOffset = if (velocity > 1000f || (velocity >= 0 && offsetY.value > maxOffset / 2)) {
+                maxOffset // Collapse
+            } else {
+                minOffset // Expand
+            }
+            offsetY.animateTo(
+                targetValue = targetOffset,
+                animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)
+            )
+        }
+
+        val nestedScrollConnection = remember {
+            object : NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                    val delta = available.y
+                    // Dragging UP (delta < 0) and not yet fully expanded -> Consume
+                    if (delta < 0 && offsetY.value > minOffset + 1f) {
+                        draggableState.dispatchRawDelta(delta)
+                        return available
+                    }
+                    return Offset.Zero
+                }
+
+                override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                    val delta = available.y
+                    // Dragging DOWN (delta > 0)
+                    // Only allow if it's a direct user drag, NOT a fling
+                    if (delta > 0 && source == NestedScrollSource.Drag) {
+                        draggableState.dispatchRawDelta(delta)
+                        return available
+                    }
+                    return Offset.Zero
+                }
+
+                override suspend fun onPreFling(available: Velocity): Velocity {
+                    if (offsetY.value > minOffset + 1f && offsetY.value < maxOffset - 1f) {
+                        settleSpring(available.y)
+                        return available
+                    }
+                    return super.onPreFling(available)
+                }
+
+                override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                    return super.onPostFling(consumed, available)
+                }
+            }
+        }
+
         // Update GlobalUiState for Snackbar positioning
         // If expanded (open), offset is 0 (bottom of screen)
         // If collapsed (peek), offset is peekHeight (above the sheet)
@@ -228,21 +284,12 @@ fun PredictiveBottomSheet(
                     RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
                 )
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .nestedScroll(nestedScrollConnection)
                 .draggable(
                     state = draggableState,
                     orientation = Orientation.Vertical,
                     onDragStopped = { velocity ->
-                        val targetOffset = if (velocity > 1000f || (velocity >= 0 && offsetY.value > maxOffset / 2)) {
-                            maxOffset
-                        } else {
-                            minOffset
-                        }
-                        scope.launch {
-                            offsetY.animateTo(
-                                targetValue = targetOffset,
-                                animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)
-                            )
-                        }
+                        scope.launch { settleSpring(velocity) }
                     }
                 )
         ) {
