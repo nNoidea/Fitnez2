@@ -36,6 +36,21 @@ import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
 import com.nnoidea.fitnez2.ui.components.TopHeader
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.input.KeyboardType
+import android.view.HapticFeedbackConstants
+import com.nnoidea.fitnez2.core.localization.EnStrings
+import com.nnoidea.fitnez2.data.SettingsRepository
+import com.nnoidea.fitnez2.ui.components.PredictiveAlertDialog
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
@@ -44,9 +59,9 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     val globalState = LocalGlobalUiState.current
     val supportedLanguages = LocalizationManager.supportedLanguages
     
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val settingsRepository = remember { com.nnoidea.fitnez2.data.SettingsRepository(context) }
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val context = LocalContext.current
+    val settingsRepository = remember { SettingsRepository(context) }
+    val scope = rememberCoroutineScope()
 
     val defaultSets by settingsRepository.defaultSetsFlow.collectAsState(initial = "3")
     val defaultReps by settingsRepository.defaultRepsFlow.collectAsState(initial = "10")
@@ -55,9 +70,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showWeightUnitDialog by remember { mutableStateOf(false) }
     
-    var showSetsDialog by remember { mutableStateOf(false) }
-    var showRepsDialog by remember { mutableStateOf(false) }
-    var showWeightDialog by remember { mutableStateOf(false) }
+    var showDefaultsDialog by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -102,28 +115,10 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
 
             HorizontalDivider()
 
-            // Default Values Section
-            Text(
-                text = "Defaults", 
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp),
-                color = MaterialTheme.colorScheme.primary
-            )
-            
             SettingsItem(
-                label = globalLocalization.labelDefaultSets,
-                value = defaultSets,
-                onClick = { showSetsDialog = true }
-            )
-            SettingsItem(
-                label = globalLocalization.labelDefaultReps,
-                value = defaultReps,
-                onClick = { showRepsDialog = true }
-            )
-            SettingsItem(
-                label = globalLocalization.labelDefaultWeight,
-                value = defaultWeight,
-                onClick = { showWeightDialog = true }
+                label = globalLocalization.labelDefaultExerciseValues,
+                value = "$defaultSets x $defaultReps @ $defaultWeight", 
+                onClick = { showDefaultsDialog = true }
             )
 
             HorizontalDivider()
@@ -146,7 +141,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     )
 
     // Prepare language options with "System Default" (null) at the top
-    val languageOptions = listOf<com.nnoidea.fitnez2.core.localization.EnStrings?>(null) + supportedLanguages
+    val languageOptions = listOf<EnStrings?>(null) + supportedLanguages
     SelectionDialog(
         show = showLanguageDialog,
         title = globalLocalization.labelLanguage,
@@ -160,96 +155,75 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         labelProvider = { it?.languageName ?: globalLocalization.labelSystemLanguage }
     )
     
-    // Default Values Dialogs
-    SettingsInputDialog(
-        show = showSetsDialog,
-        title = globalLocalization.labelDefaultSets,
-        initialValue = defaultSets,
-        onDismissRequest = { showSetsDialog = false },
-        onConfirm = { 
-            scope.launch { 
-                settingsRepository.setDefaultSets(it) 
-                showSetsDialog = false
-            }
-        }
-    )
+    // Unified Default Values Dialog
+    if (showDefaultsDialog) {
+        var sets by remember { mutableStateOf(defaultSets) }
+        var reps by remember { mutableStateOf(defaultReps) }
+        var weight by remember { mutableStateOf(defaultWeight) }
 
-    SettingsInputDialog(
-        show = showRepsDialog,
-        title = globalLocalization.labelDefaultReps,
-        initialValue = defaultReps,
-        onDismissRequest = { showRepsDialog = false },
-        onConfirm = { 
-            scope.launch { 
-                settingsRepository.setDefaultReps(it) 
-                showRepsDialog = false
+        PredictiveAlertDialog(
+            show = showDefaultsDialog,
+            onDismissRequest = { showDefaultsDialog = false },
+            title = globalLocalization.labelDefaultExerciseValues,
+            confirmButton = {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            settingsRepository.setDefaultSets(sets)
+                            settingsRepository.setDefaultReps(reps)
+                            settingsRepository.setDefaultWeight(weight)
+                            showDefaultsDialog = false
+                        }
+                    }
+                ) {
+                    Text(globalLocalization.labelSave)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDefaultsDialog = false }) {
+                    Text(globalLocalization.labelCancel)
+                }
             }
-        }
-    )
-
-    SettingsInputDialog(
-        show = showWeightDialog,
-        title = globalLocalization.labelDefaultWeight,
-        initialValue = defaultWeight,
-        onDismissRequest = { showWeightDialog = false },
-        onConfirm = { 
-            scope.launch { 
-                settingsRepository.setDefaultWeight(it) 
-                showWeightDialog = false
-            }
-        }
-    )
-}
-
-@Composable
-fun SettingsInputDialog(
-    show: Boolean,
-    title: String,
-    initialValue: String,
-    onDismissRequest: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    if (show) {
-        var text by remember { mutableStateOf(initialValue) }
-        
-        PredictiveModal(
-            show = show,
-            onDismissRequest = onDismissRequest
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                
-                androidx.compose.material3.OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
+                // Sets
+                OutlinedTextField(
+                    value = sets,
+                    onValueChange = { sets = it },
+                    label = { Text(globalLocalization.labelDefaultSets) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
 
-                Row(
+                // Reps
+                OutlinedTextField(
+                    value = reps,
+                    onValueChange = { reps = it },
+                    label = { Text(globalLocalization.labelDefaultReps) },
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = onDismissRequest) {
-                        Text(globalLocalization.labelCancel)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TextButton(onClick = { onConfirm(text) }) {
-                        Text(globalLocalization.labelSave)
-                    }
-                }
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+
+                // Weight
+                OutlinedTextField(
+                    value = weight,
+                    onValueChange = { weight = it },
+                    label = { Text(globalLocalization.labelDefaultWeight) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
             }
         }
     }
 }
+
+
 
 @Composable
 fun SettingsItem(
@@ -344,24 +318,24 @@ fun RadioOption(
 
 @Composable
 fun HapticsTestSection() {
-    val view = androidx.compose.ui.platform.LocalView.current
+    val view = LocalView.current
     
     // Define the available haptic types (Name -> Constant/Action)
     val hapticTypes = remember {
         listOf(
-            "Clock Tick" to android.view.HapticFeedbackConstants.CLOCK_TICK,
-            "Context Click" to android.view.HapticFeedbackConstants.CONTEXT_CLICK,
-            "Keyboard Tap" to android.view.HapticFeedbackConstants.KEYBOARD_TAP,
-            "Long Press" to android.view.HapticFeedbackConstants.LONG_PRESS,
-            "Virtual Key" to android.view.HapticFeedbackConstants.VIRTUAL_KEY,
-            "Confirm" to android.view.HapticFeedbackConstants.CONFIRM,
-            "Reject" to android.view.HapticFeedbackConstants.REJECT,
-            "Gesture Start" to android.view.HapticFeedbackConstants.GESTURE_START,
-            "Gesture End" to android.view.HapticFeedbackConstants.GESTURE_END
+            "Clock Tick" to HapticFeedbackConstants.CLOCK_TICK,
+            "Context Click" to HapticFeedbackConstants.CONTEXT_CLICK,
+            "Keyboard Tap" to HapticFeedbackConstants.KEYBOARD_TAP,
+            "Long Press" to HapticFeedbackConstants.LONG_PRESS,
+            "Virtual Key" to HapticFeedbackConstants.VIRTUAL_KEY,
+            "Confirm" to HapticFeedbackConstants.CONFIRM,
+            "Reject" to HapticFeedbackConstants.REJECT,
+            "Gesture Start" to HapticFeedbackConstants.GESTURE_START,
+            "Gesture End" to HapticFeedbackConstants.GESTURE_END
         )
     }
 
-    var sliderPosition by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    var sliderPosition by remember { mutableFloatStateOf(0f) }
     
     // Logic to snap and trigger
     // We want the slider to feel "steps".
@@ -370,9 +344,9 @@ fun HapticsTestSection() {
     val currentType = hapticTypes[index]
 
     // Trigger haptic only when the discrete index changes
-    var lastIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    var lastIndex by remember { mutableIntStateOf(0) }
     
-    androidx.compose.runtime.LaunchedEffect(index) {
+    LaunchedEffect(index) {
         if (index != lastIndex) {
             view.performHapticFeedback(currentType.second)
             lastIndex = index
@@ -390,7 +364,7 @@ fun HapticsTestSection() {
             modifier = Modifier.padding(bottom = 8.dp)
         )
         
-        androidx.compose.material3.Slider(
+        Slider(
             value = sliderPosition,
             onValueChange = { 
                 sliderPosition = it

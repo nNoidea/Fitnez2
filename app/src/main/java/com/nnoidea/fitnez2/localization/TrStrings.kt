@@ -71,6 +71,8 @@ object TrStrings : EnStrings(
 
     override val labelExerciseNamePlaceholder: String = "örn. Bench Press"
 
+    override val labelDefaultExerciseValues: String = "Varsayılan Egzersiz Değerleri"
+
     override val labelDefaultSets: String = "Varsayılan Set"
     override val labelDefaultReps: String = "Varsayılan Tekrar"
     override val labelDefaultWeight: String = "Varsayılan Ağırlık"

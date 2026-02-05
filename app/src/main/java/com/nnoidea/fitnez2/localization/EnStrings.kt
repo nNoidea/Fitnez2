@@ -81,6 +81,8 @@ sealed class EnStrings(
     
     open val labelExerciseNamePlaceholder: String = "e.g. Bench Press"
     
+    open val labelDefaultExerciseValues: String = "Default Exercise Values"
+
     open val labelDefaultSets: String = "Default Sets"
     open val labelDefaultReps: String = "Default Reps"
     open val labelDefaultWeight: String = "Default Weight"
