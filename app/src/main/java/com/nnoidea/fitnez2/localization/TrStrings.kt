@@ -68,4 +68,7 @@ object TrStrings : EnStrings(
     override val labelToday: String = "Bugün"
     override val labelYesterday: String = "Dün"
     override val labelDeleteExerciseWarning = "Bu işlem tüm kayıtları silecek ve geri alınamaz"
+
+    override val labelExerciseNamePlaceholder: String = "örn. Bench Press"
+
 }

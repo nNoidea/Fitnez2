@@ -582,13 +582,7 @@ private fun PredictiveExerciseSelectionDialog(
                         }
                     }
     
-                    if (sortedExercises.isEmpty()) {
-                         Text(
-                             text = "No exercises found",
-                             style = MaterialTheme.typography.bodyMedium,
-                             modifier = Modifier.padding(16.dp)
-                         )
-                    }
+
                 }
 
                 // Vertical Scrollbar Overlay
@@ -691,7 +685,7 @@ private fun PredictiveExerciseSelectionDialog(
         label = globalLocalization.labelExerciseName,
         confirmLabel = globalLocalization.labelAdd,
         cancelLabel = globalLocalization.labelCancel,
-        placeholder = "e.g. Bench Press",
+        placeholder = globalLocalization.labelExerciseNamePlaceholder,
         onDismissRequest = { showCreateDialog = false },
         onConfirm = { newName ->
             scope.launch {

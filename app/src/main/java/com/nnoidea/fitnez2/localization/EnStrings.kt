@@ -78,6 +78,9 @@ sealed class EnStrings(
     open val labelToday: String = "Today"
     open val labelYesterday: String = "Yesterday"
     open val labelDeleteExerciseWarning: String = "This action will delete all records and cannot be undone"
+    
+    open val labelExerciseNamePlaceholder: String = "e.g. Bench Press"
+
 }
 
 /**
