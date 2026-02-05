@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import com.nnoidea.fitnez2.ui.components.PredictiveDialog
+import com.nnoidea.fitnez2.ui.components.PredictiveModal
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -142,7 +142,7 @@ fun <T> SelectionDialog(
     labelProvider: (T) -> String
 ) {
     if (show) {
-        PredictiveDialog(
+        PredictiveModal(
             show = show,
             onDismissRequest = onDismissRequest
         ) {

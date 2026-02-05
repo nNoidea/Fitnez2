@@ -476,10 +476,9 @@ private fun PredictiveExerciseSelectionDialog(
     var exerciseToDelete by remember { mutableStateOf<Exercise?>(null) }
     var exerciseToEdit by remember { mutableStateOf<Exercise?>(null) }
     var showCreateDialog by remember { mutableStateOf(false) }
-    var editName by remember { mutableStateOf("") }
-    var createName by remember { mutableStateOf("") }
 
-    PredictiveDialog(
+
+    PredictiveModal(
         show = show,
         onDismissRequest = onDismissRequest
     ) {
@@ -506,7 +505,6 @@ private fun PredictiveExerciseSelectionDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { 
-                                createName = ""
                                 showCreateDialog = true 
                             }
                             .padding(vertical = 12.dp, horizontal = 8.dp),
@@ -548,7 +546,6 @@ private fun PredictiveExerciseSelectionDialog(
                         IconButton(
                             onClick = { 
                                 exerciseToEdit = exercise
-                                editName = exercise.name
                             },
                         ) {
                             Icon(
@@ -584,155 +581,69 @@ private fun PredictiveExerciseSelectionDialog(
     }
 
     // Delete Confirmation Dialog
-    PredictiveDialog(
+    PredictiveConfirmationDialog(
         show = exerciseToDelete != null,
-        onDismissRequest = { exerciseToDelete = null }
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = globalLocalization.labelDelete,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.error
-            )
-            
-            Text(
-                text = globalLocalization.labelDeleteExerciseWarning,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = { exerciseToDelete = null }) {
-                    Text(globalLocalization.labelCancel)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        exerciseToDelete?.let { exercise ->
-                            scope.launch {
-                                exerciseDao.delete(exercise.id)
-                                exerciseToDelete = null
-                            }
-                        }
-                    },
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(globalLocalization.labelDelete)
+        onDismissRequest = { exerciseToDelete = null },
+        title = globalLocalization.labelDelete,
+        message = globalLocalization.labelDeleteExerciseWarning,
+        confirmLabel = globalLocalization.labelDelete,
+        cancelLabel = globalLocalization.labelCancel,
+        isDestructive = true,
+        onConfirm = {
+            exerciseToDelete?.let { exercise ->
+                scope.launch {
+                    exerciseDao.delete(exercise.id)
+                    exerciseToDelete = null
                 }
             }
         }
-    }
+    )
 
     // Edit Dialog
-    PredictiveDialog(
+    PredictiveInputDialog(
         show = exerciseToEdit != null,
-        onDismissRequest = { exerciseToEdit = null }
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = globalLocalization.labelEditExercise,
-                style = MaterialTheme.typography.headlineSmall
-            )
-            
-            TextField(
-                value = editName,
-                onValueChange = { editName = it },
-                label = { Text(globalLocalization.labelExerciseName) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = { exerciseToEdit = null }) {
-                    Text(globalLocalization.labelCancel)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        exerciseToEdit?.let { exercise ->
-                            scope.launch {
-                                try {
-                                    exerciseDao.update(exercise.copy(name = editName))
-                                    exerciseToEdit = null
-                                } catch (e: Exception) {
-                                    // Error handling could be added here
-                                }
-                            }
-                        }
+        title = globalLocalization.labelEditExercise,
+        initialValue = exerciseToEdit?.name ?: "",
+        label = globalLocalization.labelExerciseName,
+        confirmLabel = globalLocalization.labelSave,
+        cancelLabel = globalLocalization.labelCancel,
+        onDismissRequest = { exerciseToEdit = null },
+        onConfirm = { newName ->
+            exerciseToEdit?.let { exercise ->
+                scope.launch {
+                    try {
+                        exerciseDao.update(exercise.copy(name = newName))
+                        exerciseToEdit = null
+                    } catch (e: Exception) {
+                        // Error handling could be added here
                     }
-                ) {
-                    Text(globalLocalization.labelSave)
                 }
             }
         }
-    }
+    )
 
     // Create Dialog
-    PredictiveDialog(
+    PredictiveInputDialog(
         show = showCreateDialog,
-        onDismissRequest = { showCreateDialog = false }
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = globalLocalization.labelCreateExercise,
-                style = MaterialTheme.typography.headlineSmall
-            )
-            
-            TextField(
-                value = createName,
-                onValueChange = { createName = it },
-                label = { Text(globalLocalization.labelExerciseName) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                placeholder = { Text("e.g. Bench Press") }
-            )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = { showCreateDialog = false }) {
-                    Text(globalLocalization.labelCancel)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        if (createName.isNotBlank()) {
-                            scope.launch {
-                                try {
-                                    val newExercise = Exercise(name = createName)
-                                    exerciseDao.create(newExercise)
-                                    showCreateDialog = false
-                                } catch (e: Exception) {
-                                    // Handle existing name error if needed
-                                }
-                            }
-                        }
-                    },
-                    enabled = createName.isNotBlank()
-                ) {
-                    Text(globalLocalization.labelAdd)
+        title = globalLocalization.labelCreateExercise,
+        initialValue = "",
+        label = globalLocalization.labelExerciseName,
+        confirmLabel = globalLocalization.labelAdd,
+        cancelLabel = globalLocalization.labelCancel,
+        placeholder = "e.g. Bench Press",
+        onDismissRequest = { showCreateDialog = false },
+        onConfirm = { newName ->
+            scope.launch {
+                try {
+                    val newExercise = Exercise(name = newName)
+                    exerciseDao.create(newExercise)
+                    showCreateDialog = false
+                } catch (e: Exception) {
+                    // Handle existing name error if needed
                 }
             }
         }
-    }
+    )
 }
+
+
