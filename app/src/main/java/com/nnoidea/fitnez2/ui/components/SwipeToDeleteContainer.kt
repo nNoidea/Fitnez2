@@ -25,12 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
+import android.view.HapticFeedbackConstants
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -44,7 +44,7 @@ fun SwipeToDeleteContainer(
     enableSwipeRight: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
+    val view = LocalView.current
     val density = LocalDensity.current
     
     // Offset state
@@ -161,7 +161,7 @@ fun SwipeToDeleteContainer(
                                         // Haptic Feedback Logic
                                         if ((-proposed) >= dismissThreshold && !hasVibrated) {
                                             // Just crossed threshold
-                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            view.performHapticFeedback(HapticFeedbackConstants.REJECT)
                                             hasVibrated = true
                                         } else if ((-proposed) < dismissThreshold && hasVibrated) {
                                             // Crossed back
@@ -179,7 +179,7 @@ fun SwipeToDeleteContainer(
                             if ((-finalOffset) >= dismissThreshold) {
                                 // Delete
                                 scope.launch {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                     // Animate away
                                     // User requested 50% faster animation. Default is usually ~300-400ms.
                                     // using tween(200) ensures a snappy exit.
