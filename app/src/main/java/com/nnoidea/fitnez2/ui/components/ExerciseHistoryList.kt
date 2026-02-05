@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.width
@@ -83,6 +85,8 @@ fun ExerciseHistoryList(
     modifier: Modifier = Modifier,
     extraBottomPadding: Dp = 0.dp
 ) {
+
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // Ideally, pass DAO or VM, but keeping DB access here for drop-in compatibility
@@ -116,6 +120,18 @@ fun ExerciseHistoryList(
 
     // Content Display
     val globalUiState = LocalGlobalUiState.current
+    val listState = rememberLazyListState()
+
+    // Scroll to top when receiving the signal
+    LaunchedEffect(Unit) {
+        globalUiState.signalFlow.collect { signal ->
+            if (signal is com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop) {
+                listState.animateScrollToItem(0)
+            }
+        }
+    }
+
+
 
     Surface(
         modifier = modifier,
@@ -124,7 +140,9 @@ fun ExerciseHistoryList(
     ) {
         ExerciseHistoryListContent(
             modifier = Modifier.fillMaxSize(),
+            listState = listState,
             groupedHistory = groupedHistory,
+
             weightUnit = weightUnit,
             extraBottomPadding = extraBottomPadding,
             onUpdateRequest = { updatedRecord ->
@@ -169,13 +187,14 @@ fun ExerciseHistoryList(
 @Composable
 private fun ExerciseHistoryListContent(
     modifier: Modifier,
-
+    listState: androidx.compose.foundation.lazy.LazyListState,
     groupedHistory: Map<String, List<Pair<RecordWithExercise, Boolean>>>,
     weightUnit: String,
     extraBottomPadding: Dp,
     onUpdateRequest: (Record) -> Unit,
     onDeleteRequest: (Record) -> Unit
 ) {
+
     if (groupedHistory.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
@@ -187,8 +206,10 @@ private fun ExerciseHistoryListContent(
     } else {
         LazyColumn(
             modifier = modifier,
+            state = listState,
             contentPadding = PaddingValues(bottom = 80.dp + extraBottomPadding)
         ) {
+
             groupedHistory.forEach { (dateString, records) ->
                 item(key = "header_$dateString") {
                     val date = records.firstOrNull()?.first?.record?.date ?: 0L

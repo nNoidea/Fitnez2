@@ -16,9 +16,10 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import androidx.compose.runtime.LaunchedEffect
+
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -68,12 +69,13 @@ class GlobalUiState(
     }
 
     // Signals: One-off events (e.g. ScrollToTop)
-    private val _signalChannel = Channel<UiSignal>(Channel.BUFFERED)
-    val signalFlow = _signalChannel.receiveAsFlow()
+    private val _signalFlow = MutableSharedFlow<UiSignal>()
+    val signalFlow = _signalFlow.asSharedFlow()
 
     suspend fun emitSignal(signal: UiSignal) {
-        _signalChannel.send(signal)
+        _signalFlow.emit(signal)
     }
+
 
     // Snackbar State
     val snackbarHostState = SnackbarHostState()

@@ -78,6 +78,8 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.foundation.text.BasicTextField
+
+
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.animation.animateColorAsState
@@ -86,7 +88,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.fillMaxSize
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
+import com.nnoidea.fitnez2.ui.common.UiSignal
 import androidx.compose.ui.geometry.Offset
+
 
 
 import androidx.compose.ui.platform.LocalContext
@@ -127,6 +131,8 @@ fun PredictiveBottomSheet(
         var setsValue by remember { mutableStateOf("") }
         var repsValue by remember { mutableStateOf("") }
         var weightValue by remember { mutableStateOf("") }
+
+
 
         // Prefill with latest record
         LaunchedEffect(Unit) {
@@ -357,8 +363,11 @@ fun PredictiveBottomSheet(
                                                 date = System.currentTimeMillis()
                                             )
                                             recordDao.create(record)
+                                            globalUiState.emitSignal(UiSignal.ScrollToTop)
 
                                             // Form values are preserved for multiple entries
+
+
                                         }
                                     } catch (e: Exception) {
                                         // Handle error - could show toast or snackbar
@@ -431,6 +440,8 @@ fun PredictiveBottomSheet(
                     ExerciseHistoryList(
                         modifier = Modifier.fillMaxSize()
                     )
+
+
                 }
             }
         }
