@@ -31,6 +31,7 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -51,11 +52,15 @@ fun SwipeToDeleteContainer(
     val scope = rememberCoroutineScope()
     
     // Thresholds
-    // We'll calculate the threshold dynamically based on the layout width
+    // User requested using Screen Width instead of Item Width.
+    val configuration = LocalConfiguration.current
+    val screenWidthPx = with(LocalDensity.current) { configuration.screenWidthDp.dp.toPx() }
+    val dismissThreshold = screenWidthPx * 0.4f
+    
+    // We still track itemWidth for visual reveal progress if needed, or just remove if unused for logic.
+    // But existing code uses itemWidth for revealProgress and target animation (`-itemWidth`).
+    // So we keep itemWidth for visuals/animation targets, but use screenWidth for the *Decision* threshold.
     var itemWidth by remember { mutableStateOf(0f) }
-    // User requested "increased travel" to prevent accidental deletes.
-    // 50% is a standard "safe" threshold for destructive actions (like Archive/Delete).
-    val dismissThreshold = itemWidth * 0.5f
 
     Box(
         modifier = modifier
@@ -99,6 +104,7 @@ fun SwipeToDeleteContainer(
                         val down = awaitFirstDown(requireUnconsumed = false)
                         
                         var dragStarted = false
+                        var hasVibrated = false
                         
                         do {
                             val event = awaitPointerEvent()
@@ -151,6 +157,16 @@ fun SwipeToDeleteContainer(
                                         // Apply
                                         scope.launch { offsetX.snapTo(proposed) }
                                         change.consume()
+                                        
+                                        // Haptic Feedback Logic
+                                        if ((-proposed) >= dismissThreshold && !hasVibrated) {
+                                            // Just crossed threshold
+                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            hasVibrated = true
+                                        } else if ((-proposed) < dismissThreshold && hasVibrated) {
+                                            // Crossed back
+                                            hasVibrated = false
+                                        }
                                     }
                                 }
                             }
