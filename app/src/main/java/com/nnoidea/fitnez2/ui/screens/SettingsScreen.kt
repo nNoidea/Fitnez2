@@ -35,6 +35,8 @@ import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
 import com.nnoidea.fitnez2.ui.components.TopHeader
+import kotlin.math.roundToInt
+
 @Composable
 fun SettingsScreen(onOpenDrawer: () -> Unit) {
     val globalState = LocalGlobalUiState.current
@@ -81,6 +83,10 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 value = globalState.weightUnit,
                 onClick = { showWeightUnitDialog = true }
             )
+
+            HorizontalDivider()
+            
+            HapticsTestSection()
         }
     }
 
@@ -201,3 +207,74 @@ fun RadioOption(
         Text(text = text, style = MaterialTheme.typography.bodyLarge)
     }
 }
+
+// --- Haptics Test Section ---
+
+@Composable
+fun HapticsTestSection() {
+    val view = androidx.compose.ui.platform.LocalView.current
+    
+    // Define the available haptic types (Name -> Constant/Action)
+    val hapticTypes = remember {
+        listOf(
+            "Clock Tick" to android.view.HapticFeedbackConstants.CLOCK_TICK,
+            "Context Click" to android.view.HapticFeedbackConstants.CONTEXT_CLICK,
+            "Keyboard Tap" to android.view.HapticFeedbackConstants.KEYBOARD_TAP,
+            "Long Press" to android.view.HapticFeedbackConstants.LONG_PRESS,
+            "Virtual Key" to android.view.HapticFeedbackConstants.VIRTUAL_KEY,
+            "Confirm" to android.view.HapticFeedbackConstants.CONFIRM,
+            "Reject" to android.view.HapticFeedbackConstants.REJECT,
+            "Gesture Start" to android.view.HapticFeedbackConstants.GESTURE_START,
+            "Gesture End" to android.view.HapticFeedbackConstants.GESTURE_END
+        )
+    }
+
+    var sliderPosition by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    
+    // Logic to snap and trigger
+    // We want the slider to feel "steps".
+    // When value changes, we find the closest index.
+    val index = sliderPosition.roundToInt().coerceIn(0, hapticTypes.size - 1)
+    val currentType = hapticTypes[index]
+
+    // Trigger haptic only when the discrete index changes
+    var lastIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    
+    androidx.compose.runtime.LaunchedEffect(index) {
+        if (index != lastIndex) {
+            view.performHapticFeedback(currentType.second)
+            lastIndex = index
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Haptics Test: ${currentType.first}",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        androidx.compose.material3.Slider(
+            value = sliderPosition,
+            onValueChange = { 
+                sliderPosition = it
+                // We could also trigger continuous feedback here if we wanted "ticks" while dragging
+                // But triggering on step change (via LaunchedEffect) is safer for distinct feel.
+            },
+            valueRange = 0f..(hapticTypes.size - 1).toFloat(),
+            steps = hapticTypes.size - 2, // Steps are the ticks *between* min and max.
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Text(
+            text = "Move slider to feel different vibrations",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
