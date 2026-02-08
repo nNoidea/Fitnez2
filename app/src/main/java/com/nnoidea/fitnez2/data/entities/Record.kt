@@ -30,12 +30,5 @@ data class Record(
     val weight: Double,
     val date: Long
 ) {
-    init {
-        validate()
-    }
 
-    fun validate() {
-        require(sets >= 0) { globalLocalization.errorSetsInputInvalid }
-        require(reps >= 0) { globalLocalization.errorRepsInputInvalid }
-    }
 }

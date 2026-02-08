@@ -39,6 +39,18 @@ abstract class RecordDao {
         if (count == 0) {
             throw IllegalArgumentException(LocalizationManager.strings.errorExerciseNotFoundById(record.exerciseId))
         }
+
+        // Validation
+        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateSets(record.sets)) {
+            throw IllegalArgumentException("Invalid sets: ${record.sets}")
+        }
+        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateReps(record.reps)) {
+            throw IllegalArgumentException("Invalid reps: ${record.reps}")
+        }
+        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateWeight(record.weight)) {
+            throw IllegalArgumentException("Invalid weight: ${record.weight}")
+        }
+
         insertInternal(record)
     }
 
@@ -88,6 +100,16 @@ abstract class RecordDao {
 
     @Transaction
     open suspend fun update(record: Record) {
+        // Validation
+         if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateSets(record.sets)) {
+            throw IllegalArgumentException("Invalid sets: ${record.sets}")
+        }
+        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateReps(record.reps)) {
+            throw IllegalArgumentException("Invalid reps: ${record.reps}")
+        }
+        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateWeight(record.weight)) {
+            throw IllegalArgumentException("Invalid weight: ${record.weight}")
+        }
         updateInternal(record)
     }
 

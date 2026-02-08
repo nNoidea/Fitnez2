@@ -155,7 +155,6 @@ fun ExerciseHistoryList(
             onUpdateRequest = { updatedRecord ->
                 scope.launch {
                      try {
-                         updatedRecord.validate()
                          dao.update(updatedRecord)
                      } catch (e: Exception) {
                          // Ideally show snackbar error
@@ -400,7 +399,7 @@ private fun HistoryRecordCard(
                     value = item.record.sets.toString(),
                     label = globalLocalization.labelSets,
                     onUpdate = { newVal ->
-                        newVal.toIntOrNull()?.let {
+                        com.nnoidea.fitnez2.core.ValidateAndCorrect.sets(newVal)?.let {
                             onUpdate(item.record.copy(sets = it))
                         }
                     },
@@ -413,7 +412,7 @@ private fun HistoryRecordCard(
                     value = item.record.reps.toString(),
                     label = globalLocalization.labelReps,
                     onUpdate = { newVal ->
-                        newVal.toIntOrNull()?.let {
+                        com.nnoidea.fitnez2.core.ValidateAndCorrect.reps(newVal)?.let {
                             onUpdate(item.record.copy(reps = it))
                         }
                     },
@@ -426,7 +425,7 @@ private fun HistoryRecordCard(
                     value = item.record.weight.toString().removeSuffix(".0"),
                     label = weightUnit,
                     onUpdate = { newVal ->
-                        newVal.toDoubleOrNull()?.let {
+                        com.nnoidea.fitnez2.core.ValidateAndCorrect.weight(newVal)?.let {
                             onUpdate(item.record.copy(weight = it))
                         }
                     },

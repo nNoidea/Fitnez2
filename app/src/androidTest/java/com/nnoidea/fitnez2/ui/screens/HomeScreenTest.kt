@@ -4,6 +4,8 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.printToLog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.nnoidea.fitnez2.core.localization.EnglishStrings
 import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
@@ -33,6 +35,9 @@ class HomeScreenTest {
 
         // Use the testing robot to look for the hamburger menu by its content description
         // This confirms the screen is actually rendered and the top bar area is visible.
+        // Debugging: Print the semantics tree to see what's actually there
+        rule.onRoot().printToLog("HomeScreenTest")
+
         rule.onNodeWithContentDescription(EnglishStrings.labelOpenDrawer)
             .assertIsDisplayed()
     }

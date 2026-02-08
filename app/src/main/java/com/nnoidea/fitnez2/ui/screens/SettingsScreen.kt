@@ -169,10 +169,18 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 Button(
                     onClick = {
                         scope.launch {
-                            settingsRepository.setDefaultSets(sets)
-                            settingsRepository.setDefaultReps(reps)
-                            settingsRepository.setDefaultWeight(weight)
-                            showDefaultsDialog = false
+                            val validSets = com.nnoidea.fitnez2.core.ValidateAndCorrect.sets(sets)
+                            val validReps = com.nnoidea.fitnez2.core.ValidateAndCorrect.reps(reps)
+                            val validWeight = com.nnoidea.fitnez2.core.ValidateAndCorrect.weight(weight)
+
+                            if (validSets != null && validReps != null && validWeight != null) {
+                                settingsRepository.setDefaultSets(validSets.toString())
+                                settingsRepository.setDefaultReps(validReps.toString())
+                                settingsRepository.setDefaultWeight(validWeight.toString())
+                                showDefaultsDialog = false
+                            } else {
+                                // Ideally show error, for now just don't close
+                            }
                         }
                     }
                 ) {
