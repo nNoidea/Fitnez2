@@ -415,13 +415,13 @@ fun PredictiveBottomSheet(
                                         }
 
                                         val inputSets = setsValue.ifEmpty { setsFallback }
-                                        val sets = ValidateAndCorrect.sets(inputSets, globalUiState) ?: return@launch
+                                        val sets = ValidateAndCorrect.sets(inputSets) ?: return@launch
 
                                         val inputReps = repsValue.ifEmpty { repsFallback }
-                                        val reps = ValidateAndCorrect.reps(inputReps, globalUiState) ?: return@launch
+                                        val reps = ValidateAndCorrect.reps(inputReps) ?: return@launch
 
                                         val inputWeight = weightValue.ifEmpty { weightFallback }
-                                        val weight = ValidateAndCorrect.weight(inputWeight, globalUiState) ?: return@launch
+                                        val weight = ValidateAndCorrect.weight(inputWeight) ?: return@launch
 
                                         val record = Record(
                                             exerciseId = exerciseId,
@@ -459,44 +459,62 @@ fun PredictiveBottomSheet(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Button 2: Sets
-                        InputButton(
-                            label = globalLocalization.labelSets,
+                        com.nnoidea.fitnez2.ui.common.SetsInput(
                             value = setsValue,
-                            onValueChange = { setsValue = it },
-                            containerColor = MaterialTheme.colorScheme.tertiary,
-                            contentColor = MaterialTheme.colorScheme.onTertiary,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(buttonHeight)
-                        )
+                            onValidChange = { setsValue = it.toString() }
+                        ) { displayValue, placeholder, interactionSource, onValueChange ->
+                            BottomSheetInputStyle(
+                                label = globalLocalization.labelSets,
+                                displayValue = displayValue,
+                                placeholder = placeholder,
+                                interactionSource = interactionSource,
+                                onValueChange = onValueChange,
+                                containerColor = MaterialTheme.colorScheme.tertiary,
+                                contentColor = MaterialTheme.colorScheme.onTertiary,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(buttonHeight)
+                            )
+                        }
 
                         // Button 3: Reps
-                        InputButton(
-                            label = globalLocalization.labelReps,
+                        com.nnoidea.fitnez2.ui.common.RepsInput(
                             value = repsValue,
-                            onValueChange = { repsValue = it },
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(buttonHeight)
-                        )
+                            onValidChange = { repsValue = it.toString() }
+                        ) { displayValue, placeholder, interactionSource, onValueChange ->
+                            BottomSheetInputStyle(
+                                label = globalLocalization.labelReps,
+                                displayValue = displayValue,
+                                placeholder = placeholder,
+                                interactionSource = interactionSource,
+                                onValueChange = onValueChange,
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(buttonHeight)
+                            )
+                        }
 
                         // Button 4: Weight
-                        InputButton(
-                            label = weightUnit,
+                        com.nnoidea.fitnez2.ui.common.WeightInput(
                             value = weightValue,
-                            onValueChange = { weightValue = it },
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(buttonHeight),
-                            keyboardType = KeyboardType.Decimal,
-                            validate = { text ->
-                                text.isEmpty() || text == "-" || text.toDoubleOrNull() != null
-                            }
-                        )
+                            onValidChange = { weightValue = it.toString() }
+                        ) { displayValue, placeholder, interactionSource, onValueChange ->
+                            BottomSheetInputStyle(
+                                label = weightUnit,
+                                displayValue = displayValue,
+                                placeholder = placeholder,
+                                interactionSource = interactionSource,
+                                onValueChange = onValueChange,
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                isDecimal = true,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(buttonHeight)
+                            )
+                        }
                     }
 
 
@@ -534,71 +552,72 @@ fun PredictiveBottomSheet(
     }
 }
 
+/**
+ * Visual style for bottom sheet input fields.
+ * This is just the "skin" - logic is handled by SetsInput/RepsInput/WeightInput.
+ */
 @Composable
-private fun InputButton(
+private fun BottomSheetInputStyle(
     label: String,
-    value: String,
+    displayValue: String,
+    placeholder: String,
+    interactionSource: androidx.compose.foundation.interaction.MutableInteractionSource,
     onValueChange: (String) -> Unit,
     containerColor: Color,
     contentColor: Color,
     modifier: Modifier = Modifier,
-    keyboardType: KeyboardType = KeyboardType.Number,
-    validate: (String) -> Boolean = { it.all { char -> char.isDigit() } }
+    isDecimal: Boolean = false
 ) {
-    com.nnoidea.fitnez2.ui.common.SmartInputLogic(
-        value = value,
+    val keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Number
+    
+    BasicTextField(
+        value = displayValue,
         onValueChange = onValueChange,
-        validate = validate 
-    ) { displayValue, placeholder, interactionSource, onWrappedValueChange ->
-        
-        BasicTextField(
-            value = displayValue,
-            onValueChange = onWrappedValueChange,
-            modifier = modifier
-                .background(containerColor, RoundedCornerShape(24.dp)),
-            interactionSource = interactionSource,
-            textStyle = MaterialTheme.typography.titleLarge.copy(
-                color = contentColor,
-                textAlign = TextAlign.Start
-            ),
-            singleLine = true,
-            cursorBrush = SolidColor(contentColor),
-            decorationBox = { innerTextField ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = contentColor
-                    )
-                    Text(
-                        text = " | ",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = contentColor
-                    )
-                    
-                    Box(contentAlignment = Alignment.CenterStart) {
-                        if (displayValue.isEmpty()) {
-                             Text(
-                                text = placeholder.ifEmpty { " " }, 
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    color = contentColor.copy(alpha = 0.5f)
-                                )
-                             )
-                        }
-                        innerTextField()
+        modifier = modifier
+            .background(containerColor, RoundedCornerShape(24.dp)),
+        interactionSource = interactionSource,
+        textStyle = MaterialTheme.typography.titleLarge.copy(
+            color = contentColor,
+            textAlign = TextAlign.Start
+        ),
+        singleLine = true,
+        cursorBrush = SolidColor(contentColor),
+        decorationBox = { innerTextField ->
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = contentColor
+                )
+                Text(
+                    text = " | ",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = contentColor
+                )
+                
+                Box(contentAlignment = Alignment.CenterStart) {
+                    if (displayValue.isEmpty()) {
+                         Text(
+                            text = placeholder.ifEmpty { " " }, 
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = contentColor.copy(alpha = 0.5f)
+                            )
+                         )
                     }
+                    innerTextField()
                 }
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
-        )
-    }
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
+    )
 }
+
 
 @Composable
 private fun PredictiveExerciseSelectionDialog(

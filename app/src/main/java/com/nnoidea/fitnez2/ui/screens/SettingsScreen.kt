@@ -219,9 +219,9 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 Button(
                     onClick = {
                         scope.launch {
-                            val validSets = ValidateAndCorrect.sets(sets, globalState)
-                            val validReps = ValidateAndCorrect.reps(reps, globalState)
-                            val validWeight = ValidateAndCorrect.weight(weight, globalState)
+                            val validSets = ValidateAndCorrect.sets(sets)
+                            val validReps = ValidateAndCorrect.reps(reps)
+                            val validWeight = ValidateAndCorrect.weight(weight)
 
                             if (validSets != null && validReps != null && validWeight != null) {
                                 settingsRepository.setDefaultSets(validSets.toString())

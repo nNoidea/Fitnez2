@@ -40,6 +40,15 @@ class GlobalUiState(
     private val onWeightUnitChanged: ((String) -> Unit)? = null,
     private val onRotationModeChanged: ((String) -> Unit)? = null
 ) {
+    companion object {
+        // Global instance for non-Composable access (e.g., ValidateAndCorrect)
+        var instance: GlobalUiState? = null
+            private set
+        
+        fun setInstance(state: GlobalUiState) {
+            instance = state
+        }
+    }
     // State: Is any overlay (Drawer, Dialog, etc.) currently masking the main content?
     var isOverlayOpen by mutableStateOf(false)
 
@@ -121,9 +130,11 @@ class GlobalUiState(
 
     fun showTooltip(message: String, durationMillis: Long = 3000) {
         currentTooltipJob?.cancel()
+        // Set message immediately (synchronously) so it shows even if scope is null
+        tooltipMessage = message
+        tooltipId++
+        // Schedule auto-dismiss if scope is available
         currentTooltipJob = scope?.launch {
-            tooltipMessage = message
-            tooltipId++
             kotlinx.coroutines.delay(durationMillis)
             tooltipMessage = null
         }
@@ -190,6 +201,9 @@ fun ProvideGlobalUiState(
     state: GlobalUiState = rememberGlobalUiState(),
     content: @Composable () -> Unit
 ) {
+    // Set global instance for non-Composable access
+    GlobalUiState.setInstance(state)
+    
     CompositionLocalProvider(
         LocalGlobalUiState provides state
     ) {

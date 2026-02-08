@@ -1,6 +1,7 @@
 package com.nnoidea.fitnez2.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -416,6 +417,9 @@ private fun HeaderLabel(text: String) {
     )
 }
 
+// Field type for validation - no longer needed, delete
+// private enum class FieldType { SETS, REPS, WEIGHT }
+
 @Composable
 private fun HistoryRecordCard(
     item: RecordWithExercise,
@@ -475,44 +479,56 @@ private fun HistoryRecordCard(
                     }
                 },
                 col2 = {
-                    HistoryInput(
+                    com.nnoidea.fitnez2.ui.common.SetsInput(
                         value = item.record.sets.toString(),
-                        label = globalLocalization.labelSets,
-                        onUpdate = { newVal ->
-                            com.nnoidea.fitnez2.core.ValidateAndCorrect.sets(newVal)?.let {
-                                onUpdate(item.record.copy(sets = it))
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        contentColor = contentColor
-                    )
+                        onValidChange = { validSets ->
+                            onUpdate(item.record.copy(sets = validSets))
+                        }
+                    ) { displayValue, placeholder, interactionSource, onValueChange ->
+                        HistoryInputStyle(
+                            displayValue = displayValue,
+                            placeholder = placeholder,
+                            interactionSource = interactionSource,
+                            onValueChange = onValueChange,
+                            contentColor = contentColor,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 },
                 col3 = {
-                    HistoryInput(
+                    com.nnoidea.fitnez2.ui.common.RepsInput(
                         value = item.record.reps.toString(),
-                        label = globalLocalization.labelReps,
-                        onUpdate = { newVal ->
-                            com.nnoidea.fitnez2.core.ValidateAndCorrect.reps(newVal)?.let {
-                                onUpdate(item.record.copy(reps = it))
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        contentColor = contentColor
-                    )
+                        onValidChange = { validReps ->
+                            onUpdate(item.record.copy(reps = validReps))
+                        }
+                    ) { displayValue, placeholder, interactionSource, onValueChange ->
+                        HistoryInputStyle(
+                            displayValue = displayValue,
+                            placeholder = placeholder,
+                            interactionSource = interactionSource,
+                            onValueChange = onValueChange,
+                            contentColor = contentColor,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 },
                 col4 = {
-                    HistoryInput(
+                    com.nnoidea.fitnez2.ui.common.WeightInput(
                         value = item.record.weight.toString().removeSuffix(".0"),
-                        label = weightUnit,
-                        onUpdate = { newVal ->
-                            com.nnoidea.fitnez2.core.ValidateAndCorrect.weight(newVal)?.let {
-                                onUpdate(item.record.copy(weight = it))
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        isDecimal = true,
-                        contentColor = contentColor
-                    )
+                        onValidChange = { validWeight ->
+                            onUpdate(item.record.copy(weight = validWeight))
+                        }
+                    ) { displayValue, placeholder, interactionSource, onValueChange ->
+                        HistoryInputStyle(
+                            displayValue = displayValue,
+                            placeholder = placeholder,
+                            interactionSource = interactionSource,
+                            onValueChange = onValueChange,
+                            contentColor = contentColor,
+                            isDecimal = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             )
             
@@ -528,76 +544,63 @@ private fun HistoryRecordCard(
     }
 }
 
+/**
+ * Visual style for history input fields.
+ * This is just the "skin" - logic is handled by SetsInput/RepsInput/WeightInput.
+ */
 @Composable
-private fun HistoryInput(
-    value: String,
-    label: String,
-    onUpdate: (String) -> Unit,
+private fun HistoryInputStyle(
+    displayValue: String,
+    placeholder: String,
+    interactionSource: MutableInteractionSource,
+    onValueChange: (String) -> Unit,
+    contentColor: Color,
     modifier: Modifier = Modifier,
-    isDecimal: Boolean = false,
-    contentColor: Color
+    isDecimal: Boolean = false
 ) {
-    com.nnoidea.fitnez2.ui.common.SmartInputLogic(
-        value = value,
-        onValueChange = { },
-        onFocusLost = { finalVal ->
-             if (finalVal != value) {
-                 onUpdate(finalVal)
-             }
-        },
-        validate = {
-            if (it.isEmpty()) true
-            else if (isDecimal) it.toDoubleOrNull() != null
-            else it.toIntOrNull() != null
-        }
-    ) { displayValue, placeholder, interactionSource, onWrappedValueChange ->
-        
-        // Visuals similar to Fitnez 1 "Pill" but using Fitnez 2 token style?
-        // User said: "need to look visually different" from bottom sheet.
-        // Bottom sheet is Colored Container.
-        // Here let's use a subtle outline or filled background differently.
-        // Fitnez 1 uses: backgroundColor = MaterialTheme.colorScheme.errorContainer (etc) w/ RoundedCorner 20.dp
-        
-        Box(
-            modifier = modifier
-                .height(44.dp)
-                .background(
-                    contentColor.copy(alpha = HistoryInputBackgroundAlpha), 
-                    RoundedCornerShape(12.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            BasicTextField(
-                value = displayValue,
-                onValueChange = onWrappedValueChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                interactionSource = interactionSource,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    color = contentColor
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                decorationBox = { innerTextField ->
-                     if (displayValue.isEmpty()) {
-                          Text(
-                            text = placeholder,
-                             style = MaterialTheme.typography.bodyLarge.copy(
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.Bold,
-                                color = contentColor.copy(alpha = 0.5f)
-                            )
-                          )
-                     }
-                     innerTextField()
-                }
-            )
-        }
+    Box(
+        modifier = modifier
+            .height(44.dp)
+            .background(
+                contentColor.copy(alpha = HistoryInputBackgroundAlpha), 
+                RoundedCornerShape(12.dp)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        BasicTextField(
+            value = displayValue,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            interactionSource = interactionSource,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold,
+                color = contentColor
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Number
+            ),
+            decorationBox = { innerTextField ->
+                 if (displayValue.isEmpty()) {
+                      Text(
+                        text = placeholder,
+                         style = MaterialTheme.typography.bodyLarge.copy(
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            color = contentColor.copy(alpha = 0.5f)
+                        )
+                      )
+                 }
+                 innerTextField()
+            }
+        )
     }
 }
+
+
 
 
 
