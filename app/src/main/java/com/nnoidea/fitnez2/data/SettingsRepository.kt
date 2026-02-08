@@ -66,4 +66,13 @@ class SettingsRepository(private val context: Context) {
     suspend fun setDefaultWeight(value: String) {
         context.dataStore.edit { it[DEFAULT_WEIGHT_KEY] = value }
     }
+
+    private val ROTATION_MODE_KEY = stringPreferencesKey("rotation_mode")
+
+    val rotationModeFlow: Flow<String> = context.dataStore.data
+        .map { preferences -> preferences[ROTATION_MODE_KEY] ?: "system" }
+
+    suspend fun setRotationMode(mode: String) {
+        context.dataStore.edit { it[ROTATION_MODE_KEY] = mode }
+    }
 }

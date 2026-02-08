@@ -88,6 +88,11 @@ sealed class EnStrings(
     open val labelDefaultWeight: String = "Default Weight"
     
     open val labelBack: String = "Back"
+    
+    open val labelRotation: String = "Auto-rotate"
+    open val labelRotationSystem: String = "Follow System"
+    open val labelRotationOn: String = "On"
+    open val labelRotationOff: String = "Off"
 
 }
 

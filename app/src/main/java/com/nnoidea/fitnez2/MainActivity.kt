@@ -54,6 +54,16 @@ class MainActivity : ComponentActivity() {
                         globalUiState.isOverlayOpen = drawerState.isOpen
                     }
 
+                    // Handle Rotation Mode
+                    val rotationMode = globalUiState.rotationMode
+                    LaunchedEffect(rotationMode) {
+                        requestedOrientation = when (rotationMode) {
+                            "on" -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+                            "off" -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                            else -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        }
+                    }
+
                     ProvideGlobalUiState(globalUiState) {
                         ModalNavigationDrawer(
                             drawerState = drawerState,

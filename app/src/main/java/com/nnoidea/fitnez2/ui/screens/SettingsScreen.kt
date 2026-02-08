@@ -65,6 +65,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
 
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showWeightUnitDialog by remember { mutableStateOf(false) }
+    var showRotationDialog by remember { mutableStateOf(false) }
     
     var showDefaultsDialog by remember { mutableStateOf(false) }
 
@@ -99,6 +100,22 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             )
 
             HorizontalDivider()
+
+            HorizontalDivider()
+
+            // Rotation Setting
+            val rotationLabel = when (globalState.rotationMode) {
+                "system" -> globalLocalization.labelRotationSystem
+                "on" -> globalLocalization.labelRotationOn
+                "off" -> globalLocalization.labelRotationOff
+                else -> globalLocalization.labelRotationSystem
+            }
+
+            SettingsItem(
+                label = globalLocalization.labelRotation,
+                value = rotationLabel,
+                onClick = { showRotationDialog = true }
+            )
 
             HorizontalDivider()
             
@@ -147,6 +164,26 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         },
         onDismissRequest = { showWeightUnitDialog = false },
         labelProvider = { it }
+    )
+
+    SelectionDialog(
+        show = showRotationDialog,
+        title = globalLocalization.labelRotation,
+        options = listOf("system", "on", "off"),
+        selectedValue = globalState.rotationMode,
+        onValueSelected = {
+            globalState.switchRotationMode(it)
+            showRotationDialog = false
+        },
+        onDismissRequest = { showRotationDialog = false },
+        labelProvider = {
+            when (it) {
+                "system" -> globalLocalization.labelRotationSystem
+                "on" -> globalLocalization.labelRotationOn
+                "off" -> globalLocalization.labelRotationOff
+                else -> ""
+            }
+        }
     )
 
     // Prepare language options with "System Default" (null) at the top

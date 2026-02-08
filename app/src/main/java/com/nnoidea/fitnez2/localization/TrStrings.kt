@@ -79,4 +79,9 @@ object TrStrings : EnStrings(
     
     override val labelBack: String = "Geri"
 
+    override val labelRotation: String = "Otomatik Döndürme"
+    override val labelRotationSystem: String = "Sistemi İzle"
+    override val labelRotationOn: String = "Açık"
+    override val labelRotationOff: String = "Kapalı"
+
 }

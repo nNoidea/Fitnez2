@@ -36,7 +36,8 @@ sealed interface UiSignal {
 class GlobalUiState(
     val scope: CoroutineScope? = null,
     private val onLanguageChanged: ((EnStrings?) -> Unit)? = null,
-    private val onWeightUnitChanged: ((String) -> Unit)? = null
+    private val onWeightUnitChanged: ((String) -> Unit)? = null,
+    private val onRotationModeChanged: ((String) -> Unit)? = null
 ) {
     // State: Is any overlay (Drawer, Dialog, etc.) currently masking the main content?
     var isOverlayOpen by mutableStateOf(false)
@@ -58,6 +59,9 @@ class GlobalUiState(
     // State: BottomSheet Offset for Snackbars
     var bottomSheetSnackbarOffset by mutableStateOf(0.dp)
 
+    // State: Rotation Mode
+    var rotationMode by mutableStateOf("system")
+
     fun switchLanguage(newLanguage: EnStrings?) {
         LocalizationManager.setLanguage(newLanguage)
         onLanguageChanged?.invoke(newLanguage)
@@ -66,6 +70,11 @@ class GlobalUiState(
     fun switchWeightUnit(unit: String) {
         weightUnit = unit
         onWeightUnitChanged?.invoke(unit)
+    }
+
+    fun switchRotationMode(mode: String) {
+        rotationMode = mode
+        onRotationModeChanged?.invoke(mode)
     }
 
     // Signals: One-off events (e.g. ScrollToTop)
@@ -124,6 +133,11 @@ fun rememberGlobalUiState(): GlobalUiState {
                 scope.launch {
                     settingsRepository.setWeightUnit(unit)
                 }
+            },
+            onRotationModeChanged = { mode ->
+                scope.launch {
+                    settingsRepository.setRotationMode(mode)
+                }
             }
         )
     }
@@ -141,6 +155,11 @@ fun rememberGlobalUiState(): GlobalUiState {
         launch {
             settingsRepository.weightUnitFlow.collect { unit ->
                 state.weightUnit = unit
+            }
+        }
+        launch {
+            settingsRepository.rotationModeFlow.collect { mode ->
+                state.rotationMode = mode
             }
         }
     }
