@@ -76,5 +76,7 @@ object TrStrings : EnStrings(
     override val labelDefaultSets: String = "Varsayılan Set"
     override val labelDefaultReps: String = "Varsayılan Tekrar"
     override val labelDefaultWeight: String = "Varsayılan Ağırlık"
+    
+    override val labelBack: String = "Geri"
 
 }

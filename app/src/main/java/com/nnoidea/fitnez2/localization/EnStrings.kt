@@ -86,6 +86,8 @@ sealed class EnStrings(
     open val labelDefaultSets: String = "Default Sets"
     open val labelDefaultReps: String = "Default Reps"
     open val labelDefaultWeight: String = "Default Weight"
+    
+    open val labelBack: String = "Back"
 
 }
 
