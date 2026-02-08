@@ -116,7 +116,7 @@ fun SwipeToDeleteContainer(
                                 
                                 if (kotlin.math.abs(dx) > viewConfiguration.touchSlop) {
                                     // Slop passed. Horizontal?
-                                    if (kotlin.math.abs(dx) > kotlin.math.abs(dy)) {
+                                    if (kotlin.math.abs(dx) > kotlin.math.abs(dy)*5) {
                                         // Horizontal.
                                         if (dx < 0) {
                                             // Swipe Left -> active!

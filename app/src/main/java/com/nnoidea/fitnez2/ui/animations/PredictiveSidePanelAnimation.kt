@@ -26,7 +26,7 @@ private fun Modifier.predictiveSidePanelAnimation(state: PredictiveSidePanelStat
                 scaleX = scale
                 scaleY = scale
                 // Slight slide out effect
-                translationX = -size.width * state.progress * 0.1f
+                translationX = -size.width * state.progress * 0.3f
                 shape = RoundedCornerShape(16.dp * state.progress)
                 clip = true
             }
