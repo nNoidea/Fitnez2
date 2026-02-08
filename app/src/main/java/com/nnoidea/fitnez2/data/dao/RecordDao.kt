@@ -34,7 +34,7 @@ abstract class RecordDao {
     // --- CREATE ---
 
     @Transaction
-    open suspend fun create(record: Record) {
+    open suspend fun create(record: Record): Long {
         val count = checkExerciseExists(record.exerciseId)
         if (count == 0) {
             throw IllegalArgumentException(LocalizationManager.strings.errorExerciseNotFoundById(record.exerciseId))
@@ -51,7 +51,7 @@ abstract class RecordDao {
             throw IllegalArgumentException("Invalid weight: ${record.weight}")
         }
 
-        insertInternal(record)
+        return insertInternal(record)
     }
 
     // --- READ ---

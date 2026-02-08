@@ -130,11 +130,41 @@ fun ExerciseHistoryList(
     val listState = rememberLazyListState()
 
     // Scroll to top when receiving the signal
+    // State to track if we are waiting for a specific record to appear to scroll to it
+    var pendingScrollRecordId by remember { mutableStateOf<Int?>(null) }
+
+    // Scroll trigger: Receive signal
     LaunchedEffect(Unit) {
         globalUiState.signalFlow.collect { signal ->
             if (signal is com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop) {
-                listState.animateScrollToItem(0)
+                // Check if the record is already in the list (fast path)
+                val targetId = signal.recordId
+                if (targetId != null) {
+                    val alreadyExists = groupedHistory.values.flatten().any { it.first.record.id == targetId }
+                    if (alreadyExists) {
+                         listState.animateScrollToItem(0)
+                         pendingScrollRecordId = null
+                    } else {
+                        // Wait for it to appear
+                        pendingScrollRecordId = targetId
+                    }
+                } else {
+                     // Fallback for legacy calls (if any) or forced scrolls without ID
+                     listState.animateScrollToItem(0)
+                }
             }
+        }
+    }
+
+    // Scroll trigger: Data update
+    LaunchedEffect(groupedHistory, pendingScrollRecordId) {
+        val targetId = pendingScrollRecordId
+        if (targetId != null) {
+             val exists = groupedHistory.values.flatten().any { it.first.record.id == targetId }
+             if (exists) {
+                 listState.animateScrollToItem(0)
+                 pendingScrollRecordId = null
+             }
         }
     }
 

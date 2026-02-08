@@ -405,8 +405,8 @@ fun PredictiveBottomSheet(
                                                 weight = weight,
                                                 date = System.currentTimeMillis()
                                             )
-                                            recordDao.create(record)
-                                            globalUiState.emitSignal(UiSignal.ScrollToTop)
+                                            val newId = recordDao.create(record)
+                                            globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
 
                                             // Form values are preserved for multiple entries
 

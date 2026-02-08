@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 
 // Simple global UI signals
 sealed interface UiSignal {
-    data object ScrollToTop : UiSignal
+    data class ScrollToTop(val recordId: Int? = null) : UiSignal
     // add more stuff here...
 }
 
