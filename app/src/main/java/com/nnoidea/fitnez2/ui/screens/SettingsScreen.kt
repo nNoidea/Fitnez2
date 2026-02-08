@@ -48,6 +48,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.nnoidea.fitnez2.core.localization.EnStrings
 import com.nnoidea.fitnez2.data.SettingsRepository
 import com.nnoidea.fitnez2.ui.components.PredictiveAlertDialog
+import com.nnoidea.fitnez2.core.ValidateAndCorrect
+import com.nnoidea.fitnez2.ui.components.TopTooltip
 import kotlinx.coroutines.launch
 
 @Composable
@@ -151,6 +153,8 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 }
             )
         }
+
+        TopTooltip(globalUiState = globalState)
     }
 
     SelectionDialog(
@@ -215,9 +219,9 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 Button(
                     onClick = {
                         scope.launch {
-                            val validSets = com.nnoidea.fitnez2.core.ValidateAndCorrect.sets(sets)
-                            val validReps = com.nnoidea.fitnez2.core.ValidateAndCorrect.reps(reps)
-                            val validWeight = com.nnoidea.fitnez2.core.ValidateAndCorrect.weight(weight)
+                            val validSets = ValidateAndCorrect.sets(sets, globalState)
+                            val validReps = ValidateAndCorrect.reps(reps, globalState)
+                            val validWeight = ValidateAndCorrect.weight(weight, globalState)
 
                             if (validSets != null && validReps != null && validWeight != null) {
                                 settingsRepository.setDefaultSets(validSets.toString())

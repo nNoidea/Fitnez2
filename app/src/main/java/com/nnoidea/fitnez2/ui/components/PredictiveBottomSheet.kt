@@ -101,6 +101,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.nnoidea.fitnez2.data.AppDatabase
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
+import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import androidx.compose.runtime.collectAsState
 import com.nnoidea.fitnez2.ui.components.ExerciseHistoryList
 import com.nnoidea.fitnez2.data.SettingsRepository
@@ -408,28 +409,34 @@ fun PredictiveBottomSheet(
                                 scope.launch {
                                     try {
                                         val exerciseId = selectedExerciseId
-                                        val sets = setsValue.ifEmpty { setsFallback }.toIntOrNull()
-                                        val reps = repsValue.ifEmpty { repsFallback }.toIntOrNull()
-                                        val weight = weightValue.ifEmpty { weightFallback }.toDoubleOrNull()
-
-                                        if (exerciseId != null && 
-                                            sets != null && sets > 0 && 
-                                            reps != null && reps > 0 && 
-                                            weight != null) {
-                                            val record = Record(
-                                                exerciseId = exerciseId,
-                                                sets = sets,
-                                                reps = reps,
-                                                weight = weight,
-                                                date = System.currentTimeMillis()
-                                            )
-                                            val newId = recordDao.create(record)
-                                            globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
-
-                                            // Form values are preserved for multiple entries
-
-
+                                        if (exerciseId == null) {
+                                            globalUiState.showSnackbar(globalLocalization.labelSelectExercise) 
+                                            return@launch
                                         }
+
+                                        val inputSets = setsValue.ifEmpty { setsFallback }
+                                        val sets = ValidateAndCorrect.sets(inputSets, globalUiState) ?: return@launch
+
+                                        val inputReps = repsValue.ifEmpty { repsFallback }
+                                        val reps = ValidateAndCorrect.reps(inputReps, globalUiState) ?: return@launch
+
+                                        val inputWeight = weightValue.ifEmpty { weightFallback }
+                                        val weight = ValidateAndCorrect.weight(inputWeight, globalUiState) ?: return@launch
+
+                                        val record = Record(
+                                            exerciseId = exerciseId,
+                                            sets = sets,
+                                            reps = reps,
+                                            weight = weight,
+                                            date = System.currentTimeMillis()
+                                        )
+                                        val newId = recordDao.create(record)
+                                        globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
+
+
+                                        // Form values are preserved for multiple entries
+
+
                                     } catch (e: Exception) {
                                         // Handle error - could show toast or snackbar
                                     }

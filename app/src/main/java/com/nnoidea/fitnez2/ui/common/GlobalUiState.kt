@@ -6,6 +6,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.nnoidea.fitnez2.core.localization.EnStrings
@@ -108,6 +109,23 @@ class GlobalUiState(
             if (result == SnackbarResult.ActionPerformed) {
                 onActionPerformed()
             }
+        }
+    }
+
+    // Tooltip State
+    var tooltipMessage by mutableStateOf<String?>(null)
+        private set
+    var tooltipId by mutableLongStateOf(0L)
+        private set
+    private var currentTooltipJob: Job? = null
+
+    fun showTooltip(message: String, durationMillis: Long = 3000) {
+        currentTooltipJob?.cancel()
+        currentTooltipJob = scope?.launch {
+            tooltipMessage = message
+            tooltipId++
+            kotlinx.coroutines.delay(durationMillis)
+            tooltipMessage = null
         }
     }
 }

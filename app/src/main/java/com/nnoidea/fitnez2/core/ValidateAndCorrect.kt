@@ -1,5 +1,7 @@
 package com.nnoidea.fitnez2.core
 
+import com.nnoidea.fitnez2.ui.common.GlobalUiState
+
 object ValidateAndCorrect {
 
     /**
@@ -8,12 +10,27 @@ object ValidateAndCorrect {
      * Handles inputs like "01" -> 1, "5.0" -> 5.
      * Returns the valid Integer or null if invalid.
      */
-    fun sets(input: String): Int? {
-        val number = input.toDoubleOrNull() ?: return null
+    fun sets(input: String, uiState: GlobalUiState? = null): Int? {
+        if (input.isBlank()) {
+            uiState?.showTooltip("Sets cannot be empty")
+            return null
+        }
+        val number = input.toDoubleOrNull()
+        if (number == null) {
+            uiState?.showTooltip("Invalid sets format")
+            return null
+        }
         // Check if it's an integer (whole number)
-        if (number % 1.0 != 0.0) return null
+        if (number % 1.0 != 0.0) {
+            uiState?.showTooltip("Sets must be a whole number")
+            return null
+        }
         val intValue = number.toInt()
-        return if (intValue > 0) intValue else null
+        if (intValue <= 0) {
+            uiState?.showTooltip("Sets must be greater than 0")
+            return null
+        }
+        return intValue
     }
 
     /**
@@ -21,11 +38,26 @@ object ValidateAndCorrect {
      * Rules: Must be an integer > 0.
      * Returns the valid Integer or null if invalid.
      */
-    fun reps(input: String): Int? {
-        val number = input.toDoubleOrNull() ?: return null
-        if (number % 1.0 != 0.0) return null
+    fun reps(input: String, uiState: GlobalUiState? = null): Int? {
+        if (input.isBlank()) {
+            uiState?.showTooltip("Reps cannot be empty")
+            return null
+        }
+        val number = input.toDoubleOrNull()
+        if (number == null) {
+            uiState?.showTooltip("Invalid reps format")
+            return null
+        }
+        if (number % 1.0 != 0.0) {
+            uiState?.showTooltip("Reps must be a whole number")
+            return null
+        }
         val intValue = number.toInt()
-        return if (intValue > 0) intValue else null
+        if (intValue <= 0) {
+            uiState?.showTooltip("Reps must be greater than 0")
+            return null
+        }
+        return intValue
     }
 
     /**
@@ -33,8 +65,21 @@ object ValidateAndCorrect {
      * Rules: Must be a valid number. (Negative allowed per user spec "can be negative or positive")
      * Returns the valid Double or null if invalid.
      */
-    fun weight(input: String): Double? {
-        return input.toDoubleOrNull()
+    fun weight(input: String, uiState: GlobalUiState? = null): Double? {
+        if (input.isBlank()) {
+            uiState?.showTooltip("Weight cannot be empty")
+            return null
+        }
+        val number = input.toDoubleOrNull()
+        if (number == null) {
+            uiState?.showTooltip("Invalid weight format")
+            return null
+        }
+        if (number.isNaN() || number.isInfinite()) {
+           uiState?.showTooltip("Invalid weight value")
+           return null
+        }
+        return number
     }
 
     // Direct value validation for DAO / Internal use
