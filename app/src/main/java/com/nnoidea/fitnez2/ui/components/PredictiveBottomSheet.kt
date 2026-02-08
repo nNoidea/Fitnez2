@@ -318,13 +318,18 @@ fun PredictiveBottomSheet(
             }
         }
 
+        // Overshoot Buffer
+        val overshootBuffer = 150.dp
+        val overshootBufferPx = with(density) { overshootBuffer.toPx() }
+        val sheetHeight = expandedHeight + overshootBuffer
+        
         // --- MAIN SHEET CONTAINER ---
         Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .height(expandedHeight)
+                .align(Alignment.TopStart)
+                .height(sheetHeight)
                 .fillMaxWidth()
-                .offset { IntOffset(0, offsetY.value.roundToInt()) }
+                .offset { IntOffset(0, (offsetY.value + topPaddingPx).roundToInt()) }
                 .graphicsLayer {
                      if (predictiveProgress > 0f) {
                          val scale = 1f - (predictiveProgress * 0.2f)
@@ -348,7 +353,9 @@ fun PredictiveBottomSheet(
                 )
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(expandedHeight),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // 1. Drag Handle
@@ -822,7 +829,7 @@ private fun PredictiveExerciseSelectionDialog(
         onConfirm = { newName ->
             scope.launch {
                 try {
-                    val newExercise = Exercise(name = newName)
+                    val newExercise = com.nnoidea.fitnez2.data.entities.Exercise(name = newName)
                     exerciseDao.create(newExercise)
                     showCreateDialog = false
                 } catch (e: Exception) {
