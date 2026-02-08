@@ -553,7 +553,7 @@ private fun InputButton(
                     Text(
                         text = " | ",
                         style = MaterialTheme.typography.titleMedium,
-                        color = contentColor.copy(alpha = 0.7f)
+                        color = contentColor
                     )
                     
                     Box(contentAlignment = Alignment.CenterStart) {
@@ -561,7 +561,7 @@ private fun InputButton(
                              Text(
                                 text = placeholder.ifEmpty { " " }, 
                                 style = MaterialTheme.typography.titleLarge.copy(
-                                    color = contentColor.copy(alpha = 0.5f)
+                                    color = contentColor
                                 )
                              )
                         }
@@ -676,7 +676,7 @@ private fun PredictiveExerciseSelectionDialog(
                                 Icon(
                                     Icons.Default.Edit, 
                                     contentDescription = globalLocalization.labelEdit(exercise.name),
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                             
@@ -686,7 +686,7 @@ private fun PredictiveExerciseSelectionDialog(
                                 Icon(
                                     Icons.Default.Delete, 
                                     contentDescription = globalLocalization.labelDelete,
-                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                                    tint = MaterialTheme.colorScheme.error
                                 )
                             }
                         }
@@ -735,7 +735,7 @@ private fun PredictiveExerciseSelectionDialog(
                                 .height(with(LocalDensity.current) { scrollbarHeight.toDp() })
                                 .offset(y = with(LocalDensity.current) { scrollbarOffset.toDp() })
                                 .background(
-                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    MaterialTheme.colorScheme.onSurfaceVariant,
                                     RoundedCornerShape(4.dp)
                                 )
                         )

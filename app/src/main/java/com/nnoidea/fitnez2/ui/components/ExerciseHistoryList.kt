@@ -68,8 +68,8 @@ import java.util.Locale
 // UI Style Constants - Change these to tweak the list's look
 // -----------------------------------------------------------------------------
 
-private val ColorHistoryNeutralContainer @Composable get() = MaterialTheme.colorScheme.primaryContainer
-private val ColorHistoryNeutralContent @Composable get() = MaterialTheme.colorScheme.onPrimaryContainer
+private val ColorHistoryNeutralContainer @Composable get() = MaterialTheme.colorScheme.primary
+private val ColorHistoryNeutralContent @Composable get() = MaterialTheme.colorScheme.onPrimary
 
 private val ColorHistoryColoredContainer @Composable get() = MaterialTheme.colorScheme.secondaryContainer
 private val ColorHistoryColoredContent @Composable get() = MaterialTheme.colorScheme.onSecondaryContainer
