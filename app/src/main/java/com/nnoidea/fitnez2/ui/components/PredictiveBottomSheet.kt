@@ -380,10 +380,15 @@ fun PredictiveBottomSheet(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                var isOverflowing by remember { mutableStateOf(false) }
                                 Text(
                                     text = selectedExercise ?: globalLocalization.labelSelectExercise,
                                     style = MaterialTheme.typography.titleMedium,
                                     maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    onTextLayout = { textLayoutResult ->
+                                        isOverflowing = textLayoutResult.hasVisualOverflow
+                                    },
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(Icons.Default.ArrowDropDown, contentDescription = null)
@@ -503,6 +508,7 @@ fun PredictiveBottomSheet(
         PredictiveExerciseSelectionDialog(
             show = showExerciseSelection,
             exercises = dbExercises,
+            selectedExerciseId = selectedExerciseId,
             exerciseDao = exerciseDao,
             onDismissRequest = { showExerciseSelection = false },
             onExerciseSelected = { exercise ->
@@ -584,6 +590,7 @@ private fun InputButton(
 private fun PredictiveExerciseSelectionDialog(
     show: Boolean,
     exercises: List<Exercise>,
+    selectedExerciseId: Int?,
     exerciseDao: com.nnoidea.fitnez2.data.dao.ExerciseDao,
     onDismissRequest: () -> Unit,
     onExerciseSelected: (Exercise) -> Unit
@@ -661,16 +668,25 @@ private fun PredictiveExerciseSelectionDialog(
                     )
 
                     sortedExercises.forEach { exercise ->
+                        val isSelected = exercise.id == selectedExerciseId
+                        val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                        val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                        
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .background(containerColor, RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(12.dp))
                                 .clickable { onExerciseSelected(exercise) }
-                                .padding(vertical = 4.dp, horizontal = 8.dp),
+                                .padding(vertical = 12.dp, horizontal = 12.dp), // Increased padding for better touch target and visual
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = exercise.name,
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
+                                ),
+                                color = contentColor,
                                 modifier = Modifier.weight(1f)
                             )
                             
@@ -682,7 +698,7 @@ private fun PredictiveExerciseSelectionDialog(
                                 Icon(
                                     Icons.Default.Edit, 
                                     contentDescription = globalLocalization.labelEdit(exercise.name),
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = if (isSelected) contentColor else MaterialTheme.colorScheme.primary
                                 )
                             }
                             
