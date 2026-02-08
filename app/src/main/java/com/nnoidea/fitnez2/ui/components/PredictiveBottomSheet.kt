@@ -78,6 +78,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.text.BasicTextField
 
 import androidx.compose.ui.platform.LocalView
@@ -118,6 +119,7 @@ fun PredictiveBottomSheet(
     val globalUiState = LocalGlobalUiState.current
     val isOverlayOpen = globalUiState.isOverlayOpen
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     BoxWithConstraints(modifier = modifier) {
         val density = LocalDensity.current
@@ -348,6 +350,9 @@ fun PredictiveBottomSheet(
                 .draggable(
                     state = draggableState,
                     orientation = Orientation.Vertical,
+                    onDragStarted = {
+                        focusManager.clearFocus()
+                    },
                     onDragStopped = { velocity ->
                         scope.launch { settleSpring(velocity) }
                     }

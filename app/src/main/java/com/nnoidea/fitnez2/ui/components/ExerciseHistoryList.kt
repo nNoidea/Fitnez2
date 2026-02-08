@@ -46,6 +46,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.foundation.gestures.ScrollableDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -236,6 +243,17 @@ private fun ExerciseHistoryListContent(
     onDeleteRequest: (Record) -> Unit
 ) {
 
+    // Hide keyboard when scrolling
+    val focusManager = LocalFocusManager.current
+    val keyboardScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: NestedScrollSource): androidx.compose.ui.geometry.Offset {
+                focusManager.clearFocus()
+                return androidx.compose.ui.geometry.Offset.Zero
+            }
+        }
+    }
+
     if (groupedHistory.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
@@ -246,7 +264,7 @@ private fun ExerciseHistoryListContent(
         }
     } else {
         LazyColumn(
-            modifier = modifier,
+            modifier = modifier.nestedScroll(keyboardScrollConnection),
             state = listState,
             contentPadding = PaddingValues(bottom = 80.dp + extraBottomPadding)
         ) {
