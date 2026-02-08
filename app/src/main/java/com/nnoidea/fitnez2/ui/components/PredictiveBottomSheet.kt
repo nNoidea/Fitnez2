@@ -561,7 +561,7 @@ private fun InputButton(
                              Text(
                                 text = placeholder.ifEmpty { " " }, 
                                 style = MaterialTheme.typography.titleLarge.copy(
-                                    color = contentColor
+                                    color = contentColor.copy(alpha = 0.5f)
                                 )
                              )
                         }
