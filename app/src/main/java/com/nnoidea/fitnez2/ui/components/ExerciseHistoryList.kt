@@ -287,6 +287,7 @@ private fun ExerciseHistoryListContent(
                         HistoryRecordCard(
                             item = recordItem,
                             isLight = isLight,
+                            showTitle = !prevIsSame,
                             weightUnit = weightUnit,
                             shape = shape,
                             onUpdate = onUpdateRequest
@@ -419,6 +420,7 @@ private fun HeaderLabel(text: String) {
 private fun HistoryRecordCard(
     item: RecordWithExercise,
     isLight: Boolean,
+    showTitle: Boolean,
     weightUnit: String,
     shape: androidx.compose.ui.graphics.Shape,
     onUpdate: (Record) -> Unit
@@ -458,14 +460,19 @@ private fun HistoryRecordCard(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 col1 = {
-                    Text(
-                        text = item.exerciseName,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.Unspecified // Inherit from Card
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    if (showTitle) {
+                        Text(
+                            text = item.exerciseName,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Unspecified // Inherit from Card
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        // Maintain spacing if needed or just empty
+                        Spacer(modifier = Modifier.height(0.dp))
+                    }
                 },
                 col2 = {
                     HistoryInput(
