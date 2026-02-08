@@ -45,6 +45,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -58,6 +59,8 @@ import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.data.SettingsRepository
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import androidx.compose.animation.animateContentSize
 
 import androidx.compose.material3.Surface
 
@@ -423,10 +426,26 @@ private fun HistoryRecordCard(
     val containerColor = if (isLight) ColorHistoryNeutralContainer else ColorHistoryColoredContainer
     val contentColor = if (isLight) ColorHistoryNeutralContent else ColorHistoryColoredContent
 
+    var isExpanded by remember { mutableStateOf(false) }
+
+    if (isExpanded) {
+        LaunchedEffect(Unit) {
+            delay(5000)
+            isExpanded = false
+        }
+    }
+
+    val timestamp = remember(item.record.date) {
+        // Format: 14:05:30
+        SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(item.record.date))
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 2.dp),
+            .padding(horizontal = 16.dp, vertical = 2.dp)
+            .clip(shape)
+            .clickable { isExpanded = !isExpanded }, // Toggle expansion
         shape = shape,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
@@ -434,60 +453,71 @@ private fun HistoryRecordCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        HistoryGridRow(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            col1 = {
+        Column(modifier = Modifier.animateContentSize()) {
+            HistoryGridRow(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                col1 = {
+                    Text(
+                        text = item.exerciseName,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.Unspecified // Inherit from Card
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                col2 = {
+                    HistoryInput(
+                        value = item.record.sets.toString(),
+                        label = globalLocalization.labelSets,
+                        onUpdate = { newVal ->
+                            com.nnoidea.fitnez2.core.ValidateAndCorrect.sets(newVal)?.let {
+                                onUpdate(item.record.copy(sets = it))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        contentColor = contentColor
+                    )
+                },
+                col3 = {
+                    HistoryInput(
+                        value = item.record.reps.toString(),
+                        label = globalLocalization.labelReps,
+                        onUpdate = { newVal ->
+                            com.nnoidea.fitnez2.core.ValidateAndCorrect.reps(newVal)?.let {
+                                onUpdate(item.record.copy(reps = it))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        contentColor = contentColor
+                    )
+                },
+                col4 = {
+                    HistoryInput(
+                        value = item.record.weight.toString().removeSuffix(".0"),
+                        label = weightUnit,
+                        onUpdate = { newVal ->
+                            com.nnoidea.fitnez2.core.ValidateAndCorrect.weight(newVal)?.let {
+                                onUpdate(item.record.copy(weight = it))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        isDecimal = true,
+                        contentColor = contentColor
+                    )
+                }
+            )
+            
+            if (isExpanded) {
                 Text(
-                    text = item.exerciseName,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Unspecified // Inherit from Card
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            col2 = {
-                HistoryInput(
-                    value = item.record.sets.toString(),
-                    label = globalLocalization.labelSets,
-                    onUpdate = { newVal ->
-                        com.nnoidea.fitnez2.core.ValidateAndCorrect.sets(newVal)?.let {
-                            onUpdate(item.record.copy(sets = it))
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    contentColor = contentColor
-                )
-            },
-            col3 = {
-                HistoryInput(
-                    value = item.record.reps.toString(),
-                    label = globalLocalization.labelReps,
-                    onUpdate = { newVal ->
-                        com.nnoidea.fitnez2.core.ValidateAndCorrect.reps(newVal)?.let {
-                            onUpdate(item.record.copy(reps = it))
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    contentColor = contentColor
-                )
-            },
-            col4 = {
-                HistoryInput(
-                    value = item.record.weight.toString().removeSuffix(".0"),
-                    label = weightUnit,
-                    onUpdate = { newVal ->
-                        com.nnoidea.fitnez2.core.ValidateAndCorrect.weight(newVal)?.let {
-                            onUpdate(item.record.copy(weight = it))
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    isDecimal = true,
-                    contentColor = contentColor
+                    text = timestamp,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
                 )
             }
-        )
+        }
     }
 }
 
