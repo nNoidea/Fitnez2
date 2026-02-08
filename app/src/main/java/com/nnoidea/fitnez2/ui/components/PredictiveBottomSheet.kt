@@ -80,6 +80,9 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.text.BasicTextField
 
+import androidx.compose.ui.platform.LocalView
+import android.view.HapticFeedbackConstants
+
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -232,11 +235,14 @@ fun PredictiveBottomSheet(
              }
         }
 
+        val view = LocalView.current
+
         // Unified Settle Logic
         val settleSpring: suspend (Float) -> Unit = { velocity ->
             val targetOffset = if (velocity > 1000f || (velocity >= 0 && offsetY.value > maxOffset / 2)) {
                 maxOffset // Collapse
             } else {
+                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                 minOffset // Expand
             }
             offsetY.animateTo(
