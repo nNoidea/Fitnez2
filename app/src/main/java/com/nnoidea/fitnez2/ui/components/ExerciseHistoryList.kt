@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 
@@ -255,7 +256,27 @@ private fun ExerciseHistoryListContent(
                         modifier = Modifier.animateItem()
                     )
                 }
-                items(records, key = { it.first.record.id }) { (recordItem, isLight) ->
+                itemsIndexed(records, key = { _, item -> item.first.record.id }) { index, (recordItem, isLight) ->
+                    val prevIsSame = index > 0 && records[index - 1].second == isLight
+                    val nextIsSame = index < records.lastIndex && records[index + 1].second == isLight
+
+                    val shape = when {
+                        !prevIsSame && !nextIsSame -> RoundedCornerShape(28.dp)
+                        !prevIsSame && nextIsSame -> RoundedCornerShape(
+                            topStart = 28.dp,
+                            topEnd = 28.dp,
+                            bottomStart = 4.dp,
+                            bottomEnd = 4.dp
+                        )
+                        prevIsSame && !nextIsSame -> RoundedCornerShape(
+                            topStart = 4.dp,
+                            topEnd = 4.dp,
+                            bottomStart = 28.dp,
+                            bottomEnd = 28.dp
+                        )
+                        else -> RoundedCornerShape(4.dp)
+                    }
+
                     SwipeToDeleteContainer(
                         onDelete = { onDeleteRequest(recordItem.record) },
                         modifier = Modifier.animateItem()
@@ -264,6 +285,7 @@ private fun ExerciseHistoryListContent(
                             item = recordItem,
                             isLight = isLight,
                             weightUnit = weightUnit,
+                            shape = shape,
                             onUpdate = onUpdateRequest
                         )
                     }
@@ -395,6 +417,7 @@ private fun HistoryRecordCard(
     item: RecordWithExercise,
     isLight: Boolean,
     weightUnit: String,
+    shape: androidx.compose.ui.graphics.Shape,
     onUpdate: (Record) -> Unit
 ) {
     val containerColor = if (isLight) ColorHistoryNeutralContainer else ColorHistoryColoredContainer
@@ -403,8 +426,8 @@ private fun HistoryRecordCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(26.dp), // Expressive Extra Large Corner
+            .padding(horizontal = 16.dp, vertical = 2.dp),
+        shape = shape,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor
