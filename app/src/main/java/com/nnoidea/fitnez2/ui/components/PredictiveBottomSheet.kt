@@ -383,7 +383,10 @@ fun PredictiveBottomSheet(
                     ) {
                         // Button 1: Exercise Selector
                         FilledTonalButton(
-                            onClick = { showExerciseSelection = true },
+                            onClick = {
+                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                showExerciseSelection = true
+                            },
                             modifier = Modifier
                                 .weight(2f)
                                 .height(buttonHeight),
@@ -410,6 +413,7 @@ fun PredictiveBottomSheet(
 
                         Button(
                             onClick = {
+                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
                                 keyboardController?.hide()
                                 scope.launch {
                                     try {
@@ -634,6 +638,7 @@ private fun PredictiveExerciseSelectionDialog(
     onExerciseSelected: (Exercise) -> Unit
 ) {
     val globalLocalization = com.nnoidea.fitnez2.core.localization.globalLocalization
+    val view = LocalView.current
 
     val scope = rememberCoroutineScope()
     
@@ -715,7 +720,10 @@ private fun PredictiveExerciseSelectionDialog(
                                 .fillMaxWidth()
                                 .background(containerColor, RoundedCornerShape(12.dp))
                                 .clip(RoundedCornerShape(12.dp))
-                                .clickable { onExerciseSelected(exercise) }
+                                .clickable {
+                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                    onExerciseSelected(exercise)
+                                }
                                 .padding(vertical = 12.dp, horizontal = 12.dp), // Increased padding for better touch target and visual
                             verticalAlignment = Alignment.CenterVertically
                         ) {

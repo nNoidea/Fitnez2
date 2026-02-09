@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
+import android.view.HapticFeedbackConstants
 
 import com.nnoidea.fitnez2.core.ValidateAndCorrect
 
@@ -133,6 +135,7 @@ private fun <T> SmartValidatedInput(
     val focusManager = LocalFocusManager.current
     val density = LocalDensity.current
     val isKeyboardVisible = WindowInsets.ime.getBottom(density) > 0
+    val view = LocalView.current
 
     // Clear focus when keyboard dismissed
     LaunchedEffect(isKeyboardVisible) {
@@ -152,6 +155,7 @@ private fun <T> SmartValidatedInput(
     LaunchedEffect(isFocused) {
         if (isFocused) {
             // Focus gained - save and clear
+            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
             savedValue = internalValue
             internalValue = ""
             wasFocused = true
