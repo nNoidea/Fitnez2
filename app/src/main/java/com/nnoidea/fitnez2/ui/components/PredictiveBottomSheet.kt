@@ -153,7 +153,7 @@ fun PredictiveBottomSheet(
             if (latestForExercise != null) {
                 setsValue = latestForExercise.record.sets.toString()
                 repsValue = latestForExercise.record.reps.toString()
-                weightValue = latestForExercise.record.weight.toString().removeSuffix(".0")
+                weightValue = latestForExercise.record.weight.toString()
             } else {
                 // Use default values if no history for this exercise
                 setsValue = defaultSets
@@ -507,7 +507,7 @@ fun PredictiveBottomSheet(
 
                         // Button 4: Weight
                         com.nnoidea.fitnez2.ui.common.WeightInput(
-                            value = weightValue,
+                            value = weightValue.toDoubleOrNull() ?: 0.0,
                             onValidChange = { weightValue = it.toString() }
                         ) { displayValue, placeholder, interactionSource, onValueChange ->
                             BottomSheetInputStyle(

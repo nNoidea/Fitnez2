@@ -76,13 +76,13 @@ fun RepsInput(
  * Handles focus/unfocus behavior and applies ValidateAndCorrect.weight() on blur.
  * If validation fails, the value reverts to the previous valid value.
  *
- * @param value Current weight value as string
+ * @param value Current weight value as Double (formatted internally, removes .0 for whole numbers)
  * @param onValidChange Called with validated value when user commits a valid change
  * @param content Slot for rendering - receives display state and handlers
  */
 @Composable
 fun WeightInput(
-    value: String,
+    value: Double,
     onValidChange: (Double) -> Unit,
     content: @Composable (
         displayValue: String,
@@ -91,8 +91,11 @@ fun WeightInput(
         onValueChange: (String) -> Unit
     ) -> Unit
 ) {
+    // Format: remove unnecessary .0 suffix for whole numbers (e.g., 50.0 -> "50")
+    val formattedValue = value.toString().removeSuffix(".0")
+    
     SmartValidatedInput(
-        value = value,
+        value = formattedValue,
         validate = { ValidateAndCorrect.weight(it) },
         inputFilter = { it.isEmpty() || it == "-" || it.toDoubleOrNull() != null },
         onValidChange = { onValidChange(it as Double) },

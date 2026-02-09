@@ -532,7 +532,7 @@ private fun HistoryRecordCard(
                 },
                 col4 = {
                     com.nnoidea.fitnez2.ui.common.WeightInput(
-                        value = item.record.weight.toString().removeSuffix(".0"),
+                        value = item.record.weight,
                         onValidChange = { validWeight ->
                             onUpdate(item.record.copy(weight = validWeight))
                         }
