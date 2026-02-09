@@ -94,6 +94,17 @@ sealed class EnStrings(
     open val labelRotationOn: String = "On"
     open val labelRotationOff: String = "Off"
 
+    open val labelExportData: String = "Export Data"
+    open val labelImportData: String = "Import Data"
+    open val labelExportSuccess: String = "Export Successful"
+    open val labelExportFailed: String = "Export Failed"
+    open val labelImportSuccess: String = "Import Successful"
+    open val labelImportFailed: String = "Import Failed"
+    
+    open val titleImportWarning: String = "Overwrite Data?"
+    open val msgImportWarning: String = "This will permanently delete your current database and replace it with the imported data. This action cannot be undone."
+    open val labelConfirm: String = "Confirm"
+
 }
 
 /**

@@ -84,4 +84,15 @@ object TrStrings : EnStrings(
     override val labelRotationOn: String = "Açık"
     override val labelRotationOff: String = "Kapalı"
 
+    override val labelExportData = "Veriyi Dışa Aktar"
+    override val labelImportData = "Veriyi İçe Aktar"
+    override val labelExportSuccess = "Dışa Aktarma Başarılı"
+    override val labelExportFailed = "Dışa Aktarma Başarısız"
+    override val labelImportSuccess = "İçe Aktarma Başarılı"
+    override val labelImportFailed = "İçe Aktarma Başarısız"
+
+    override val titleImportWarning = "Verilerin Üzerine Yazılsın Mı?"
+    override val msgImportWarning = "Bu işlem mevcut veritabanınızı kalıcı olarak silip yerine içe aktarılan verileri koyacaktır. Bu işlem geri alınamaz."
+    override val labelConfirm = "Onayla"
+
 }

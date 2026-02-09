@@ -117,4 +117,13 @@ abstract class RecordDao {
 
     @Query("DELETE FROM record WHERE id = :recordId")
     abstract suspend fun delete(recordId: Int)
+
+    @Query("SELECT * FROM record")
+    abstract suspend fun getAllRecords(): List<Record>
+
+    @Query("DELETE FROM record")
+    abstract suspend fun deleteAllRecords()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertAll(records: List<Record>)
 }

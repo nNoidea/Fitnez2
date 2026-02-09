@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.width
 import com.nnoidea.fitnez2.ui.components.PredictiveModal
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -50,6 +50,14 @@ import com.nnoidea.fitnez2.data.SettingsRepository
 import com.nnoidea.fitnez2.ui.components.PredictiveAlertDialog
 import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.ui.components.TopTooltip
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.nnoidea.fitnez2.data.AppDatabase
+import com.nnoidea.fitnez2.data.BackupRepository
+import android.widget.Toast
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 @Composable
@@ -59,6 +67,8 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     
     val context = LocalContext.current
     val settingsRepository = remember { SettingsRepository(context) }
+    val database = remember { AppDatabase.getDatabase(context, kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)) }
+    val backupRepository = remember { BackupRepository(context, database) }
     val scope = rememberCoroutineScope()
 
     val defaultSets by settingsRepository.defaultSetsFlow.collectAsState(initial = "3")
@@ -70,6 +80,32 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     var showRotationDialog by remember { mutableStateOf(false) }
     
     var showDefaultsDialog by remember { mutableStateOf(false) }
+    var showImportConfirmation by remember { mutableStateOf(false) }
+    var importUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let {
+            scope.launch {
+                val result = backupRepository.exportDatabase(it)
+                if (result.isSuccess) {
+                    Toast.makeText(context, globalLocalization.labelExportSuccess, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, globalLocalization.labelExportFailed, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            importUri = it
+            showImportConfirmation = true
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -138,6 +174,30 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
 
             HorizontalDivider()
             
+            HorizontalDivider()
+
+            // Export Data
+            SettingsItem(
+                label = globalLocalization.labelExportData,
+                value = "",
+                onClick = {
+                    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                    val fileName = "Fitnez2-$timeStamp.json"
+                    exportLauncher.launch(fileName)
+                }
+            )
+
+            HorizontalDivider()
+
+            // Import Data
+            SettingsItem(
+                label = globalLocalization.labelImportData,
+                value = "",
+                onClick = {
+                    importLauncher.launch(arrayOf("application/json"))
+                }
+            )
+
             HorizontalDivider()
 
             // Developer Settings
@@ -277,6 +337,40 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
             }
+        }
+    }
+
+    if (showImportConfirmation) {
+        PredictiveAlertDialog(
+            show = showImportConfirmation,
+            onDismissRequest = { showImportConfirmation = false },
+            title = globalLocalization.titleImportWarning,
+            confirmButton = {
+                Button(
+                    onClick = {
+                        importUri?.let { uri ->
+                            scope.launch {
+                                val result = backupRepository.importDatabase(uri)
+                                if (result.isSuccess) {
+                                    Toast.makeText(context, globalLocalization.labelImportSuccess, Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, globalLocalization.labelImportFailed, Toast.LENGTH_SHORT).show()
+                                }
+                                showImportConfirmation = false
+                            }
+                        }
+                    }
+                ) {
+                    Text(globalLocalization.labelConfirm)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportConfirmation = false }) {
+                    Text(globalLocalization.labelCancel)
+                }
+            }
+        ) {
+           Text(globalLocalization.msgImportWarning)
         }
     }
 

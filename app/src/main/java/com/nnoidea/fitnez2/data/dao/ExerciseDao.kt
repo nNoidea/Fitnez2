@@ -17,6 +17,9 @@ abstract class ExerciseDao {
     // INTERNAL & HELPER METHODS
     // ============================================================================================
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertAll(exercises: List<Exercise>)
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     protected abstract suspend fun insertInternal(exercise: Exercise): Long
 
@@ -97,4 +100,7 @@ abstract class ExerciseDao {
     open suspend fun delete(exerciseId: Int) {
         deleteExerciseInternal(exerciseId)
     }
+
+    @Query("DELETE FROM exercise")
+    abstract suspend fun deleteAllExercises()
 }
