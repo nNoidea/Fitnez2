@@ -49,7 +49,7 @@ import com.nnoidea.fitnez2.core.localization.EnStrings
 import com.nnoidea.fitnez2.data.SettingsRepository
 import com.nnoidea.fitnez2.ui.components.PredictiveAlertDialog
 import com.nnoidea.fitnez2.core.ValidateAndCorrect
-import com.nnoidea.fitnez2.ui.components.TopTooltip
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.nnoidea.fitnez2.data.AppDatabase
@@ -214,7 +214,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             )
         }
 
-        TopTooltip(globalUiState = globalState)
+
     }
 
     SelectionDialog(

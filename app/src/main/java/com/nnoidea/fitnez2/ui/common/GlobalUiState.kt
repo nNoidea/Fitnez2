@@ -121,24 +121,7 @@ class GlobalUiState(
         }
     }
 
-    // Tooltip State
-    var tooltipMessage by mutableStateOf<String?>(null)
-        private set
-    var tooltipId by mutableLongStateOf(0L)
-        private set
-    private var currentTooltipJob: Job? = null
 
-    fun showTooltip(message: String, durationMillis: Long = 3000) {
-        currentTooltipJob?.cancel()
-        // Set message immediately (synchronously) so it shows even if scope is null
-        tooltipMessage = message
-        tooltipId++
-        // Schedule auto-dismiss if scope is available
-        currentTooltipJob = scope?.launch {
-            kotlinx.coroutines.delay(durationMillis)
-            tooltipMessage = null
-        }
-    }
 }
 
 val LocalGlobalUiState = compositionLocalOf { GlobalUiState() }

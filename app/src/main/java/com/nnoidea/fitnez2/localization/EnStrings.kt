@@ -105,6 +105,20 @@ sealed class EnStrings(
     open val msgImportWarning: String = "This will permanently delete your current database and replace it with the imported data. This action cannot be undone."
     open val labelConfirm: String = "Confirm"
 
+    // Validation Errors
+    open val errorSetsEmpty: String = "Sets cannot be empty"
+    open val errorSetsFormat: String = "Invalid sets format"
+    open val errorSetsWholeNumber: String = "Sets must be a whole number"
+    open val errorSetsPositive: String = "Sets must be greater than 0"
+
+    open val errorRepsEmpty: String = "Reps cannot be empty"
+    open val errorRepsFormat: String = "Invalid reps format"
+    open val errorRepsWholeNumber: String = "Reps must be a whole number"
+    open val errorRepsPositive: String = "Reps must be greater than 0"
+
+    open val errorWeightEmpty: String = "Weight cannot be empty"
+    open val errorWeightFormat: String = "Invalid weight format"
+    open val errorWeightInvalid: String = "Invalid weight value"
 }
 
 /**

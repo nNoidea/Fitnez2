@@ -95,4 +95,18 @@ object TrStrings : EnStrings(
     override val msgImportWarning = "Bu işlem mevcut veritabanınızı kalıcı olarak silip yerine içe aktarılan verileri koyacaktır. Bu işlem geri alınamaz."
     override val labelConfirm = "Onayla"
 
+    // Validation Errors
+    override val errorSetsEmpty = "Setler boş olamaz"
+    override val errorSetsFormat = "Geçersiz set formatı"
+    override val errorSetsWholeNumber = "Setler tam sayı olmalıdır"
+    override val errorSetsPositive = "Setler 0'dan büyük olmalıdır"
+
+    override val errorRepsEmpty = "Tekrarlar boş olamaz"
+    override val errorRepsFormat = "Geçersiz tekrar formatı"
+    override val errorRepsWholeNumber = "Tekrarlar tam sayı olmalıdır"
+    override val errorRepsPositive = "Tekrarlar 0'dan büyük olmalıdır"
+
+    override val errorWeightEmpty = "Ağırlık boş olamaz"
+    override val errorWeightFormat = "Geçersiz ağırlık formatı"
+    override val errorWeightInvalid = "Geçersiz ağırlık değeri"
 }

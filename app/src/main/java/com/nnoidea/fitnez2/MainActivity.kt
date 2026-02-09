@@ -39,6 +39,8 @@ class MainActivity : ComponentActivity() {
         val route = intent.getStringExtra(EXTRA_PAGE_ROUTE) ?: AppPage.Home.route
         val currentPage = AppPage.entries.find { it.route == route } ?: AppPage.Home
 
+        com.nnoidea.fitnez2.core.ValidateAndCorrect.init(applicationContext)
+
         setContent {
             Fitnez2Theme {
                 Surface(

@@ -22,7 +22,7 @@ import com.nnoidea.fitnez2.ui.components.HamburgerMenu
 import com.nnoidea.fitnez2.ui.components.PredictiveBottomSheet
 import com.nnoidea.fitnez2.ui.components.PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP
 import com.nnoidea.fitnez2.ui.components.TopHeader
-import com.nnoidea.fitnez2.ui.components.TopTooltip
+
 
 @Composable
 fun HomeScreen(onOpenDrawer: () -> Unit) {
@@ -58,6 +58,6 @@ fun HomeScreen(onOpenDrawer: () -> Unit) {
                 .padding(bottom = snackbarBottomPadding)
         )
         
-        TopTooltip(globalUiState = LocalGlobalUiState.current)
+
     }
 }

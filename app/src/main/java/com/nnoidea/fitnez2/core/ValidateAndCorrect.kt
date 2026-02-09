@@ -1,12 +1,49 @@
 package com.nnoidea.fitnez2.core
 
-import com.nnoidea.fitnez2.ui.common.GlobalUiState
+import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
+import android.view.Gravity
+import android.widget.TextView
+import android.widget.Toast
+import com.nnoidea.fitnez2.core.localization.LocalizationManager
+import java.lang.ref.WeakReference
 
 object ValidateAndCorrect {
 
-    // Helper to show tooltip using global instance
-    private fun showTooltip(message: String) {
-        GlobalUiState.instance?.showTooltip(message)
+    private var appContext: WeakReference<Context>? = null
+
+    fun init(context: Context) {
+        appContext = WeakReference(context.applicationContext)
+    }
+
+    // Helper to show tooltip using Toast
+    @Suppress("DEPRECATION") // Custom toast views are deprecated in API 30+ but necessary for gravity
+    private fun showToast(message: String) {
+        appContext?.get()?.let { context ->
+            val toast = Toast(context)
+            
+            // Create a simple custom view programmatically
+            val textView = TextView(context).apply {
+                text = message
+                setTextColor(Color.WHITE)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                setPadding(32, 24, 32, 24)
+                
+                // Rounded dark background
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    setColor(Color.parseColor("#333333"))
+                    cornerRadius = 48f
+                }
+            }
+
+            toast.view = textView
+            toast.duration = Toast.LENGTH_SHORT
+            toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, 150) // 150 offset from top
+            toast.show()
+        }
     }
 
     /**
@@ -17,22 +54,22 @@ object ValidateAndCorrect {
      */
     fun sets(input: String): Int? {
         if (input.isBlank()) {
-            showTooltip("Sets cannot be empty")
+            showToast(LocalizationManager.strings.errorSetsEmpty)
             return null
         }
         val number = input.toDoubleOrNull()
         if (number == null) {
-            showTooltip("Invalid sets format")
+            showToast(LocalizationManager.strings.errorSetsFormat)
             return null
         }
         // Check if it's an integer (whole number)
         if (number % 1.0 != 0.0) {
-            showTooltip("Sets must be a whole number")
+            showToast(LocalizationManager.strings.errorSetsWholeNumber)
             return null
         }
         val intValue = number.toInt()
         if (intValue <= 0) {
-            showTooltip("Sets must be greater than 0")
+            showToast(LocalizationManager.strings.errorSetsPositive)
             return null
         }
         return intValue
@@ -45,21 +82,21 @@ object ValidateAndCorrect {
      */
     fun reps(input: String): Int? {
         if (input.isBlank()) {
-            showTooltip("Reps cannot be empty")
+            showToast(LocalizationManager.strings.errorRepsEmpty)
             return null
         }
         val number = input.toDoubleOrNull()
         if (number == null) {
-            showTooltip("Invalid reps format")
+            showToast(LocalizationManager.strings.errorRepsFormat)
             return null
         }
         if (number % 1.0 != 0.0) {
-            showTooltip("Reps must be a whole number")
+            showToast(LocalizationManager.strings.errorRepsWholeNumber)
             return null
         }
         val intValue = number.toInt()
         if (intValue <= 0) {
-            showTooltip("Reps must be greater than 0")
+            showToast(LocalizationManager.strings.errorRepsPositive)
             return null
         }
         return intValue
@@ -72,16 +109,16 @@ object ValidateAndCorrect {
      */
     fun weight(input: String): Double? {
         if (input.isBlank()) {
-            showTooltip("Weight cannot be empty")
+            showToast(LocalizationManager.strings.errorWeightEmpty)
             return null
         }
         val number = input.toDoubleOrNull()
         if (number == null) {
-            showTooltip("Invalid weight format")
+            showToast(LocalizationManager.strings.errorWeightFormat)
             return null
         }
         if (number.isNaN() || number.isInfinite()) {
-           showTooltip("Invalid weight value")
+           showToast(LocalizationManager.strings.errorWeightInvalid)
            return null
         }
         return number
