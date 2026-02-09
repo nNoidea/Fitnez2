@@ -20,12 +20,14 @@ import com.nnoidea.fitnez2.core.ValidateAndCorrect
  *
  * @param value Current sets value as string
  * @param onValidChange Called with validated value when user commits a valid change
+ * @param onRawValueChange Optional callback for current uncommitted text (for external validation)
  * @param content Slot for rendering - receives display state and handlers
  */
 @Composable
 fun SetsInput(
     value: String,
     onValidChange: (Int) -> Unit,
+    onRawValueChange: ((String) -> Unit)? = null,
     content: @Composable (
         displayValue: String,
         placeholder: String,
@@ -38,6 +40,7 @@ fun SetsInput(
         validate = { ValidateAndCorrect.sets(it) },
         inputFilter = { it.isEmpty() || it.all { c -> c.isDigit() } },
         onValidChange = { onValidChange(it as Int) },
+        onRawValueChange = onRawValueChange,
         content = content
     )
 }
@@ -49,12 +52,14 @@ fun SetsInput(
  *
  * @param value Current reps value as string
  * @param onValidChange Called with validated value when user commits a valid change
+ * @param onRawValueChange Optional callback for current uncommitted text (for external validation)
  * @param content Slot for rendering - receives display state and handlers
  */
 @Composable
 fun RepsInput(
     value: String,
     onValidChange: (Int) -> Unit,
+    onRawValueChange: ((String) -> Unit)? = null,
     content: @Composable (
         displayValue: String,
         placeholder: String,
@@ -67,6 +72,7 @@ fun RepsInput(
         validate = { ValidateAndCorrect.reps(it) },
         inputFilter = { it.isEmpty() || it.all { c -> c.isDigit() } },
         onValidChange = { onValidChange(it as Int) },
+        onRawValueChange = onRawValueChange,
         content = content
     )
 }
@@ -78,12 +84,14 @@ fun RepsInput(
  *
  * @param value Current weight value as Double (formatted internally, removes .0 for whole numbers)
  * @param onValidChange Called with validated value when user commits a valid change
+ * @param onRawValueChange Optional callback for current uncommitted text (for external validation)
  * @param content Slot for rendering - receives display state and handlers
  */
 @Composable
 fun WeightInput(
     value: Double,
     onValidChange: (Double) -> Unit,
+    onRawValueChange: ((String) -> Unit)? = null,
     content: @Composable (
         displayValue: String,
         placeholder: String,
@@ -99,6 +107,7 @@ fun WeightInput(
         validate = { ValidateAndCorrect.weight(it) },
         inputFilter = { it.isEmpty() || it == "-" || it.toDoubleOrNull() != null },
         onValidChange = { onValidChange(it as Double) },
+        onRawValueChange = onRawValueChange,
         content = content
     )
 }
@@ -121,6 +130,7 @@ private fun <T> SmartValidatedInput(
     validate: (String) -> T?,
     inputFilter: (String) -> Boolean,
     onValidChange: (T) -> Unit,
+    onRawValueChange: ((String) -> Unit)? = null,
     content: @Composable (
         displayValue: String,
         placeholder: String,
@@ -201,7 +211,13 @@ private fun <T> SmartValidatedInput(
     val onValueChangeWrapper: (String) -> Unit = { newValue ->
         if (inputFilter(newValue)) {
             internalValue = newValue
+            onRawValueChange?.invoke(newValue)
         }
+    }
+
+    // Report raw value on initial composition and when synced from upstream
+    LaunchedEffect(internalValue) {
+        onRawValueChange?.invoke(internalValue)
     }
 
     content(internalValue, savedValue, interactionSource, onValueChangeWrapper)

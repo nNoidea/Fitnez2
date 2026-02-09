@@ -144,6 +144,11 @@ fun PredictiveBottomSheet(
         var repsValue by remember { mutableStateOf("") }
         var weightValue by remember { mutableStateOf("") }
 
+        // Raw (uncommitted) values for validation before Add
+        var setsRaw by remember { mutableStateOf("") }
+        var repsRaw by remember { mutableStateOf("") }
+        var weightRaw by remember { mutableStateOf("") }
+
 
 
 
@@ -414,7 +419,6 @@ fun PredictiveBottomSheet(
                         Button(
                             onClick = {
                                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
-                                keyboardController?.hide()
                                 scope.launch {
                                     try {
                                         val exerciseId = selectedExerciseId
@@ -423,14 +427,23 @@ fun PredictiveBottomSheet(
                                             return@launch
                                         }
 
-                                        val inputSets = setsValue.ifEmpty { setsFallback }
-                                        val sets = ValidateAndCorrect.sets(inputSets) ?: return@launch
+                                        // Validate raw (uncommitted) values first
+                                        // Use raw values, falling back to committed values if empty
+                                        val inputSets = setsRaw.ifEmpty { setsValue }.ifEmpty { setsFallback }
+                                        val sets = ValidateAndCorrect.sets(inputSets)
+                                        if (sets == null) return@launch // Tooltip already shown
 
-                                        val inputReps = repsValue.ifEmpty { repsFallback }
-                                        val reps = ValidateAndCorrect.reps(inputReps) ?: return@launch
+                                        val inputReps = repsRaw.ifEmpty { repsValue }.ifEmpty { repsFallback }
+                                        val reps = ValidateAndCorrect.reps(inputReps)
+                                        if (reps == null) return@launch // Tooltip already shown
 
-                                        val inputWeight = weightValue.ifEmpty { weightFallback }
-                                        val weight = ValidateAndCorrect.weight(inputWeight) ?: return@launch
+                                        val inputWeight = weightRaw.ifEmpty { weightValue }.ifEmpty { weightFallback }
+                                        val weight = ValidateAndCorrect.weight(inputWeight)
+                                        if (weight == null) return@launch // Tooltip already shown
+
+                                        // All valid - clear focus (commits values) and hide keyboard
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
 
                                         val record = Record(
                                             exerciseId = exerciseId,
@@ -470,7 +483,8 @@ fun PredictiveBottomSheet(
                         // Button 2: Sets
                         com.nnoidea.fitnez2.ui.common.SetsInput(
                             value = setsValue,
-                            onValidChange = { setsValue = it.toString() }
+                            onValidChange = { setsValue = it.toString() },
+                            onRawValueChange = { setsRaw = it }
                         ) { displayValue, placeholder, interactionSource, onValueChange ->
                             BottomSheetInputStyle(
                                 label = globalLocalization.labelSets,
@@ -489,7 +503,8 @@ fun PredictiveBottomSheet(
                         // Button 3: Reps
                         com.nnoidea.fitnez2.ui.common.RepsInput(
                             value = repsValue,
-                            onValidChange = { repsValue = it.toString() }
+                            onValidChange = { repsValue = it.toString() },
+                            onRawValueChange = { repsRaw = it }
                         ) { displayValue, placeholder, interactionSource, onValueChange ->
                             BottomSheetInputStyle(
                                 label = globalLocalization.labelReps,
@@ -508,7 +523,8 @@ fun PredictiveBottomSheet(
                         // Button 4: Weight
                         com.nnoidea.fitnez2.ui.common.WeightInput(
                             value = weightValue.toDoubleOrNull() ?: 0.0,
-                            onValidChange = { weightValue = it.toString() }
+                            onValidChange = { weightValue = it.toString() },
+                            onRawValueChange = { weightRaw = it }
                         ) { displayValue, placeholder, interactionSource, onValueChange ->
                             BottomSheetInputStyle(
                                 label = weightUnit,
