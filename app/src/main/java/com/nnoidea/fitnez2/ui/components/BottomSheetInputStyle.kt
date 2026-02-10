@@ -48,7 +48,8 @@ fun BottomSheetInputStyle(
             color = contentColor,
             textAlign = TextAlign.Start
         ),
-        singleLine = true,
+        singleLine = false,
+        maxLines = 1,
         cursorBrush = SolidColor(contentColor),
         decorationBox = { innerTextField ->
             Row(

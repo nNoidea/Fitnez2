@@ -34,21 +34,14 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ArrowDropDown
 
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.TextButton
@@ -90,7 +83,7 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.foundation.layout.fillMaxSize
+
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.common.UiSignal
@@ -104,8 +97,7 @@ import com.nnoidea.fitnez2.data.LocalSettingsRepository
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.core.ValidateAndCorrect
-import androidx.compose.runtime.collectAsState
-import com.nnoidea.fitnez2.ui.components.ExerciseHistoryList
+
 
 const val BUTTONHEIGHT = 45
 const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2*BUTTONHEIGHT + 70 + 15 // Approximately 40*2 + 70 + 15
@@ -231,6 +223,17 @@ fun PredictiveBottomSheet(
 
         val isExpanded by remember {
             derivedStateOf { offsetY.value < maxOffset / 2 }
+        }
+        
+        // Lazy Load Logic: Only load history once sheet is pulled up
+        var hasBeenOpened by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            androidx.compose.runtime.snapshotFlow { offsetY.value }
+                .collect { currentOffset ->
+                    if (!hasBeenOpened && currentOffset < maxOffset - 10f) {
+                        hasBeenOpened = true
+                    }
+                }
         }
 
         // Draggable State
@@ -453,12 +456,10 @@ fun PredictiveBottomSheet(
                                             weight = weight,
                                             date = System.currentTimeMillis()
                                         )
+
                                         val newId = recordDao.create(record)
+
                                         globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
-
-
-                                        // Form values are preserved for multiple entries
-
 
                                     } catch (e: Exception) {
                                         // Handle error - could show toast or snackbar
@@ -553,12 +554,13 @@ fun PredictiveBottomSheet(
                         .weight(1f) // Takes remaining space
                         .padding(top = 24.dp)
                 ) {
-                    ExerciseHistoryList(
-                        modifier = Modifier.fillMaxSize(),
-                        selectedExerciseId = selectedExerciseId
-                    )
-
-
+                    if (hasBeenOpened && selectedExerciseId != null) {
+                        ExerciseHistoryList(
+                            modifier = Modifier.fillMaxSize(),
+                            selectedExerciseId = selectedExerciseId,
+                            useAlternatingColors = false
+                        )
+                    }
                 }
             }
         }

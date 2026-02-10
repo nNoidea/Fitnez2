@@ -33,6 +33,9 @@ object StressTestManager {
         val recordsPerDay = 100
         val records = ArrayList<Record>()
 
+        var currentGroupIndex = 0
+        var lastExerciseId = -1
+
         for (day in 0 until daysToSimulate) {
             if (day % 10 == 0) {
                 val p = 0.2f + (0.3f * (day.toFloat() / daysToSimulate.toFloat()))
@@ -46,6 +49,12 @@ object StressTestManager {
             repeat(recordsPerDay) {
                 val exercise = savedExercises.random()
                 
+                // Calculate groupIndex (increment if exercise changes)
+                if (lastExerciseId != -1 && exercise.id != lastExerciseId) {
+                    currentGroupIndex++
+                }
+                lastExerciseId = exercise.id
+                
                 // Randomize data slightly
                 val sets = Random.nextInt(1, 6)
                 val reps = Random.nextInt(5, 16)
@@ -58,7 +67,8 @@ object StressTestManager {
                         date = timestamp,
                         sets = sets,
                         reps = reps,
-                        weight = weight
+                        weight = weight,
+                        groupIndex = currentGroupIndex
                     )
                 )
             }

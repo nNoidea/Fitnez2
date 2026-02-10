@@ -32,13 +32,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,13 +64,29 @@ import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import androidx.compose.animation.animateContentSize
 
 import androidx.compose.material3.Surface
 
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+
+import androidx.paging.PagingData
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.insertSeparators
+import androidx.paging.map
+import androidx.paging.compose.itemKey
+import androidx.paging.compose.itemContentType
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+sealed class HistoryUiModel {
+    data class RecordItem(val record: RecordWithExercise, val isLight: Boolean) : HistoryUiModel()
+    data class Header(val date: Long) : HistoryUiModel()
+}
 
 // -----------------------------------------------------------------------------
 // UI Style Constants - Change these to tweak the list's look
@@ -96,85 +108,118 @@ private const val HistoryInputBackgroundAlpha = 0.1f
 fun ExerciseHistoryList(
     modifier: Modifier = Modifier,
     extraBottomPadding: Dp = 0.dp,
-    selectedExerciseId: Int? = null
+    selectedExerciseId: Int? = null,
+    useAlternatingColors: Boolean = true
 ) {
     val scope = rememberCoroutineScope()
     val database = LocalAppDatabase.current
     val dao = database.recordDao()
 
-    val history by remember(selectedExerciseId) {
-        if (selectedExerciseId == null) {
-            dao.getAllRecordsFlow()
-        } else {
-            dao.getRecordsByExerciseId(selectedExerciseId)
-        }
-    }.collectAsState(initial = emptyList())
+
     val settingsRepository = LocalSettingsRepository.current
     val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
 
-    // Grouping Logic - derived state handles language changes gracefully
-    val groupedHistory by remember(history) {
-        derivedStateOf {
-            var isLight = true
-            var prevName: String? = null
-            
-            // Process from oldest to newest to ensure stability when new records are added at the top
-            val historyWithColor = history.asReversed().map { item ->
-                if (prevName != null && item.exerciseName != prevName) {
-                    isLight = !isLight
-                }
-                prevName = item.exerciseName
-                item to isLight
-            }.reversed()
-
-            historyWithColor.groupBy { (item, _) ->
-                globalLocalization.formatDate(item.record.date)
-            }
-        }
+    val exerciseDao = database.exerciseDao()
+    // Load all exercises into a map for fast lookup (Removing JOIN from DB query)
+    val exercisesList by exerciseDao.getAllExercisesFlow().collectAsState(initial = emptyList())
+    val exerciseMap = remember(exercisesList) {
+        exercisesList.associate { it.id to it.name }
     }
+
+    // Paging Configuration
+    val recordPager: Pager<Int, Record> = remember(selectedExerciseId) {
+        Pager(
+            config = PagingConfig(pageSize = 10, enablePlaceholders = false),
+            pagingSourceFactory = {
+                val source: androidx.paging.PagingSource<Int, Record> = if (selectedExerciseId == null) {
+                    dao.getRecordsPagingSourceRaw()
+                } else {
+                    dao.getRecordsByExerciseIdPagingSourceRaw(selectedExerciseId)
+                }
+                source
+            }
+        )
+    }
+
+    val pagingItems = remember(recordPager, exerciseMap, useAlternatingColors) {
+        val flow: kotlinx.coroutines.flow.Flow<PagingData<HistoryUiModel>> = recordPager.flow
+            .map { pagingData ->
+                val mapped = pagingData.map { record ->
+                    val exerciseName = exerciseMap[record.exerciseId] ?: "Unknown Exercise"
+                    val recordWithExercise = RecordWithExercise(record, exerciseName)
+                    
+                    val isLight = if (!useAlternatingColors) true else record.groupIndex % 2 == 0
+                    HistoryUiModel.RecordItem(recordWithExercise, isLight)
+                }
+                
+                mapped.insertSeparators<HistoryUiModel.RecordItem, HistoryUiModel> { before, after ->
+                    if (after == null) return@insertSeparators null
+                    if (before == null) return@insertSeparators HistoryUiModel.Header(after.record.record.date)
+                    
+                    if (!isSameDay(before.record.record.date, after.record.record.date)) {
+                        HistoryUiModel.Header(after.record.record.date)
+                    } else {
+                        null
+                    }
+                }
+            }
+        flow
+    }.collectAsLazyPagingItems()
 
     // Content Display
     val globalUiState = LocalGlobalUiState.current
     val listState = rememberLazyListState()
 
-    // Scroll to top when receiving the signal
-    // State to track if we are waiting for a specific record to appear to scroll to it
-    var pendingScrollRecordId by remember { mutableStateOf<Int?>(null) }
-
     // Scroll trigger: Receive signal
+    var pendingScrollRecordId by remember { mutableStateOf<Int?>(null) }
+    
     LaunchedEffect(Unit) {
         globalUiState.signalFlow.collect { signal ->
             if (signal is com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop) {
-                // Check if the record is already in the list (fast path)
-                val targetId = signal.recordId
-                if (targetId != null) {
-                    val alreadyExists = groupedHistory.values.flatten().any { it.first.record.id == targetId }
-                    if (alreadyExists) {
-                         listState.animateScrollToItem(0)
-                         pendingScrollRecordId = null
-                    } else {
-                        // Wait for it to appear
-                        pendingScrollRecordId = targetId
+                 // Immediate action: If we are very deep in the list, snap to top immediately.
+                 // This ensures Paging starts loading the top pages if they were dropped.
+                 if (listState.firstVisibleItemIndex > 20) {
+                     listState.scrollToItem(0)
+                 }
+                 
+                 // Set pending state to wait for the specific record to appear for fine-tuning
+                 pendingScrollRecordId = signal.recordId
+            }
+        }
+    }
+    
+    // Watch for the pending record to appear in the list items
+    val itemCount = pagingItems.itemCount
+    LaunchedEffect(pendingScrollRecordId, itemCount) {
+        val targetId = pendingScrollRecordId
+        if (targetId != null) {
+            
+            if (itemCount > 0) {
+                // Check if the record is in the first few items (it should be at the top)
+                // We check the first 5 items to be safe (accounting for headers)
+                val searchRange = 0 until minOf(5, itemCount)
+                var found = false
+                for (i in searchRange) {
+                    val item = pagingItems.peek(i)
+                    if (item is HistoryUiModel.RecordItem && item.record.record.id == targetId) {
+                        found = true
+                        break
                     }
-                } else {
-                     // Fallback for legacy calls (if any) or forced scrolls without ID
-                     listState.animateScrollToItem(0)
+                }
+                
+                if (found) {
+                    listState.animateScrollToItem(0)
+                    pendingScrollRecordId = null
                 }
             }
         }
     }
 
-    // Scroll trigger: Data update
-    LaunchedEffect(groupedHistory, pendingScrollRecordId) {
-        val targetId = pendingScrollRecordId
-        if (targetId != null) {
-             val exists = groupedHistory.values.flatten().any { it.first.record.id == targetId }
-             if (exists) {
-                 listState.animateScrollToItem(0)
-                 pendingScrollRecordId = null
-             }
-        }
-    }
+    
+    // Auto-scroll logic when new item is added is handled by Paging/LazyColumn behavior usually,
+    // or triggered via the signal.
+    // The previous complex logic waiting for ID is not easily applicable to Paging without scanning.
+    // Assuming adding a record triggers a refresh and scroll signal.
 
 
 
@@ -186,7 +231,7 @@ fun ExerciseHistoryList(
         ExerciseHistoryListContent(
             modifier = Modifier.fillMaxSize(),
             listState = listState,
-            groupedHistory = groupedHistory,
+            pagingItems = pagingItems,
 
             weightUnit = weightUnit,
             extraBottomPadding = extraBottomPadding,
@@ -223,6 +268,16 @@ fun ExerciseHistoryList(
     }
 }
 
+
+private fun isSameDay(millis1: Long, millis2: Long): Boolean {
+    val cal = java.util.Calendar.getInstance()
+    cal.timeInMillis = millis1
+    val y1 = cal.get(java.util.Calendar.YEAR)
+    val d1 = cal.get(java.util.Calendar.DAY_OF_YEAR)
+    cal.timeInMillis = millis2
+    return y1 == cal.get(java.util.Calendar.YEAR) && d1 == cal.get(java.util.Calendar.DAY_OF_YEAR)
+}
+
 // -----------------------------------------------------------------------------
 // Stateless UI Components
 // -----------------------------------------------------------------------------
@@ -232,7 +287,7 @@ fun ExerciseHistoryList(
 private fun ExerciseHistoryListContent(
     modifier: Modifier,
     listState: androidx.compose.foundation.lazy.LazyListState,
-    groupedHistory: Map<String, List<Pair<RecordWithExercise, Boolean>>>,
+    pagingItems: androidx.paging.compose.LazyPagingItems<HistoryUiModel>,
     weightUnit: String,
     extraBottomPadding: Dp,
     onUpdateRequest: (Record) -> Unit,
@@ -250,7 +305,7 @@ private fun ExerciseHistoryListContent(
         }
     }
 
-    if (groupedHistory.isEmpty()) {
+    if (pagingItems.itemCount == 0) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 text = globalLocalization.labelHistoryEmpty,
@@ -264,53 +319,94 @@ private fun ExerciseHistoryListContent(
             state = listState,
             contentPadding = PaddingValues(bottom = 80.dp + extraBottomPadding)
         ) {
-
-            groupedHistory.forEach { (dateString, records) ->
-                item(key = "header_$dateString") {
-                    val date = records.firstOrNull()?.first?.record?.date ?: 0L
-                    HistoryDateHeader(
-                        date = date,
-                        weightUnit = weightUnit,
-                        modifier = Modifier.animateItem()
-                    )
-                }
-                itemsIndexed(records, key = { _, item -> item.first.record.id }) { index, (recordItem, isLight) ->
-                    val prevIsSame = index > 0 && records[index - 1].second == isLight
-                    val nextIsSame = index < records.lastIndex && records[index + 1].second == isLight
-
-                    val shape = when {
-                        !prevIsSame && !nextIsSame -> RoundedCornerShape(28.dp)
-                        !prevIsSame && nextIsSame -> RoundedCornerShape(
-                            topStart = 28.dp,
-                            topEnd = 28.dp,
-                            bottomStart = 4.dp,
-                            bottomEnd = 4.dp
-                        )
-                        prevIsSame && !nextIsSame -> RoundedCornerShape(
-                            topStart = 4.dp,
-                            topEnd = 4.dp,
-                            bottomStart = 28.dp,
-                            bottomEnd = 28.dp
-                        )
-                        else -> RoundedCornerShape(4.dp)
+            items(
+                count = pagingItems.itemCount,
+                key = pagingItems.itemKey { model ->
+                     when(model) {
+                         is HistoryUiModel.Header -> "header_${model.date}"
+                         is HistoryUiModel.RecordItem -> "record_${model.record.record.id}"
+                     }
+                },
+                contentType = pagingItems.itemContentType { model ->
+                    when(model) {
+                        is HistoryUiModel.Header -> "header"
+                        is HistoryUiModel.RecordItem -> "record"
                     }
-
-                    SwipeToDeleteContainer(
-                        onDelete = { onDeleteRequest(recordItem.record) },
-                        modifier = Modifier.animateItem()
-                    ) {
-                        HistoryRecordCard(
-                            item = recordItem,
-                            isLight = isLight,
-                            showTitle = !prevIsSame,
+                }
+            ) { index ->
+                val item = pagingItems[index]
+                
+                when (item) {
+                    is HistoryUiModel.Header -> {
+                        HistoryDateHeader(
+                            date = item.date,
                             weightUnit = weightUnit,
-                            shape = shape,
-                            onUpdate = onUpdateRequest
+                            modifier = Modifier.animateItem()
                         )
                     }
-                }
-                item(key = "spacer_$dateString") {
-                    Spacer(modifier = Modifier.height(16.dp).animateItem())
+                    is HistoryUiModel.RecordItem -> {
+                        // Calculate shape based on neighbors
+                        // This is tricky with Paging because neighbors might be headers or bounds.
+                        // We can look at index-1 and index+1
+                        
+                        val prevItem = if (index > 0) pagingItems.peek(index - 1) else null
+                        val nextItem = if (index < pagingItems.itemCount - 1) pagingItems.peek(index + 1) else null
+                        
+                        val isLight = item.isLight
+                        
+                        val prevIsSame = prevItem is HistoryUiModel.RecordItem && prevItem.isLight == isLight
+                        val nextIsSame = nextItem is HistoryUiModel.RecordItem && nextItem.isLight == isLight
+                        
+                        // Also show title if previous is NOT the same exercise (or is null/header)
+                        val showTitle = if (prevItem is HistoryUiModel.RecordItem) {
+                             prevItem.record.exerciseName != item.record.exerciseName
+                        } else {
+                             true
+                        }
+
+                        val shape = when {
+                            !prevIsSame && !nextIsSame -> RoundedCornerShape(28.dp)
+                            !prevIsSame && nextIsSame -> RoundedCornerShape(
+                                topStart = 28.dp,
+                                topEnd = 28.dp,
+                                bottomStart = 4.dp,
+                                bottomEnd = 4.dp
+                            )
+                            prevIsSame && !nextIsSame -> RoundedCornerShape(
+                                topStart = 4.dp,
+                                topEnd = 4.dp,
+                                bottomStart = 28.dp,
+                                bottomEnd = 28.dp
+                            )
+                            else -> RoundedCornerShape(4.dp)
+                        }
+
+                        SwipeToDeleteContainer(
+                            onDelete = { onDeleteRequest(item.record.record) },
+                            modifier = Modifier.animateItem()
+                        ) {
+                            HistoryRecordCard(
+                                item = item.record,
+                                isLight = isLight,
+                                showTitle = showTitle,
+                                weightUnit = weightUnit,
+                                shape = shape,
+                                onUpdate = onUpdateRequest
+                            )
+                        }
+                        
+                        // Spacer logic? Previously spacer was explicit.
+                        // We can add bottom margin to the card if it's the last in a group?
+                        // Or insert separate Spacer items? Separators are cleaner.
+                        // Let's add top padding to the Header instead to simulate spacer, 
+                        // or add marginBottom to the last item of a group.
+                        // The original code had: item(key = "spacer_...") { Spacer(...) } after each day group.
+                        // With separators, we can just make the Header have top padding.
+                        // Warning: The first header shouldn't have huge top padding.
+                    }
+                    null -> {
+                        // Placeholder (disabled)
+                    }
                 }
             }
         }
@@ -591,7 +687,8 @@ private fun HistoryInputStyle(
                 fontWeight = FontWeight.Bold,
                 color = contentColor
             ),
-            singleLine = true,
+            singleLine = false,
+            maxLines = 1,
             keyboardOptions = KeyboardOptions(
                 keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Number
             ),
