@@ -17,8 +17,7 @@ import androidx.room.PrimaryKey
     ],
     indices = [
         Index(value = ["exerciseId", "date", "id"]), // Composite index for filtered sorting
-        Index(value = ["date", "id"]), // Keep for "All History" query
-        Index(value = ["groupIndex"]) // Critical for Delete/Update performance (count & cascading updates)
+        Index(value = ["date", "id"]) // Keep for "All History" query
     ]
 )
 data class Record(
@@ -28,8 +27,7 @@ data class Record(
     val sets: Int,
     val reps: Int,
     val weight: Double,
-    val date: Long,
-    val groupIndex: Int = 0 
+    val date: Long
 ) {
 
 }

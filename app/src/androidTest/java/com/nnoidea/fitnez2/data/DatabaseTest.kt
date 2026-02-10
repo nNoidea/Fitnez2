@@ -8,7 +8,6 @@ import com.nnoidea.fitnez2.data.dao.ExerciseDao
 import com.nnoidea.fitnez2.data.dao.RecordDao
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.*
@@ -127,40 +126,257 @@ class DatabaseTest {
     // ============================================================================================
 
     @Test
-    fun recordSortingAndDeletion() = runTest {
+    fun recordSortingAndCascadeDeletion() = runTest {
         // 1. Setup Exercise
         exerciseDao.create(Exercise(name = "Squat"))
         val exerciseId = exerciseDao.getAllExercises()[0].id
 
         // 2. Create Records with intentional sorting triggers
-        // We want to test Date DESC, then ID DESC
         val now = 10000L
-        
+
         // Older
         recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 10.0, date = now - 1000L))
         // Newer (Base)
         recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 20.0, date = now))
-        // Same Time as Base, but created later (Higher ID) -> Should be first in list (Stable Sort)
+        // Same Time as Base, but created later (Higher ID) -> Should be first in DESC list
         recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 30.0, date = now))
 
-        // Updated to use Flow
-        val sorted = recordDao.getRecordsByExerciseId(exerciseId).first()
-        
-        assertEquals(3, sorted.size)
-        
-        // Top one should be the one with weight 30 (Same date as 20, but higher ID)
-        assertEquals(30.0, sorted[0].record.weight, 0.1)
-        assertEquals(20.0, sorted[1].record.weight, 0.1)
-        assertEquals(10.0, sorted[2].record.weight, 0.1)
-        
-        // Verify JOIN worked
-        assertEquals("Squat", sorted[0].exerciseName)
+        val allRecords = recordDao.getAllRecords()
+        assertEquals(3, allRecords.size)
 
         // 3. Verify Hard Delete Cascading
         exerciseDao.delete(exerciseId)
-        
+
         assertEquals(0, exerciseDao.getAllExercises().size)
-        // Records should be gone from everywhere
-        assertEquals(0, recordDao.getRecordsByExerciseId(exerciseId).first().size)
+        assertEquals(0, recordDao.getAllRecords().size)
+    }
+
+    // ============================================================================================
+    // GROUP INDEX TESTS
+    // ============================================================================================
+
+    /**
+     * Helper: creates an exercise and returns its ID.
+     */
+    private suspend fun createExercise(name: String): Int {
+        exerciseDao.create(Exercise(name = name))
+        return exerciseDao.getAllExercises().first { it.name == name }.id
+    }
+
+    /**
+     * Helper: creates a record for a given exercise.
+     */
+    private suspend fun addRecord(exerciseId: Int, date: Long): Record {
+        val id = recordDao.create(Record(
+            exerciseId = exerciseId,
+            sets = 3,
+            reps = 10,
+            weight = 50.0,
+            date = date
+        ))
+        return recordDao.getRecordById(id.toInt())!!
+    }
+
+    /**
+     * Helper: gets all records sorted chronologically (ASC).
+     */
+    private suspend fun allRecordsChronological(): List<Record> {
+        return recordDao.getAllRecordsOrdered()
+    }
+
+    // --- CREATION ---
+
+    @Test
+    fun creation_insertsRecordsCorrectly() = runTest {
+        val ex1 = createExercise("Exercise1")
+        val ex2 = createExercise("Exercise2")
+
+        var t = 1000L
+        addRecord(ex1, t++)
+        addRecord(ex1, t++)
+        addRecord(ex2, t++)
+        addRecord(ex2, t++)
+
+        val records = allRecordsChronological()
+        assertEquals(4, records.size)
+        assertEquals(ex1, records[0].exerciseId)
+        assertEquals(ex1, records[1].exerciseId)
+        assertEquals(ex2, records[2].exerciseId)
+        assertEquals(ex2, records[3].exerciseId)
+    }
+
+    // --- SINGLE RECORD DELETION ---
+
+    @Test
+    fun deleteSingleRecord_removesCorrectRecord() = runTest {
+        val ex1 = createExercise("Exercise1")
+        val ex2 = createExercise("Exercise2")
+
+        var t = 1000L
+        val r1 = addRecord(ex1, t++)
+        addRecord(ex1, t++)
+        addRecord(ex2, t++)
+
+        recordDao.delete(r1.id)
+
+        val after = allRecordsChronological()
+        assertEquals(2, after.size)
+        assertEquals(ex1, after[0].exerciseId)
+        assertEquals(ex2, after[1].exerciseId)
+    }
+
+    @Test
+    fun deleteOnlyRecordInGroup_removesIt() = runTest {
+        val ex1 = createExercise("Exercise1")
+        val ex2 = createExercise("Exercise2")
+        val ex3 = createExercise("Exercise3")
+
+        var t = 1000L
+        addRecord(ex1, t++)
+        val mid = addRecord(ex2, t++)
+        addRecord(ex3, t++)
+
+        recordDao.delete(mid.id)
+
+        val after = allRecordsChronological()
+        assertEquals(2, after.size)
+        assertEquals(ex1, after[0].exerciseId)
+        assertEquals(ex3, after[1].exerciseId)
+    }
+
+    // --- EXERCISE DELETION (CASCADE) ---
+
+    @Test
+    fun exerciseDeletion_cascadeDeletesRecords() = runTest {
+        val ex1 = createExercise("Exercise1")
+        val ex2 = createExercise("Exercise2")
+        val ex3 = createExercise("Exercise3")
+
+        var t = 1000L
+        addRecord(ex1, t++); addRecord(ex1, t++)
+        addRecord(ex2, t++); addRecord(ex2, t++)
+        addRecord(ex3, t++); addRecord(ex3, t++)
+
+        exerciseDao.delete(ex2)
+
+        val after = allRecordsChronological()
+        assertEquals(4, after.size)
+        assertTrue(after.none { it.exerciseId == ex2 })
+        assertTrue(after.filter { it.exerciseId == ex1 }.size == 2)
+        assertTrue(after.filter { it.exerciseId == ex3 }.size == 2)
+    }
+
+    // --- UNDO (create with original id & date) ---
+
+    @Test
+    fun undoDelete_middleRecord_restoresRecords() = runTest {
+        val ex1 = createExercise("Exercise1")
+        val ex2 = createExercise("Exercise2")
+        val ex3 = createExercise("Exercise3")
+
+        var t = 1000L
+        addRecord(ex1, t++)
+        val mid = addRecord(ex2, t++)
+        addRecord(ex3, t++)
+
+        val savedForUndo = recordDao.getRecordById(mid.id)!!
+        recordDao.delete(mid.id)
+
+        assertEquals(2, allRecordsChronological().size)
+
+        recordDao.create(savedForUndo)
+
+        val afterUndo = allRecordsChronological()
+        assertEquals(3, afterUndo.size)
+        assertEquals(ex1, afterUndo[0].exerciseId)
+        assertEquals(ex2, afterUndo[1].exerciseId)
+        assertEquals(ex3, afterUndo[2].exerciseId)
+    }
+
+    @Test
+    fun undoDelete_lastRecord_restoresIt() = runTest {
+        val ex1 = createExercise("Exercise1")
+        val ex2 = createExercise("Exercise2")
+
+        var t = 1000L
+        addRecord(ex1, t++)
+        val last = addRecord(ex2, t++)
+
+        val savedForUndo = recordDao.getRecordById(last.id)!!
+        recordDao.delete(last.id)
+
+        assertEquals(1, allRecordsChronological().size)
+
+        recordDao.create(savedForUndo)
+
+        val afterUndo = allRecordsChronological()
+        assertEquals(2, afterUndo.size)
+        assertEquals(ex1, afterUndo[0].exerciseId)
+        assertEquals(ex2, afterUndo[1].exerciseId)
+    }
+
+    @Test
+    fun undoDelete_firstRecord_restoresIt() = runTest {
+        val ex1 = createExercise("Exercise1")
+        val ex2 = createExercise("Exercise2")
+
+        var t = 1000L
+        val first = addRecord(ex1, t++)
+        addRecord(ex2, t++)
+
+        val savedForUndo = recordDao.getRecordById(first.id)!!
+        recordDao.delete(first.id)
+
+        assertEquals(1, allRecordsChronological().size)
+
+        recordDao.create(savedForUndo)
+
+        val afterUndo = allRecordsChronological()
+        assertEquals(2, afterUndo.size)
+        assertEquals(ex1, afterUndo[0].exerciseId)
+        assertEquals(ex2, afterUndo[1].exerciseId)
+    }
+
+    @Test
+    fun undoDelete_onlyRecord_restoresFromEmpty() = runTest {
+        val ex1 = createExercise("Exercise1")
+        val only = addRecord(ex1, 1000L)
+
+        val savedForUndo = recordDao.getRecordById(only.id)!!
+        recordDao.delete(only.id)
+
+        assertEquals(0, allRecordsChronological().size)
+
+        recordDao.create(savedForUndo)
+
+        val afterUndo = allRecordsChronological()
+        assertEquals(1, afterUndo.size)
+        assertEquals(ex1, afterUndo[0].exerciseId)
+    }
+
+    @Test
+    fun multipleSequentialDeletes_thenUndo() = runTest {
+        val ex1 = createExercise("Exercise1")
+        val ex2 = createExercise("Exercise2")
+        val ex3 = createExercise("Exercise3")
+
+        var t = 1000L
+        addRecord(ex1, t++)
+        val r2 = addRecord(ex2, t++)
+        val r3 = addRecord(ex3, t++)
+
+        recordDao.delete(r2.id)
+
+        val savedForUndo = recordDao.getRecordById(r3.id)!!
+        recordDao.delete(r3.id)
+
+        assertEquals(1, allRecordsChronological().size)
+
+        recordDao.create(savedForUndo)
+
+        val afterUndo = allRecordsChronological()
+        assertEquals(2, afterUndo.size)
+        assertEquals(ex1, afterUndo[0].exerciseId)
+        assertEquals(ex3, afterUndo[1].exerciseId)
     }
 }

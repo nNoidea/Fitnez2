@@ -65,21 +65,10 @@ import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.core.TimeUtils
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.map
 import androidx.compose.animation.animateContentSize
 
 import androidx.compose.material3.Surface
 
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
-
-import androidx.paging.PagingData
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.insertSeparators
-import androidx.paging.map
-import androidx.paging.compose.itemKey
-import androidx.paging.compose.itemContentType
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -127,101 +116,52 @@ fun ExerciseHistoryList(
         exercisesList.associate { it.id to it.name }
     }
 
-    // Paging Configuration
-    val recordPager: Pager<Int, Record> = remember(selectedExerciseId) {
-        Pager(
-            config = PagingConfig(pageSize = 10, enablePlaceholders = false),
-            pagingSourceFactory = {
-                val source: androidx.paging.PagingSource<Int, Record> = if (selectedExerciseId == null) {
-                    dao.getRecordsPagingSourceRaw()
-                } else {
-                    dao.getRecordsByExerciseIdPagingSourceRaw(selectedExerciseId)
-                }
-                source
-            }
-        )
+    // In-memory record buffer: loaded once from DB, then mutated in-place
+    var records by remember { mutableStateOf<List<Record>>(emptyList()) }
+    var initialLoadDone by remember { mutableStateOf(false) }
+
+    // One-shot load on first composition (or when filter changes)
+    LaunchedEffect(selectedExerciseId) {
+        records = if (selectedExerciseId == null) {
+            dao.getLatestRecords()
+        } else {
+            dao.getRecordsByExerciseId(selectedExerciseId)
+        }
+        initialLoadDone = true
     }
 
-    val pagingItems = remember(recordPager, exerciseMap, useAlternatingColors) {
-        val flow: kotlinx.coroutines.flow.Flow<PagingData<HistoryUiModel>> = recordPager.flow
-            .map { pagingData ->
-                val mapped = pagingData.map { record ->
-                    val exerciseName = exerciseMap[record.exerciseId] ?: globalLocalization.labelUnknownExercise
-                    val recordWithExercise = RecordWithExercise(record, exerciseName)
-                    
-                    val isLight = if (!useAlternatingColors) true else record.groupIndex % 2 == 0
-                    HistoryUiModel.RecordItem(recordWithExercise, isLight)
-                }
-                
-                mapped.insertSeparators<HistoryUiModel.RecordItem, HistoryUiModel> { before, after ->
-                    if (after == null) return@insertSeparators null
-                    if (before == null) return@insertSeparators HistoryUiModel.Header(after.record.record.date)
-                    
-                    if (!TimeUtils.isSameDay(before.record.record.date, after.record.record.date)) {
-                        HistoryUiModel.Header(after.record.record.date)
-                    } else {
-                        null
-                    }
-                }
-            }
-        flow
-    }.collectAsLazyPagingItems()
+    // When an exercise is deleted (CASCADE), remove its orphaned records from the buffer
+    LaunchedEffect(exerciseMap) {
+        if (initialLoadDone && exerciseMap.isNotEmpty()) {
+            records = records.filter { it.exerciseId in exerciseMap }
+        }
+    }
+
+    // Build UI model list: compute isLight in-memory and insert date headers
+    val uiItems = remember(records, exerciseMap, useAlternatingColors) {
+        buildUiItems(records, exerciseMap, useAlternatingColors)
+    }
 
     // Content Display
     val globalUiState = LocalGlobalUiState.current
     val listState = rememberLazyListState()
 
     // Scroll trigger: Receive signal
-    var pendingScrollRecordId by remember { mutableStateOf<Int?>(null) }
-    
     LaunchedEffect(Unit) {
         globalUiState.signalFlow.collect { signal ->
             if (signal is com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop) {
-                 // Immediate action: If we are very deep in the list, snap to top immediately.
-                 // This ensures Paging starts loading the top pages if they were dropped.
-                 if (listState.firstVisibleItemIndex > 20) {
-                     listState.scrollToItem(0)
-                 }
-                 
-                 // Set pending state to wait for the specific record to appear for fine-tuning
-                 pendingScrollRecordId = signal.recordId
-            }
-        }
-    }
-    
-    // Watch for the pending record to appear in the list items
-    val itemCount = pagingItems.itemCount
-    LaunchedEffect(pendingScrollRecordId, itemCount) {
-        val targetId = pendingScrollRecordId
-        if (targetId != null) {
-            
-            if (itemCount > 0) {
-                // Check if the record is in the first few items (it should be at the top)
-                // We check the first 5 items to be safe (accounting for headers)
-                val searchRange = 0 until minOf(5, itemCount)
-                var found = false
-                for (i in searchRange) {
-                    val item = pagingItems.peek(i)
-                    if (item is HistoryUiModel.RecordItem && item.record.record.id == targetId) {
-                        found = true
-                        break
+                // A new record was added — fetch it from DB and prepend to our buffer
+                val recordId = signal.recordId
+                if (recordId != null) {
+                    val newRecord = dao.getRecordById(recordId)
+                    if (newRecord != null && records.none { it.id == newRecord.id }) {
+                        records = listOf(newRecord) + records
                     }
                 }
-                
-                if (found) {
-                    listState.animateScrollToItem(0)
-                    pendingScrollRecordId = null
-                }
+                listState.animateScrollToItem(0)
             }
         }
     }
-
-    
-    // Auto-scroll logic when new item is added is handled by Paging/LazyColumn behavior usually,
-    // or triggered via the signal.
-    // The previous complex logic waiting for ID is not easily applicable to Paging without scanning.
-    // Assuming adding a record triggers a refresh and scroll signal.
-
 
 
     Surface(
@@ -229,17 +169,20 @@ fun ExerciseHistoryList(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(28.dp)
     ) {
+        if (!initialLoadDone) return@Surface
+
         ExerciseHistoryListContent(
             modifier = Modifier.fillMaxSize(),
             listState = listState,
-            pagingItems = pagingItems,
-
+            uiItems = uiItems,
             weightUnit = weightUnit,
             extraBottomPadding = extraBottomPadding,
             onUpdateRequest = { updatedRecord ->
                 scope.launch {
                      try {
                          dao.update(updatedRecord)
+                         // Update in-memory buffer too
+                         records = records.map { if (it.id == updatedRecord.id) updatedRecord else it }
                      } catch (e: Exception) {
                          // Ideally show snackbar error
                      }
@@ -250,8 +193,9 @@ fun ExerciseHistoryList(
                     // 1. Fetch latest state for Undo (SSOT)
                     val freshRecord = dao.getRecordById(record.id) ?: record
 
-                    // 2. Delete
+                    // 2. Delete from DB and remove from in-memory buffer
                     dao.delete(record.id)
+                    records = records.filter { it.id != record.id }
 
                     // 3. Show Snackbar with Undo using fresh data
                     globalUiState.showSnackbar(
@@ -259,7 +203,13 @@ fun ExerciseHistoryList(
                         actionLabel = globalLocalization.labelUndo,
                         onActionPerformed = {
                             scope.launch {
-                                dao.create(freshRecord)
+                                val newId = dao.create(freshRecord)
+                                // Re-insert into buffer at the correct chronological position
+                                val restored = freshRecord.copy(id = newId.toInt())
+                                val mutable = records.toMutableList()
+                                val insertIdx = mutable.indexOfFirst { it.date < restored.date || (it.date == restored.date && it.id < restored.id) }
+                                if (insertIdx == -1) mutable.add(restored) else mutable.add(insertIdx, restored)
+                                records = mutable
                             }
                         }
                     )
@@ -267,6 +217,53 @@ fun ExerciseHistoryList(
             }
         )
     }
+}
+
+/**
+ * Builds the flat UI list from raw records (DESC order from DB).
+ * Computes isLight by walking from the oldest record (bottom) upward,
+ * toggling when exerciseId changes. This keeps colors stable when new
+ * records are added at the top.
+ * Inserts date headers between days.
+ */
+private fun buildUiItems(
+    records: List<Record>,
+    exerciseMap: Map<Int, String>,
+    useAlternatingColors: Boolean
+): List<HistoryUiModel> {
+    if (records.isEmpty()) return emptyList()
+
+    // 1. Compute isLight for each record (walk from oldest = last index)
+    val isLightArray = BooleanArray(records.size)
+    var currentIsLight = true
+    var lastExerciseId = records.last().exerciseId
+    isLightArray[records.lastIndex] = currentIsLight
+
+    for (i in records.lastIndex - 1 downTo 0) {
+        if (records[i].exerciseId != lastExerciseId) {
+            currentIsLight = !currentIsLight
+            lastExerciseId = records[i].exerciseId
+        }
+        isLightArray[i] = currentIsLight
+    }
+
+    // 2. Build flat list with date headers inserted
+    val result = mutableListOf<HistoryUiModel>()
+    for (i in records.indices) {
+        val record = records[i]
+        val exerciseName = exerciseMap[record.exerciseId] ?: globalLocalization.labelUnknownExercise
+        val recordWithExercise = RecordWithExercise(record, exerciseName)
+        val isLight = if (!useAlternatingColors) true else isLightArray[i]
+
+        // Insert header if this is the first record or a new day
+        if (i == 0 || !TimeUtils.isSameDay(records[i - 1].date, record.date)) {
+            result.add(HistoryUiModel.Header(record.date))
+        }
+
+        result.add(HistoryUiModel.RecordItem(recordWithExercise, isLight))
+    }
+
+    return result
 }
 
 
@@ -279,7 +276,7 @@ fun ExerciseHistoryList(
 private fun ExerciseHistoryListContent(
     modifier: Modifier,
     listState: androidx.compose.foundation.lazy.LazyListState,
-    pagingItems: androidx.paging.compose.LazyPagingItems<HistoryUiModel>,
+    uiItems: List<HistoryUiModel>,
     weightUnit: String,
     extraBottomPadding: Dp,
     onUpdateRequest: (Record) -> Unit,
@@ -297,7 +294,7 @@ private fun ExerciseHistoryListContent(
         }
     }
 
-    if (pagingItems.itemCount == 0) {
+    if (uiItems.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 text = globalLocalization.labelHistoryEmpty,
@@ -311,23 +308,21 @@ private fun ExerciseHistoryListContent(
             state = listState,
             contentPadding = PaddingValues(bottom = 80.dp + extraBottomPadding)
         ) {
-            items(
-                count = pagingItems.itemCount,
-                key = pagingItems.itemKey { model ->
+            itemsIndexed(
+                items = uiItems,
+                key = { _, model ->
                      when(model) {
                          is HistoryUiModel.Header -> "header_${model.date}"
                          is HistoryUiModel.RecordItem -> "record_${model.record.record.id}"
                      }
                 },
-                contentType = pagingItems.itemContentType { model ->
+                contentType = { _, model ->
                     when(model) {
                         is HistoryUiModel.Header -> "header"
                         is HistoryUiModel.RecordItem -> "record"
                     }
                 }
-            ) { index ->
-                val item = pagingItems[index]
-                
+            ) { index, item ->
                 when (item) {
                     is HistoryUiModel.Header -> {
                         HistoryDateHeader(
@@ -337,14 +332,10 @@ private fun ExerciseHistoryListContent(
                         )
                     }
                     is HistoryUiModel.RecordItem -> {
-                        // Calculate shape based on neighbors
-                        // This is tricky with Paging because neighbors might be headers or bounds.
-                        // We can look at index-1 and index+1
-                        
-                        val prevItem = if (index > 0) pagingItems.peek(index - 1) else null
-                        val nextItem = if (index < pagingItems.itemCount - 1) pagingItems.peek(index + 1) else null
-                        
                         val isLight = item.isLight
+                        
+                        val prevItem = if (index > 0) uiItems[index - 1] else null
+                        val nextItem = if (index < uiItems.lastIndex) uiItems[index + 1] else null
                         
                         val prevIsSame = prevItem is HistoryUiModel.RecordItem && prevItem.isLight == isLight
                         val nextIsSame = nextItem is HistoryUiModel.RecordItem && nextItem.isLight == isLight
@@ -386,18 +377,6 @@ private fun ExerciseHistoryListContent(
                                 onUpdate = onUpdateRequest
                             )
                         }
-                        
-                        // Spacer logic? Previously spacer was explicit.
-                        // We can add bottom margin to the card if it's the last in a group?
-                        // Or insert separate Spacer items? Separators are cleaner.
-                        // Let's add top padding to the Header instead to simulate spacer, 
-                        // or add marginBottom to the last item of a group.
-                        // The original code had: item(key = "spacer_...") { Spacer(...) } after each day group.
-                        // With separators, we can just make the Header have top padding.
-                        // Warning: The first header shouldn't have huge top padding.
-                    }
-                    null -> {
-                        // Placeholder (disabled)
                     }
                 }
             }

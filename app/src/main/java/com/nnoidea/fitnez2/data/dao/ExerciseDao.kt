@@ -7,7 +7,6 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.nnoidea.fitnez2.data.entities.Exercise
-import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 
 @Dao
@@ -94,9 +93,8 @@ abstract class ExerciseDao {
     // --- DELETE ---
 
     /**
-     * Permanently deletes an exercise and all its associated records.
+     * Permanently deletes an exercise and all its associated records (CASCADE).
      */
-    @Transaction
     open suspend fun delete(exerciseId: Int) {
         deleteExerciseInternal(exerciseId)
     }
