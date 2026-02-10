@@ -1,7 +1,6 @@
 package com.nnoidea.fitnez2.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +20,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.style.TextAlign
@@ -53,7 +50,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
@@ -87,8 +83,6 @@ private val ColorHistoryNeutralContent @Composable get() = MaterialTheme.colorSc
 
 private val ColorHistoryColoredContainer @Composable get() = MaterialTheme.colorScheme.secondaryContainer
 private val ColorHistoryColoredContent @Composable get() = MaterialTheme.colorScheme.onSecondaryContainer
-
-private const val HistoryInputBackgroundAlpha = 0.1f
 
 // -----------------------------------------------------------------------------
 // Public Smart Component
@@ -555,56 +549,28 @@ private fun HistoryRecordCard(
                     }
                 },
                 col2 = {
-                    com.nnoidea.fitnez2.ui.common.SetsInput(
-                        value = item.record.sets.toString(),
-                        onValidChange = { validSets ->
-                            onUpdate(item.record.copy(sets = validSets))
-                        }
-                    ) { displayValue, placeholder, interactionSource, onValueChange ->
-                        HistoryInputStyle(
-                            displayValue = displayValue,
-                            placeholder = placeholder,
-                            interactionSource = interactionSource,
-                            onValueChange = onValueChange,
-                            contentColor = contentColor,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                    HistorySetsField(
+                        value = item.record.sets,
+                        contentColor = contentColor,
+                        onValidChange = { onUpdate(item.record.copy(sets = it)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 },
                 col3 = {
-                    com.nnoidea.fitnez2.ui.common.RepsInput(
-                        value = item.record.reps.toString(),
-                        onValidChange = { validReps ->
-                            onUpdate(item.record.copy(reps = validReps))
-                        }
-                    ) { displayValue, placeholder, interactionSource, onValueChange ->
-                        HistoryInputStyle(
-                            displayValue = displayValue,
-                            placeholder = placeholder,
-                            interactionSource = interactionSource,
-                            onValueChange = onValueChange,
-                            contentColor = contentColor,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                    HistoryRepsField(
+                        value = item.record.reps,
+                        contentColor = contentColor,
+                        onValidChange = { onUpdate(item.record.copy(reps = it)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 },
                 col4 = {
-                    com.nnoidea.fitnez2.ui.common.WeightInput(
+                    HistoryWeightField(
                         value = item.record.weight,
-                        onValidChange = { validWeight ->
-                            onUpdate(item.record.copy(weight = validWeight))
-                        }
-                    ) { displayValue, placeholder, interactionSource, onValueChange ->
-                        HistoryInputStyle(
-                            displayValue = displayValue,
-                            placeholder = placeholder,
-                            interactionSource = interactionSource,
-                            onValueChange = onValueChange,
-                            contentColor = contentColor,
-                            isDecimal = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                        contentColor = contentColor,
+                        onValidChange = { onUpdate(item.record.copy(weight = it)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             )
             
@@ -620,62 +586,6 @@ private fun HistoryRecordCard(
     }
 }
 
-/**
- * Visual style for history input fields.
- * This is just the "skin" - logic is handled by SetsInput/RepsInput/WeightInput.
- */
-@Composable
-private fun HistoryInputStyle(
-    displayValue: String,
-    placeholder: String,
-    interactionSource: MutableInteractionSource,
-    onValueChange: (String) -> Unit,
-    contentColor: Color,
-    modifier: Modifier = Modifier,
-    isDecimal: Boolean = false
-) {
-    Box(
-        modifier = modifier
-            .height(44.dp)
-            .background(
-                contentColor.copy(alpha = HistoryInputBackgroundAlpha), 
-                RoundedCornerShape(12.dp)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        BasicTextField(
-            value = displayValue,
-            onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            interactionSource = interactionSource,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold,
-                color = contentColor
-            ),
-            singleLine = false,
-            maxLines = 1,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Number
-            ),
-            decorationBox = { innerTextField ->
-                 if (displayValue.isEmpty()) {
-                      Text(
-                        text = placeholder,
-                         style = MaterialTheme.typography.bodyLarge.copy(
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Bold,
-                            color = contentColor.copy(alpha = 0.5f)
-                        )
-                      )
-                 }
-                 innerTextField()
-            }
-        )
-    }
-}
 
 
 

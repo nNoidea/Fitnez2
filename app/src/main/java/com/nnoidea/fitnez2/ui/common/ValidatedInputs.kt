@@ -32,7 +32,8 @@ fun SetsInput(
         displayValue: String,
         placeholder: String,
         interactionSource: MutableInteractionSource,
-        onValueChange: (String) -> Unit
+        onValueChange: (String) -> Unit,
+        isFocused: Boolean
     ) -> Unit
 ) {
     SmartValidatedInput(
@@ -64,7 +65,8 @@ fun RepsInput(
         displayValue: String,
         placeholder: String,
         interactionSource: MutableInteractionSource,
-        onValueChange: (String) -> Unit
+        onValueChange: (String) -> Unit,
+        isFocused: Boolean
     ) -> Unit
 ) {
     SmartValidatedInput(
@@ -96,7 +98,8 @@ fun WeightInput(
         displayValue: String,
         placeholder: String,
         interactionSource: MutableInteractionSource,
-        onValueChange: (String) -> Unit
+        onValueChange: (String) -> Unit,
+        isFocused: Boolean
     ) -> Unit
 ) {
     // Format: remove unnecessary .0 suffix for whole numbers (e.g., 50.0 -> "50")
@@ -135,7 +138,8 @@ private fun <T> SmartValidatedInput(
         displayValue: String,
         placeholder: String,
         interactionSource: MutableInteractionSource,
-        onValueChange: (String) -> Unit
+        onValueChange: (String) -> Unit,
+        isFocused: Boolean
     ) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -220,5 +224,5 @@ private fun <T> SmartValidatedInput(
         onRawValueChange?.invoke(internalValue)
     }
 
-    content(internalValue, savedValue, interactionSource, onValueChangeWrapper)
+    content(internalValue, savedValue, interactionSource, onValueChangeWrapper, isFocused)
 }

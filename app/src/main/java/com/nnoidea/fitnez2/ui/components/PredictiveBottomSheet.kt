@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -77,12 +76,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import android.view.HapticFeedbackConstants
 
-
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.style.TextAlign
 
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
@@ -482,66 +475,33 @@ fun PredictiveBottomSheet(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Button 2: Sets
-                        com.nnoidea.fitnez2.ui.common.SetsInput(
+                        BottomSheetSetsField(
                             value = setsValue,
-                            onValidChange = { setsValue = it.toString() },
-                            onRawValueChange = { setsRaw = it }
-                        ) { displayValue, placeholder, interactionSource, onValueChange ->
-                            BottomSheetInputStyle(
-                                label = globalLocalization.labelSets,
-                                displayValue = displayValue,
-                                placeholder = placeholder,
-                                interactionSource = interactionSource,
-                                onValueChange = onValueChange,
-                                containerColor = MaterialTheme.colorScheme.tertiary,
-                                contentColor = MaterialTheme.colorScheme.onTertiary,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(buttonHeight)
-                            )
-                        }
+                            onValidChange = { setsValue = it },
+                            onRawValueChange = { setsRaw = it },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(buttonHeight)
+                        )
 
-                        // Button 3: Reps
-                        com.nnoidea.fitnez2.ui.common.RepsInput(
+                        BottomSheetRepsField(
                             value = repsValue,
-                            onValidChange = { repsValue = it.toString() },
-                            onRawValueChange = { repsRaw = it }
-                        ) { displayValue, placeholder, interactionSource, onValueChange ->
-                            BottomSheetInputStyle(
-                                label = globalLocalization.labelReps,
-                                displayValue = displayValue,
-                                placeholder = placeholder,
-                                interactionSource = interactionSource,
-                                onValueChange = onValueChange,
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(buttonHeight)
-                            )
-                        }
+                            onValidChange = { repsValue = it },
+                            onRawValueChange = { repsRaw = it },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(buttonHeight)
+                        )
 
-                        // Button 4: Weight
-                        com.nnoidea.fitnez2.ui.common.WeightInput(
+                        BottomSheetWeightField(
                             value = weightValue.toDoubleOrNull() ?: 0.0,
-                            onValidChange = { weightValue = it.toString() },
-                            onRawValueChange = { weightRaw = it }
-                        ) { displayValue, placeholder, interactionSource, onValueChange ->
-                            BottomSheetInputStyle(
-                                label = weightUnit,
-                                displayValue = displayValue,
-                                placeholder = placeholder,
-                                interactionSource = interactionSource,
-                                onValueChange = onValueChange,
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                isDecimal = true,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(buttonHeight)
-                            )
-                        }
+                            label = weightUnit,
+                            onValidChange = { weightValue = it },
+                            onRawValueChange = { weightRaw = it },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(buttonHeight)
+                        )
                     }
 
 
