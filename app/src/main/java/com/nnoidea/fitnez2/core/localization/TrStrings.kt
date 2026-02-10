@@ -81,6 +81,10 @@ object TrStrings : EnStrings(
     override val titleImportWarning = "Verilerin Üzerine Yazılsın Mı?"
     override val msgImportWarning = "Bu işlem mevcut veritabanınızı kalıcı olarak silip yerine içe aktarılan verileri koyacaktır. Bu işlem geri alınamaz."
     override val labelConfirm = "Onayla"
+    override val labelDeveloperOptions = "Geliştirici Seçenekleri"
+    override val unitKg = "kg"
+    override val unitLb = "lb"
+    override val labelUnknownExercise = "Bilinmeyen Egzersiz"
 
     // Validation Errors
     override val errorSetsEmpty = "Setler boş olamaz"

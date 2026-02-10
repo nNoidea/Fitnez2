@@ -44,6 +44,16 @@ sealed class EnStrings(
         return sdf.format(java.util.Date(timestamp)).lowercase()
     }
 
+    open fun formatDateShort(timestamp: Long): String {
+        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", appLocale)
+        return sdf.format(java.util.Date(timestamp))
+    }
+
+    open fun formatDayName(timestamp: Long): String {
+        val sdf = java.text.SimpleDateFormat("EEEE", appLocale)
+        return sdf.format(java.util.Date(timestamp))
+    }
+
 
     open fun labelEdit(target: String): String = "Edit $target"
 
@@ -91,6 +101,10 @@ sealed class EnStrings(
     open val titleImportWarning: String = "Overwrite Data?"
     open val msgImportWarning: String = "This will permanently delete your current database and replace it with the imported data. This action cannot be undone."
     open val labelConfirm: String = "Confirm"
+    open val labelDeveloperOptions: String = "Developer Options"
+    open val unitKg: String = "kg"
+    open val unitLb: String = "lb"
+    open val labelUnknownExercise: String = "Unknown Exercise"
 
     // Validation Errors
     open val errorSetsEmpty: String = "Sets cannot be empty"

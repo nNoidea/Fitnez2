@@ -199,7 +199,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             // Developer Settings
             // Developer Settings
             SettingsItem(
-                label = "Developer Options",
+                label = globalLocalization.labelDeveloperOptions,
                 value = "",
                 onClick = {
                    val intent = android.content.Intent(context, com.nnoidea.fitnez2.MainActivity::class.java).apply {
@@ -216,7 +216,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     SelectionDialog(
         show = showWeightUnitDialog,
         title = globalLocalization.labelWeightUnit,
-        options = listOf("kg", "lb"),
+        options = listOf(globalLocalization.unitKg, globalLocalization.unitLb),
         selectedValue = globalState.weightUnit,
         onValueSelected = {
             globalState.switchWeightUnit(it)

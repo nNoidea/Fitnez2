@@ -2,7 +2,7 @@ package com.nnoidea.fitnez2.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -28,7 +28,7 @@ enum class AppPage(
     Program(
             route = "program",
             label = { globalLocalization.labelProgram },
-            icon = Icons.Default.List,
+            icon = Icons.AutoMirrored.Filled.List,
             content = { ProgramScreen(onOpenDrawer = it) }
     ),
     Settings(
@@ -39,7 +39,7 @@ enum class AppPage(
     ),
     Developer(
             route = "developer",
-            label = { "Developer Options" }, // Hardcoded for now as requested for dev features
+            label = { globalLocalization.labelDeveloperOptions },
             icon = Icons.Default.Build,
             content = { _ ->
                 val context = androidx.compose.ui.platform.LocalContext.current

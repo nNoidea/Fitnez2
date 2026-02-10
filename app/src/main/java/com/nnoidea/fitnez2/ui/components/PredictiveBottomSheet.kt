@@ -278,7 +278,7 @@ fun PredictiveBottomSheet(
                     val delta = available.y
                     // Dragging DOWN (delta > 0)
                     // Only allow if it's a direct user drag, NOT a fling
-                    if (delta > 0 && source == NestedScrollSource.Drag) {
+                    if (delta > 0 && source == NestedScrollSource.UserInput) {
                         draggableState.dispatchRawDelta(delta)
                         return available
                     }

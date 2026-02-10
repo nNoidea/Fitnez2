@@ -62,6 +62,7 @@ import com.nnoidea.fitnez2.data.LocalSettingsRepository
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
+import com.nnoidea.fitnez2.core.TimeUtils
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
@@ -145,7 +146,7 @@ fun ExerciseHistoryList(
         val flow: kotlinx.coroutines.flow.Flow<PagingData<HistoryUiModel>> = recordPager.flow
             .map { pagingData ->
                 val mapped = pagingData.map { record ->
-                    val exerciseName = exerciseMap[record.exerciseId] ?: "Unknown Exercise"
+                    val exerciseName = exerciseMap[record.exerciseId] ?: globalLocalization.labelUnknownExercise
                     val recordWithExercise = RecordWithExercise(record, exerciseName)
                     
                     val isLight = if (!useAlternatingColors) true else record.groupIndex % 2 == 0
@@ -156,7 +157,7 @@ fun ExerciseHistoryList(
                     if (after == null) return@insertSeparators null
                     if (before == null) return@insertSeparators HistoryUiModel.Header(after.record.record.date)
                     
-                    if (!isSameDay(before.record.record.date, after.record.record.date)) {
+                    if (!TimeUtils.isSameDay(before.record.record.date, after.record.record.date)) {
                         HistoryUiModel.Header(after.record.record.date)
                     } else {
                         null
@@ -268,15 +269,6 @@ fun ExerciseHistoryList(
     }
 }
 
-
-private fun isSameDay(millis1: Long, millis2: Long): Boolean {
-    val cal = java.util.Calendar.getInstance()
-    cal.timeInMillis = millis1
-    val y1 = cal.get(java.util.Calendar.YEAR)
-    val d1 = cal.get(java.util.Calendar.DAY_OF_YEAR)
-    cal.timeInMillis = millis2
-    return y1 == cal.get(java.util.Calendar.YEAR) && d1 == cal.get(java.util.Calendar.DAY_OF_YEAR)
-}
 
 // -----------------------------------------------------------------------------
 // Stateless UI Components
@@ -464,17 +456,14 @@ private fun HistoryDateHeader(
         android.text.format.DateUtils.isToday(date + android.text.format.DateUtils.DAY_IN_MILLIS)
     }
 
-    val dateFormat = remember(currentLocale) { SimpleDateFormat("d/M/yyyy", currentLocale) }
-    val dayFormat = remember(currentLocale) { SimpleDateFormat("EEEE", currentLocale) }
-
-    val dateString = remember(dateObj, currentLocale) { 
-        dateFormat.format(dateObj) 
+    val dateString = remember(date, currentLocale) { 
+        globalLocalization.formatDateShort(date) 
     }
     
-    val dayName = remember(dateObj, currentLocale, isToday, isYesterday) {
+    val dayName = remember(date, currentLocale, isToday, isYesterday) {
         if (isToday) globalLocalization.labelToday
         else if (isYesterday) globalLocalization.labelYesterday
-        else dayFormat.format(dateObj)
+        else globalLocalization.formatDayName(date)
     }
 
     // Aligned with the content inside the cards
