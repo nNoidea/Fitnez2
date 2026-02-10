@@ -1,6 +1,7 @@
 package com.nnoidea.fitnez2.ui.screens
 
 import android.view.HapticFeedbackConstants
+import com.nnoidea.fitnez2.ui.components.SettingsItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

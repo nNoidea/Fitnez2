@@ -25,7 +25,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.nnoidea.fitnez2.data.AppDatabase
+import com.nnoidea.fitnez2.data.LocalAppDatabase
+import com.nnoidea.fitnez2.data.LocalSettingsRepository
 import com.nnoidea.fitnez2.data.SettingsRepository
+import com.nnoidea.fitnez2.core.RotationMode
 import kotlinx.coroutines.launch
 
 // Simple global UI signals
@@ -72,7 +76,7 @@ class GlobalUiState(
 
 
     // State: Rotation Mode
-    var rotationMode by mutableStateOf("system")
+    var rotationMode by mutableStateOf(RotationMode.SYSTEM)
 
     fun switchLanguage(newLanguage: EnStrings?) {
         LocalizationManager.setLanguage(newLanguage)
@@ -188,8 +192,15 @@ fun ProvideGlobalUiState(
 ) {
     GlobalUiState.setInstance(state)
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val database = remember { AppDatabase.getDatabase(context, scope) }
+    val settingsRepository = remember { SettingsRepository(context) }
+
     CompositionLocalProvider(
-        LocalGlobalUiState provides state
+        LocalGlobalUiState provides state,
+        LocalAppDatabase provides database,
+        LocalSettingsRepository provides settingsRepository,
     ) {
         content()
     }

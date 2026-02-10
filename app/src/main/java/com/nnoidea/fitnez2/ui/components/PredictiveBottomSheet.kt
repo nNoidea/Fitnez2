@@ -33,7 +33,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Search
+
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.heightIn
@@ -67,7 +67,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.input.KeyboardType
+
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -79,7 +79,7 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.foundation.text.BasicTextField
+
 
 import androidx.compose.ui.platform.LocalView
 import android.view.HapticFeedbackConstants
@@ -99,13 +99,13 @@ import androidx.compose.ui.geometry.Offset
 
 
 import androidx.compose.ui.platform.LocalContext
-import com.nnoidea.fitnez2.data.AppDatabase
+import com.nnoidea.fitnez2.data.LocalAppDatabase
+import com.nnoidea.fitnez2.data.LocalSettingsRepository
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import androidx.compose.runtime.collectAsState
 import com.nnoidea.fitnez2.ui.components.ExerciseHistoryList
-import com.nnoidea.fitnez2.data.SettingsRepository
 
 const val BUTTONHEIGHT = 45
 const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2*BUTTONHEIGHT + 70 + 15 // Approximately 40*2 + 70 + 15
@@ -126,10 +126,10 @@ fun PredictiveBottomSheet(
         val scope = rememberCoroutineScope()
 
         // DB Access
-        val database = remember { AppDatabase.getDatabase(context, scope) }
+        val database = LocalAppDatabase.current
         val exerciseDao = database.exerciseDao()
         val recordDao = database.recordDao()
-        val settingsRepository = remember { SettingsRepository(context) }
+        val settingsRepository = LocalSettingsRepository.current
         
         val dbExercises by exerciseDao.getAllExercisesFlow().collectAsState(initial = emptyList())
         val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
@@ -563,7 +563,7 @@ fun PredictiveBottomSheet(
             }
         }
 
-        PredictiveExerciseSelectionDialog(
+        ExerciseSelectionDialog(
             show = showExerciseSelection,
             exercises = dbExercises,
             selectedExerciseId = selectedExerciseId,
@@ -577,323 +577,3 @@ fun PredictiveBottomSheet(
         )
     }
 }
-
-/**
- * Visual style for bottom sheet input fields.
- * This is just the "skin" - logic is handled by SetsInput/RepsInput/WeightInput.
- */
-@Composable
-private fun BottomSheetInputStyle(
-    label: String,
-    displayValue: String,
-    placeholder: String,
-    interactionSource: androidx.compose.foundation.interaction.MutableInteractionSource,
-    onValueChange: (String) -> Unit,
-    containerColor: Color,
-    contentColor: Color,
-    modifier: Modifier = Modifier,
-    isDecimal: Boolean = false
-) {
-    val keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Number
-    
-    BasicTextField(
-        value = displayValue,
-        onValueChange = onValueChange,
-        modifier = modifier
-            .background(containerColor, RoundedCornerShape(24.dp)),
-        interactionSource = interactionSource,
-        textStyle = MaterialTheme.typography.titleLarge.copy(
-            color = contentColor,
-            textAlign = TextAlign.Start
-        ),
-        singleLine = true,
-        cursorBrush = SolidColor(contentColor),
-        decorationBox = { innerTextField ->
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = contentColor
-                )
-                Text(
-                    text = " | ",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = contentColor
-                )
-                
-                Box(contentAlignment = Alignment.CenterStart) {
-                    if (displayValue.isEmpty()) {
-                         Text(
-                            text = placeholder.ifEmpty { " " }, 
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = contentColor.copy(alpha = 0.5f)
-                            )
-                         )
-                    }
-                    innerTextField()
-                }
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
-    )
-}
-
-
-@Composable
-private fun PredictiveExerciseSelectionDialog(
-    show: Boolean,
-    exercises: List<Exercise>,
-    selectedExerciseId: Int?,
-    exerciseDao: com.nnoidea.fitnez2.data.dao.ExerciseDao,
-    onDismissRequest: () -> Unit,
-    onExerciseSelected: (Exercise) -> Unit
-) {
-    val globalLocalization = com.nnoidea.fitnez2.core.localization.globalLocalization
-    val view = LocalView.current
-
-    val scope = rememberCoroutineScope()
-    
-    var exerciseToDelete by remember { mutableStateOf<Exercise?>(null) }
-    var exerciseToEdit by remember { mutableStateOf<Exercise?>(null) }
-    var showCreateDialog by remember { mutableStateOf(false) }
-
-
-    PredictiveModal(
-        show = show,
-        onDismissRequest = onDismissRequest
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = globalLocalization.labelSelectExercise,
-                style = MaterialTheme.typography.headlineSmall
-            )
-
-            // List - Sorted alphabetically (case-insensitive)
-            val sortedExercises = remember(exercises) {
-                exercises.sortedBy { it.name.lowercase() }
-            }
-
-            // Custom Scrollbar Logic
-            val scrollState = rememberScrollState()
-            val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-            val screenHeight = configuration.screenHeightDp.dp
-            var columnHeightPx by remember { mutableFloatStateOf(0f) }
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier
-                        .heightIn(max = screenHeight * 0.6f)
-                        .padding(end = 4.dp) // Space for scrollbar
-                        .onGloballyPositioned { coordinates ->
-                             columnHeightPx = coordinates.size.height.toFloat()
-                        }
-                        .verticalScroll(scrollState)
-                ) {
-
-                    // ADDED: Create Button at the top
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { 
-                                showCreateDialog = true 
-                            }
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Add, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        Text(
-                            text = globalLocalization.labelCreateExercise,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                        )
-                    }
-                    androidx.compose.material3.HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant
-                    )
-
-                    sortedExercises.forEach { exercise ->
-                        val isSelected = exercise.id == selectedExerciseId
-                        val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                        val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                        
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(containerColor, RoundedCornerShape(12.dp))
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
-                                    onExerciseSelected(exercise)
-                                }
-                                .padding(vertical = 12.dp, horizontal = 12.dp), // Increased padding for better touch target and visual
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = exercise.name,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
-                                ),
-                                color = contentColor,
-                                modifier = Modifier.weight(1f)
-                            )
-                            
-                            IconButton(
-                                onClick = { 
-                                    exerciseToEdit = exercise
-                                },
-                            ) {
-                                Icon(
-                                    Icons.Default.Edit, 
-                                    contentDescription = globalLocalization.labelEdit(exercise.name),
-                                    tint = if (isSelected) contentColor else MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            
-                            IconButton(
-                                onClick = { exerciseToDelete = exercise },
-                            ) {
-                                Icon(
-                                    Icons.Default.Delete, 
-                                    contentDescription = globalLocalization.labelDelete,
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        }
-                    }
-    
-
-                }
-
-                // Vertical Scrollbar Overlay
-                // Show ONLY if reached max height (implied by content overflowing -> maxValue > 0)
-                val scrollbarVisible = scrollState.maxValue > 0
-
-                if (scrollbarVisible && columnHeightPx > 0f) {
-                    val scrollbarHeight by remember(scrollState.maxValue, columnHeightPx) {
-                        derivedStateOf {
-                            val viewportHeight = columnHeightPx
-                            val contentHeight = viewportHeight + scrollState.maxValue
-                            // Ratio: Viewport / Content
-                            (viewportHeight * (viewportHeight / contentHeight)).coerceAtLeast(40f) 
-                        }
-                    }
-
-                    val scrollbarOffset by remember(scrollState.value, scrollState.maxValue, columnHeightPx, scrollbarHeight) {
-                        derivedStateOf {
-                            val maxScroll = scrollState.maxValue.toFloat()
-                            if (maxScroll == 0f) return@derivedStateOf 0f
-                            
-                            val availableTrack = columnHeightPx - scrollbarHeight
-                            val scrollProgress = scrollState.value.toFloat() / maxScroll
-                            
-                            availableTrack * scrollProgress
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .width(4.dp)
-                            // Track height = Viewport height
-                            .height(with(LocalDensity.current) { columnHeightPx.toDp() }) 
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh) // Track color
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .width(4.dp)
-                                .height(with(LocalDensity.current) { scrollbarHeight.toDp() })
-                                .offset(y = with(LocalDensity.current) { scrollbarOffset.toDp() })
-                                .background(
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                    RoundedCornerShape(4.dp)
-                                )
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    // Delete Confirmation Dialog
-    PredictiveConfirmationDialog(
-        show = exerciseToDelete != null,
-        onDismissRequest = { exerciseToDelete = null },
-        title = globalLocalization.labelDelete,
-        message = globalLocalization.labelDeleteExerciseWarning,
-        confirmLabel = globalLocalization.labelDelete,
-        cancelLabel = globalLocalization.labelCancel,
-        isDestructive = true,
-        onConfirm = {
-            exerciseToDelete?.let { exercise ->
-                scope.launch {
-                    exerciseDao.delete(exercise.id)
-                    exerciseToDelete = null
-                }
-            }
-        }
-    )
-
-    // Edit Dialog
-    PredictiveInputDialog(
-        show = exerciseToEdit != null,
-        title = globalLocalization.labelEditExercise,
-        initialValue = exerciseToEdit?.name ?: "",
-        label = globalLocalization.labelExerciseName,
-        confirmLabel = globalLocalization.labelSave,
-        cancelLabel = globalLocalization.labelCancel,
-        onDismissRequest = { exerciseToEdit = null },
-        onConfirm = { newName ->
-            exerciseToEdit?.let { exercise ->
-                scope.launch {
-                    try {
-                        exerciseDao.update(exercise.copy(name = newName))
-                        exerciseToEdit = null
-                    } catch (e: Exception) {
-                        // Error handling could be added here
-                    }
-                }
-            }
-        }
-    )
-
-    // Create Dialog
-    PredictiveInputDialog(
-        show = showCreateDialog,
-        title = globalLocalization.labelCreateExercise,
-        initialValue = "",
-        label = globalLocalization.labelExerciseName,
-        confirmLabel = globalLocalization.labelAdd,
-        cancelLabel = globalLocalization.labelCancel,
-        placeholder = globalLocalization.labelExerciseNamePlaceholder,
-        onDismissRequest = { showCreateDialog = false },
-        onConfirm = { newName ->
-            scope.launch {
-                try {
-                    val newExercise = com.nnoidea.fitnez2.data.entities.Exercise(name = newName)
-                    exerciseDao.create(newExercise)
-                    showCreateDialog = false
-                } catch (e: Exception) {
-                    // Handle existing name error if needed
-                }
-            }
-        }
-    )
-}
-
-

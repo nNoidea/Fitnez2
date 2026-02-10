@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
+import com.nnoidea.fitnez2.core.ValidateAndCorrect
 
 @Dao
 abstract class RecordDao {
@@ -39,18 +40,7 @@ abstract class RecordDao {
         if (count == 0) {
             throw IllegalArgumentException(LocalizationManager.strings.errorExerciseNotFoundById(record.exerciseId))
         }
-
-        // Validation
-        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateSets(record.sets)) {
-            throw IllegalArgumentException("Invalid sets: ${record.sets}")
-        }
-        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateReps(record.reps)) {
-            throw IllegalArgumentException("Invalid reps: ${record.reps}")
-        }
-        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateWeight(record.weight)) {
-            throw IllegalArgumentException("Invalid weight: ${record.weight}")
-        }
-
+        validateRecord(record)
         return insertInternal(record)
     }
 
@@ -100,17 +90,14 @@ abstract class RecordDao {
 
     @Transaction
     open suspend fun update(record: Record) {
-        // Validation
-         if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateSets(record.sets)) {
-            throw IllegalArgumentException("Invalid sets: ${record.sets}")
-        }
-        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateReps(record.reps)) {
-            throw IllegalArgumentException("Invalid reps: ${record.reps}")
-        }
-        if (!com.nnoidea.fitnez2.core.ValidateAndCorrect.validateWeight(record.weight)) {
-            throw IllegalArgumentException("Invalid weight: ${record.weight}")
-        }
+        validateRecord(record)
         updateInternal(record)
+    }
+
+    private fun validateRecord(record: Record) {
+        require(ValidateAndCorrect.validateSets(record.sets)) { "Invalid sets: ${record.sets}" }
+        require(ValidateAndCorrect.validateReps(record.reps)) { "Invalid reps: ${record.reps}" }
+        require(ValidateAndCorrect.validateWeight(record.weight)) { "Invalid weight: ${record.weight}" }
     }
 
     // --- DELETE ---

@@ -70,7 +70,7 @@ class SettingsRepository(private val context: Context) {
     private val ROTATION_MODE_KEY = stringPreferencesKey("rotation_mode")
 
     val rotationModeFlow: Flow<String> = context.dataStore.data
-        .map { preferences -> preferences[ROTATION_MODE_KEY] ?: "system" }
+        .map { preferences -> preferences[ROTATION_MODE_KEY] ?: com.nnoidea.fitnez2.core.RotationMode.SYSTEM }
 
     suspend fun setRotationMode(mode: String) {
         context.dataStore.edit { it[ROTATION_MODE_KEY] = mode }

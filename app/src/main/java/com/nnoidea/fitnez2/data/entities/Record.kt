@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.nnoidea.fitnez2.core.localization.globalLocalization
 
 @Entity(
     tableName = "record",

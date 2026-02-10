@@ -14,15 +14,9 @@ sealed class EnStrings(
     open val labelLanguage: String = "Language"
 
     open val errorExerciseNameBlank: String = "Exercise name cannot be empty or blank"
-    open val errorExerciseAlreadyExists: String = "Exercise with this name already exists."
-    open val errorExerciseRenameConflict: String = "This name is already used by another exercise."
-    open val errorExerciseNotFound: String = "Exercise not found."
 
     open val errorIdMustBeZero: String = "New exercises must have an ID of 0. Use update() for existing exercises."
     open val errorIdMustNotBeZero: String = "Records to update must have a non-zero ID. Use create() for new exercises."
-
-    open val errorSetsInputInvalid: String = "Sets must be non-negative and limited to 2 decimal places."
-    open val errorRepsInputInvalid: String = "Reps must be non-negative and limited to 2 decimal places."
 
     open fun errorExerciseAlreadyExists(name: String): String = "Exercise with name '$name' already exists."
     open fun errorExerciseRenameConflict(name: String): String = "Exercise name '$name' is already used by another exercise."
@@ -45,13 +39,6 @@ sealed class EnStrings(
     open val labelReps: String = "Reps"
     open val labelWeight: String = "Weight"
 
-    // UI - BottomSheet
-    open val labelBottomSheetTitle: String = "Custom Draggable Sheet"
-    open val labelBottomSheetDesc: String = "Full control over animation."
-    open val labelSayHello: String = "Say Hello"
-    open val labelHelloTitle: String = "Hello"
-    open val labelHelloText: String = "Hello there!"
-    open val labelOkay: String = "Okay"
     open fun formatDate(timestamp: Long): String {
         val sdf = java.text.SimpleDateFormat("dd/MM/yyyy - EEEE", appLocale)
         return sdf.format(java.util.Date(timestamp)).lowercase()

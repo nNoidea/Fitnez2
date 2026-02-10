@@ -16,7 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
 import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import androidx.compose.ui.Modifier
-import com.nnoidea.fitnez2.ui.animations.predictiveSidePanelContainer
+import com.nnoidea.fitnez2.ui.components.predictiveSidePanelContainer
 import com.nnoidea.fitnez2.ui.components.PredictiveSidePanel
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
@@ -54,8 +54,8 @@ class MainActivity : ComponentActivity() {
                     val rotationMode = globalUiState.rotationMode
                     LaunchedEffect(rotationMode) {
                         requestedOrientation = when (rotationMode) {
-                            "on" -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-                            "off" -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                            com.nnoidea.fitnez2.core.RotationMode.ON -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+                            com.nnoidea.fitnez2.core.RotationMode.OFF -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                             else -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                         }
                     }

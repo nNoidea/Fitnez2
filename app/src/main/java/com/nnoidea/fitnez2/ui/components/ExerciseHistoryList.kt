@@ -61,11 +61,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
-import com.nnoidea.fitnez2.data.AppDatabase
+import com.nnoidea.fitnez2.data.LocalAppDatabase
+import com.nnoidea.fitnez2.data.LocalSettingsRepository
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
-import com.nnoidea.fitnez2.data.SettingsRepository
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import androidx.compose.animation.animateContentSize
@@ -98,12 +98,8 @@ fun ExerciseHistoryList(
     extraBottomPadding: Dp = 0.dp,
     selectedExerciseId: Int? = null
 ) {
-
-
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    // Ideally, pass DAO or VM, but keeping DB access here for drop-in compatibility
-    val database = remember { AppDatabase.getDatabase(context, scope) }
+    val database = LocalAppDatabase.current
     val dao = database.recordDao()
 
     val history by remember(selectedExerciseId) {
@@ -113,7 +109,7 @@ fun ExerciseHistoryList(
             dao.getRecordsByExerciseId(selectedExerciseId)
         }
     }.collectAsState(initial = emptyList())
-    val settingsRepository = remember { SettingsRepository(context) }
+    val settingsRepository = LocalSettingsRepository.current
     val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
 
     // Grouping Logic - derived state handles language changes gracefully
@@ -435,8 +431,6 @@ private fun HeaderLabel(text: String) {
     )
 }
 
-// Field type for validation - no longer needed, delete
-// private enum class FieldType { SETS, REPS, WEIGHT }
 
 @Composable
 private fun HistoryRecordCard(

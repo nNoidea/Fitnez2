@@ -13,13 +13,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import com.nnoidea.fitnez2.ui.components.PredictiveModal
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import com.nnoidea.fitnez2.ui.components.SelectionDialog
+import com.nnoidea.fitnez2.ui.components.SettingsItem
 
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -52,8 +50,10 @@ import com.nnoidea.fitnez2.core.ValidateAndCorrect
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.nnoidea.fitnez2.data.AppDatabase
+import com.nnoidea.fitnez2.data.LocalAppDatabase
+import com.nnoidea.fitnez2.data.LocalSettingsRepository
 import com.nnoidea.fitnez2.data.BackupRepository
+import com.nnoidea.fitnez2.core.RotationMode
 import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -66,8 +66,8 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     val supportedLanguages = LocalizationManager.supportedLanguages
     
     val context = LocalContext.current
-    val settingsRepository = remember { SettingsRepository(context) }
-    val database = remember { AppDatabase.getDatabase(context, kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)) }
+    val settingsRepository = LocalSettingsRepository.current
+    val database = LocalAppDatabase.current
     val backupRepository = remember { BackupRepository(context, database) }
     val scope = rememberCoroutineScope()
 
@@ -139,13 +139,11 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
 
             HorizontalDivider()
 
-            HorizontalDivider()
-
             // Rotation Setting
             val rotationLabel = when (globalState.rotationMode) {
-                "system" -> globalLocalization.labelRotationSystem
-                "on" -> globalLocalization.labelRotationOn
-                "off" -> globalLocalization.labelRotationOff
+                RotationMode.SYSTEM -> globalLocalization.labelRotationSystem
+                RotationMode.ON -> globalLocalization.labelRotationOn
+                RotationMode.OFF -> globalLocalization.labelRotationOff
                 else -> globalLocalization.labelRotationSystem
             }
 
@@ -172,8 +170,6 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 onClick = { showDefaultsDialog = true }
             )
 
-            HorizontalDivider()
-            
             HorizontalDivider()
 
             // Export Data
@@ -233,7 +229,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     SelectionDialog(
         show = showRotationDialog,
         title = globalLocalization.labelRotation,
-        options = listOf("system", "on", "off"),
+        options = RotationMode.ALL,
         selectedValue = globalState.rotationMode,
         onValueSelected = {
             globalState.switchRotationMode(it)
@@ -242,9 +238,9 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         onDismissRequest = { showRotationDialog = false },
         labelProvider = {
             when (it) {
-                "system" -> globalLocalization.labelRotationSystem
-                "on" -> globalLocalization.labelRotationOn
-                "off" -> globalLocalization.labelRotationOff
+                RotationMode.SYSTEM -> globalLocalization.labelRotationSystem
+                RotationMode.ON -> globalLocalization.labelRotationOn
+                RotationMode.OFF -> globalLocalization.labelRotationOff
                 else -> ""
             }
         }
@@ -374,97 +370,5 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     }
 
 }
-
-
-
-@Composable
-fun SettingsItem(
-    label: String,
-    value: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = label, style = MaterialTheme.typography.bodyLarge)
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium
-        )
-    }
-}
-
-@Composable
-fun <T> SelectionDialog(
-    show: Boolean,
-    title: String,
-    options: List<T>,
-    selectedValue: T,
-    onValueSelected: (T) -> Unit,
-    onDismissRequest: () -> Unit,
-    labelProvider: (T) -> String
-) {
-    if (show) {
-        PredictiveModal(
-            show = show,
-            onDismissRequest = onDismissRequest
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    options.forEach { option ->
-                        RadioOption(
-                            text = labelProvider(option),
-                            selected = option == selectedValue,
-                            onClick = { onValueSelected(option) }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                TextButton(
-                    onClick = onDismissRequest,
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text(globalLocalization.labelCancel)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun RadioOption(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(
-            selected = selected,
-            onClick = null // Handled by Row
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(text = text, style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
 
 

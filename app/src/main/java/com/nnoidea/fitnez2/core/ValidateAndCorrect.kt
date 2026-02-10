@@ -10,59 +10,43 @@ object ValidateAndCorrect {
     }
 
     /**
-     * Validates and corrects Sets input.
+     * Shared validation for positive integer inputs (sets, reps).
      * Rules: Must be an integer > 0.
      * Handles inputs like "01" -> 1, "5.0" -> 5.
-     * Returns the valid Integer or null if invalid.
      */
-    fun sets(input: String): Int? {
-        if (input.isBlank()) {
-            showError(LocalizationManager.strings.errorSetsEmpty)
-            return null
-        }
+    private fun positiveInt(
+        input: String,
+        errorEmpty: String,
+        errorFormat: String,
+        errorWholeNumber: String,
+        errorPositive: String
+    ): Int? {
+        if (input.isBlank()) { showError(errorEmpty); return null }
         val number = input.toDoubleOrNull()
-        if (number == null) {
-            showError(LocalizationManager.strings.errorSetsFormat)
-            return null
-        }
-        if (number % 1.0 != 0.0) {
-            showError(LocalizationManager.strings.errorSetsWholeNumber)
-            return null
-        }
+            ?: run { showError(errorFormat); return null }
+        if (number % 1.0 != 0.0) { showError(errorWholeNumber); return null }
         val intValue = number.toInt()
-        if (intValue <= 0) {
-            showError(LocalizationManager.strings.errorSetsPositive)
-            return null
-        }
+        if (intValue <= 0) { showError(errorPositive); return null }
         return intValue
     }
 
-    /**
-     * Validates and corrects Reps input.
-     * Rules: Must be an integer > 0.
-     * Returns the valid Integer or null if invalid.
-     */
-    fun reps(input: String): Int? {
-        if (input.isBlank()) {
-            showError(LocalizationManager.strings.errorRepsEmpty)
-            return null
-        }
-        val number = input.toDoubleOrNull()
-        if (number == null) {
-            showError(LocalizationManager.strings.errorRepsFormat)
-            return null
-        }
-        if (number % 1.0 != 0.0) {
-            showError(LocalizationManager.strings.errorRepsWholeNumber)
-            return null
-        }
-        val intValue = number.toInt()
-        if (intValue <= 0) {
-            showError(LocalizationManager.strings.errorRepsPositive)
-            return null
-        }
-        return intValue
-    }
+    /** Validates and corrects Sets input. Returns the valid Integer or null. */
+    fun sets(input: String): Int? = positiveInt(
+        input,
+        LocalizationManager.strings.errorSetsEmpty,
+        LocalizationManager.strings.errorSetsFormat,
+        LocalizationManager.strings.errorSetsWholeNumber,
+        LocalizationManager.strings.errorSetsPositive
+    )
+
+    /** Validates and corrects Reps input. Returns the valid Integer or null. */
+    fun reps(input: String): Int? = positiveInt(
+        input,
+        LocalizationManager.strings.errorRepsEmpty,
+        LocalizationManager.strings.errorRepsFormat,
+        LocalizationManager.strings.errorRepsWholeNumber,
+        LocalizationManager.strings.errorRepsPositive
+    )
 
     /**
      * Validates and corrects Weight input.

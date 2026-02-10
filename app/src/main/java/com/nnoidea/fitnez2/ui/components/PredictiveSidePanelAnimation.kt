@@ -1,4 +1,4 @@
-package com.nnoidea.fitnez2.ui.animations
+package com.nnoidea.fitnez2.ui.components
 
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.foundation.shape.RoundedCornerShape
