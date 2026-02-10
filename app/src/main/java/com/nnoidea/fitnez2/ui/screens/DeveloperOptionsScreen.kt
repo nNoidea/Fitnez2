@@ -15,14 +15,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.nnoidea.fitnez2.ui.components.PredictiveModal
 import com.nnoidea.fitnez2.ui.components.TopHeader
 import com.nnoidea.fitnez2.core.localization.globalLocalization
+import kotlinx.coroutines.launch
+import com.nnoidea.fitnez2.ui.components.PredictiveConfirmationDialog
 import kotlin.math.roundToInt
 
 @Composable
 fun DeveloperOptionsScreen(onBack: () -> Unit) {
     var showColorPalette by remember { mutableStateOf(false) }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+    var showStressTestDialog by remember { mutableStateOf(false) }
+    var isStressTestRunning by remember { mutableStateOf(false) }
+    var stressTestProgressMessage by remember { mutableStateOf("") }
+    var stressTestProgressValue by remember { mutableFloatStateOf(0f) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -58,6 +70,22 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
                 HorizontalDivider()
 
                 HapticsTestSection()
+
+                HorizontalDivider()
+
+                // --- Database Section ---
+                Text(
+                    text = "Database",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                )
+
+                SettingsItem(
+                    label = "Run Data Stress Test",
+                    value = "Wipe DB & Insert 1M Records",
+                    onClick = { showStressTestDialog = true }
+                )
             }
         }
     }
@@ -67,6 +95,79 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
             show = showColorPalette,
             onDismissRequest = { showColorPalette = false }
         )
+    }
+
+    if (showStressTestDialog) {
+        PredictiveConfirmationDialog(
+            show = showStressTestDialog,
+            onDismissRequest = { showStressTestDialog = false },
+            title = "Run Stress Test?",
+            message = "⚠️ WARNING: This will permanently DELETE ALL existing data (exercises & records) and replace it with ~1 million generated records (2000-2025).\n\nThis process may take a minute.",
+            confirmLabel = "Wipe & Generate",
+            isDestructive = true,
+            onConfirm = {
+                showStressTestDialog = false
+                isStressTestRunning = true
+                scope.launch {
+                    try {
+                        val db = com.nnoidea.fitnez2.data.AppDatabase.getDatabase(context, this)
+                        com.nnoidea.fitnez2.data.StressTestManager.performStressTest(db) { progress, message ->
+                            stressTestProgressValue = progress
+                            stressTestProgressMessage = message
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    } finally {
+                        isStressTestRunning = false
+                        stressTestProgressMessage = ""
+                        stressTestProgressValue = 0f
+                    }
+                }
+            }
+        )
+    }
+
+    if (isStressTestRunning) {
+        PredictiveModal(
+            show = isStressTestRunning,
+            onDismissRequest = { /* Prevent dismissal during operation */ }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Generating Data...",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Expressive Linear Progress Indicator
+                LinearProgressIndicator(
+                    progress = { stressTestProgressValue },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .graphicsLayer {
+                            shape = RoundedCornerShape(4.dp)
+                            clip = true
+                        },
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = stressTestProgressMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
