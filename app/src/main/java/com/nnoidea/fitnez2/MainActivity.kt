@@ -12,11 +12,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import com.nnoidea.fitnez2.ui.common.GlobalUiState
-import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
 import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import androidx.compose.ui.Modifier
@@ -38,8 +34,6 @@ class MainActivity : ComponentActivity() {
         // Identify which page this instance should represent
         val route = intent.getStringExtra(EXTRA_PAGE_ROUTE) ?: AppPage.Home.route
         val currentPage = AppPage.entries.find { it.route == route } ?: AppPage.Home
-
-        com.nnoidea.fitnez2.core.ValidateAndCorrect.init(applicationContext)
 
         setContent {
             Fitnez2Theme {
@@ -70,52 +64,52 @@ class MainActivity : ComponentActivity() {
                         ModalNavigationDrawer(
                             drawerState = drawerState,
 
-                        drawerContent = {
-                            predictiveSidePanelContainer(
-                                drawerState = drawerState,
-                                scope = scope
-                            ) {
-                                PredictiveSidePanel(
-                                    currentRoute = currentPage.route,
-                                    onItemClick = { clickedRoute ->
-                                        if (clickedRoute != currentPage.route) {
-                                            if (clickedRoute == AppPage.Home.route) {
-                                                if (currentPage != AppPage.Home) {
+                            drawerContent = {
+                                predictiveSidePanelContainer(
+                                    drawerState = drawerState,
+                                    scope = scope
+                                ) {
+                                    PredictiveSidePanel(
+                                        currentRoute = currentPage.route,
+                                        onItemClick = { clickedRoute ->
+                                            if (clickedRoute != currentPage.route) {
+                                                if (clickedRoute == AppPage.Home.route) {
+                                                    if (currentPage != AppPage.Home) {
+                                                        scope.launch {
+                                                            drawerState.snapTo(DrawerValue.Closed)
+                                                            finish()
+                                                        }
+                                                    }
+                                                } else {
                                                     scope.launch {
                                                         drawerState.snapTo(DrawerValue.Closed)
-                                                        finish()
+
+                                                        val intent =
+                                                            Intent(
+                                                                this@MainActivity,
+                                                                MainActivity::class.java
+                                                            ).apply {
+                                                                putExtra(
+                                                                    EXTRA_PAGE_ROUTE,
+                                                                    clickedRoute
+                                                                )
+                                                            }
+
+                                                        startActivity(intent)
+
+                                                        if (currentPage != AppPage.Home) {
+                                                            finish()
+                                                        }
                                                     }
                                                 }
                                             } else {
-                                                scope.launch {
-                                                    drawerState.snapTo(DrawerValue.Closed)
-
-                                                    val intent =
-                                                        Intent(
-                                                            this@MainActivity,
-                                                            MainActivity::class.java
-                                                        ).apply {
-                                                            putExtra(
-                                                                EXTRA_PAGE_ROUTE,
-                                                                clickedRoute
-                                                            )
-                                                        }
-
-                                                    startActivity(intent)
-
-                                                    if (currentPage != AppPage.Home) {
-                                                        finish()
-                                                    }
-                                                }
+                                                scope.launch { drawerState.close() }
                                             }
-                                        } else {
-                                            scope.launch { drawerState.close() }
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             }
-                        }
-                    ) {
+                        ) {
                             currentPage.content { scope.launch { drawerState.open() } }
                         }
                     }

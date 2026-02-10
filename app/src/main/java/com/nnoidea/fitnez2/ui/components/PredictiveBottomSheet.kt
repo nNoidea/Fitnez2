@@ -296,6 +296,7 @@ fun PredictiveBottomSheet(
             }
         }
 
+
         // Update GlobalUiState for Snackbar positioning
         // If expanded (open), offset is 0 (bottom of screen)
         // If collapsed (peek), offset is peekHeight (above the sheet)

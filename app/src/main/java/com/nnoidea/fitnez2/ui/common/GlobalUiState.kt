@@ -41,7 +41,6 @@ class GlobalUiState(
     private val onRotationModeChanged: ((String) -> Unit)? = null
 ) {
     companion object {
-        // Global instance for non-Composable access (e.g., ValidateAndCorrect)
         var instance: GlobalUiState? = null
             private set
         
@@ -49,6 +48,7 @@ class GlobalUiState(
             instance = state
         }
     }
+
     // State: Is any overlay (Drawer, Dialog, etc.) currently masking the main content?
     var isOverlayOpen by mutableStateOf(false)
 
@@ -68,6 +68,8 @@ class GlobalUiState(
 
     // State: BottomSheet Offset for Snackbars
     var bottomSheetSnackbarOffset by mutableStateOf(0.dp)
+
+
 
     // State: Rotation Mode
     var rotationMode by mutableStateOf("system")
@@ -184,9 +186,8 @@ fun ProvideGlobalUiState(
     state: GlobalUiState = rememberGlobalUiState(),
     content: @Composable () -> Unit
 ) {
-    // Set global instance for non-Composable access
     GlobalUiState.setInstance(state)
-    
+
     CompositionLocalProvider(
         LocalGlobalUiState provides state
     ) {

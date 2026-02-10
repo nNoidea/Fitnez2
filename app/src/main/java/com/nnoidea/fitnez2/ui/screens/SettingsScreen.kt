@@ -271,6 +271,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         var reps by remember { mutableStateOf(defaultReps) }
         var weight by remember { mutableStateOf(defaultWeight) }
 
+
         PredictiveAlertDialog(
             show = showDefaultsDialog,
             onDismissRequest = { showDefaultsDialog = false },
@@ -288,8 +289,6 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                                 settingsRepository.setDefaultReps(validReps.toString())
                                 settingsRepository.setDefaultWeight(validWeight.toString())
                                 showDefaultsDialog = false
-                            } else {
-                                // Ideally show error, for now just don't close
                             }
                         }
                     }
