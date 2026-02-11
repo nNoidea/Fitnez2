@@ -89,6 +89,20 @@ abstract class RecordDao {
         deleteInternal(recordId)
     }
 
+    // --- OLDER RECORDS (beyond the latest 100) ---
+
+    @Query("SELECT * FROM record ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
+    abstract suspend fun getOlderRecords(offset: Int, limit: Int = 50): List<Record>
+
+    @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
+    abstract suspend fun getOlderRecordsByExerciseId(exerciseId: Int, offset: Int, limit: Int = 50): List<Record>
+
+    @Query("SELECT COUNT(*) FROM record")
+    abstract suspend fun getTotalRecordCount(): Int
+
+    @Query("SELECT COUNT(*) FROM record WHERE exerciseId = :exerciseId")
+    abstract suspend fun getRecordCountByExerciseId(exerciseId: Int): Int
+
     @Query("SELECT * FROM record")
     abstract suspend fun getAllRecords(): List<Record>
 

@@ -85,6 +85,7 @@ object TrStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Bilinmeyen Egzersiz"
+    override val labelOlderRecords = "Eski Kayıtlar"
 
     // Validation Errors
     override val errorSetsEmpty = "Setler boş olamaz"

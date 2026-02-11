@@ -1,12 +1,16 @@
 package com.nnoidea.fitnez2.core
 
+import android.content.Context
+import android.widget.Toast
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
-import com.nnoidea.fitnez2.ui.common.GlobalUiState
 
 object ValidateAndCorrect {
 
+    /** Set once from ProvideGlobalUiState. */
+    var appContext: Context? = null
+
     private fun showError(message: String) {
-        GlobalUiState.instance?.showSnackbar(message)
+        appContext?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
     }
 
     /**

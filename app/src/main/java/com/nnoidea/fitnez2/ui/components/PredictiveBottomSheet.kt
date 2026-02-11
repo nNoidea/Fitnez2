@@ -75,6 +75,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 
 import androidx.compose.ui.platform.LocalView
 import android.view.HapticFeedbackConstants
+import android.widget.Toast
 
 
 import com.nnoidea.fitnez2.core.localization.globalLocalization
@@ -420,7 +421,7 @@ fun PredictiveBottomSheet(
                                     try {
                                         val exerciseId = selectedExerciseId
                                         if (exerciseId == null) {
-                                            globalUiState.showSnackbar(globalLocalization.labelSelectExercise) 
+                                            Toast.makeText(context, globalLocalization.labelSelectExercise, Toast.LENGTH_SHORT).show()
                                             return@launch
                                         }
 

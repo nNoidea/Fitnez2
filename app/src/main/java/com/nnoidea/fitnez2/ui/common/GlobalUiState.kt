@@ -193,6 +193,7 @@ fun ProvideGlobalUiState(
     GlobalUiState.setInstance(state)
 
     val context = LocalContext.current
+    com.nnoidea.fitnez2.core.ValidateAndCorrect.appContext = context.applicationContext
     val scope = rememberCoroutineScope()
     val database = remember { AppDatabase.getDatabase(context, scope) }
     val settingsRepository = remember { SettingsRepository(context) }

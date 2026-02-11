@@ -34,10 +34,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import kotlinx.coroutines.launch
 
-import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.foundation.layout.statusBarsPadding
-
 
 /**
  * A highly customizable Dialog with Predictive Back support and smooth animations.
@@ -128,13 +124,6 @@ private fun CorePredictiveDialog(
                 }
             }
 
-            // Snackbar — renders inside the Dialog window so it appears above dialog content
-            SnackbarHost(
-                hostState = LocalGlobalUiState.current.snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .statusBarsPadding()
-            )
         }
     }
 }
