@@ -1,4 +1,4 @@
-.PHONY: build install clean stop prod prod-install
+.PHONY: build install clean stop prod prod-install emulator check-device
 
 # Default task: Builds the debug APK
 build:
@@ -10,13 +10,22 @@ prod:
 	./gradlew assembleRelease
 	cp app/build/outputs/apk/release/app-release.apk ~/Mutual/app-release.apk
 
+# Launches the emulator
+emulator:
+	@echo "Launching emulator..."
+	~/repos/scripts/emulator.sh
+
+# Checks if a device or emulator is connected
+check-device:
+	@adb devices | grep -wq "device" || (echo "Error: No device or emulator connected. Run 'make emulator' to start one." && exit 1)
+
 # Builds and installs the built APK to a connected device or emulator
-install:
+install: check-device
 	@echo "Building and installing to device..."
 	./gradlew installDebug
 
 # Installs the production APK to a connected device or emulator
-prod-install:
+prod-install: check-device
 	@echo "Installing Production APK..."
 	./gradlew installRelease
 
