@@ -57,6 +57,8 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
+import android.view.HapticFeedbackConstants
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -300,6 +302,7 @@ private fun ScrollToTopButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val view = LocalView.current
     val showButton by remember {
         derivedStateOf { listState.firstVisibleItemIndex > 3 }
     }
@@ -311,7 +314,10 @@ private fun ScrollToTopButton(
         modifier = modifier
     ) {
         SmallFloatingActionButton(
-            onClick = onClick,
+            onClick = {
+                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                onClick()
+            },
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp)
@@ -694,12 +700,17 @@ private fun HistoryRecordCard(
         SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(item.record.date))
     }
 
+    val view = LocalView.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 2.dp)
             .clip(shape)
-            .clickable { isExpanded = !isExpanded }, // Toggle expansion
+            .clickable { 
+                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                isExpanded = !isExpanded 
+            }, // Toggle expansion
         shape = shape,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,

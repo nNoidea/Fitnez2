@@ -104,6 +104,7 @@ fun ExerciseSelectionDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { 
+                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
                                 showCreateDialog = true 
                             }
                             .padding(vertical = 12.dp, horizontal = 8.dp),
@@ -155,6 +156,7 @@ fun ExerciseSelectionDialog(
                             
                             IconButton(
                                 onClick = { 
+                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
                                     exerciseToEdit = exercise
                                 },
                             ) {
@@ -166,7 +168,10 @@ fun ExerciseSelectionDialog(
                             }
                             
                             IconButton(
-                                onClick = { exerciseToDelete = exercise },
+                                onClick = { 
+                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                    exerciseToDelete = exercise 
+                                },
                             ) {
                                 Icon(
                                     Icons.Default.Delete, 

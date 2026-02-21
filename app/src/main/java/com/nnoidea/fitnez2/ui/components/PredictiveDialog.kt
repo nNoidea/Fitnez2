@@ -219,6 +219,7 @@ fun PredictiveInputDialog(
     cancelLabel: String = "Cancel",
     onConfirm: (String) -> Unit
 ) {
+    val view = androidx.compose.ui.platform.LocalView.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var text by remember { androidx.compose.runtime.mutableStateOf(initialValue) }
 
@@ -236,6 +237,7 @@ fun PredictiveInputDialog(
         confirmButton = {
             androidx.compose.material3.Button(
                 onClick = {
+                    view.performHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
                     keyboardController?.hide()
                     if (text.isNotBlank()) {
                         onConfirm(text)
@@ -279,6 +281,7 @@ fun PredictiveConfirmationDialog(
     isDestructive: Boolean = false,
     onConfirm: () -> Unit
 ) {
+    val view = androidx.compose.ui.platform.LocalView.current
     PredictiveAlertDialog(
         show = show,
         onDismissRequest = onDismissRequest,
@@ -287,6 +290,7 @@ fun PredictiveConfirmationDialog(
         confirmButton = {
             androidx.compose.material3.Button(
                 onClick = {
+                    view.performHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
                     onConfirm()
                 },
                 colors = if (isDestructive) {
