@@ -14,10 +14,9 @@ class DatabaseSeeder(
     private val applicationScope: CoroutineScope
 ) : RoomDatabase.Callback() {
 
-    override fun onOpen(db: SupportSQLiteDatabase) {
-        super.onOpen(db)
-        Log.d("DatabaseSeeder", "Database opened. Checking if seeding is needed...")
-        // Comment out the block below to stop seeding
+    override fun onCreate(db: SupportSQLiteDatabase) {
+        super.onCreate(db)
+        Log.d("DatabaseSeeder", "Database created for the first time. Seeding...")
         applicationScope.launch(Dispatchers.IO) {
             populateDatabase(databaseProvider())
         }
@@ -26,12 +25,6 @@ class DatabaseSeeder(
     private suspend fun populateDatabase(database: AppDatabase) {
         val exerciseDao = database.exerciseDao()
         val recordDao = database.recordDao()
-
-        // Check if database is already populated
-        if (exerciseDao.getAllExercises().isNotEmpty()) {
-            Log.d("DatabaseSeeder", "Database already populated. Skipping seeding.")
-            return
-        }
 
         val initialExercises = listOf(
             "Squat",
@@ -76,5 +69,7 @@ class DatabaseSeeder(
                 )
             }
         }
+
+        Log.d("DatabaseSeeder", "Seeding complete.")
     }
 }
