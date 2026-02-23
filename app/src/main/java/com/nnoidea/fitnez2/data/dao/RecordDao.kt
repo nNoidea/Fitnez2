@@ -19,7 +19,7 @@ abstract class RecordDao {
     // ============================================================================================
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    protected abstract suspend fun insertInternal(record: Record): Long
+    abstract suspend fun insertInternal(record: Record): Long
 
     @Update
     protected abstract suspend fun updateInternal(record: Record)

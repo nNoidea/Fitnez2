@@ -20,7 +20,7 @@ abstract class ExerciseDao {
     abstract suspend fun insertAll(exercises: List<Exercise>)
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    protected abstract suspend fun insertInternal(exercise: Exercise): Long
+    abstract suspend fun insertInternal(exercise: Exercise): Long
 
     @Update
     protected abstract suspend fun updateInternal(exercise: Exercise)
