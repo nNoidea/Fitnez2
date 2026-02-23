@@ -58,7 +58,7 @@ class DatabaseSeeder(
         timePoints.forEach { timestamp ->
             repeat(5) { i ->
                 val exercise = exercises[i % exercises.size]
-                recordDao.create(
+                val newId = recordDao.create(
                     Record(
                         exerciseId = exercise.id,
                         date = timestamp,
@@ -67,6 +67,16 @@ class DatabaseSeeder(
                         reps = 5 + i
                     )
                 )
+
+                // Emit signal so the UI prepends this record in real-time,
+                // exactly like tapping the Add button.
+                com.nnoidea.fitnez2.ui.common.GlobalUiState.instance?.let { state ->
+                    state.scope?.launch(Dispatchers.Main) {
+                        state.emitSignal(
+                            com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop(newId.toInt())
+                        )
+                    }
+                }
             }
         }
 
