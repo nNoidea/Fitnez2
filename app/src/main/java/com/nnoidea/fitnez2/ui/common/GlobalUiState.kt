@@ -1,48 +1,43 @@
 package com.nnoidea.fitnez2.ui.common
 
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.nnoidea.fitnez2.core.RotationMode
+import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.EnStrings
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
-import com.nnoidea.fitnez2.core.localization.TrStrings
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarResult
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import androidx.compose.runtime.LaunchedEffect
-
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.data.AppDatabase
 import com.nnoidea.fitnez2.data.LocalAppDatabase
 import com.nnoidea.fitnez2.data.LocalSettingsRepository
 import com.nnoidea.fitnez2.data.SettingsRepository
-import com.nnoidea.fitnez2.core.RotationMode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 // Simple global UI signals
 sealed interface UiSignal {
     data class ScrollToTop(val recordId: Int? = null) : UiSignal
-    // add more stuff here...
+    data object DatabaseSeeded : UiSignal
 }
 
 class GlobalUiState(
-    val scope: CoroutineScope? = null,
-    private val onLanguageChanged: ((EnStrings?) -> Unit)? = null,
-    private val onWeightUnitChanged: ((String) -> Unit)? = null,
-    private val onRotationModeChanged: ((String) -> Unit)? = null
+    val scope: CoroutineScope,
+    private val settingsRepository: SettingsRepository
 ) {
     companion object {
         var instance: GlobalUiState? = null
@@ -73,24 +68,28 @@ class GlobalUiState(
     // State: BottomSheet Offset for Snackbars
     var bottomSheetSnackbarOffset by mutableStateOf(0.dp)
 
-
-
     // State: Rotation Mode
     var rotationMode by mutableStateOf(RotationMode.SYSTEM)
 
     fun switchLanguage(newLanguage: EnStrings?) {
         LocalizationManager.setLanguage(newLanguage)
-        onLanguageChanged?.invoke(newLanguage)
+        scope.launch {
+            settingsRepository.setLanguageCode(newLanguage?.appLocale?.language)
+        }
     }
 
     fun switchWeightUnit(unit: String) {
         weightUnit = unit
-        onWeightUnitChanged?.invoke(unit)
+        scope.launch {
+            settingsRepository.setWeightUnit(unit)
+        }
     }
 
     fun switchRotationMode(mode: String) {
         rotationMode = mode
-        onRotationModeChanged?.invoke(mode)
+        scope.launch {
+            settingsRepository.setRotationMode(mode)
+        }
     }
 
     // Signals: One-off events (e.g. ScrollToTop)
@@ -100,7 +99,6 @@ class GlobalUiState(
     suspend fun emitSignal(signal: UiSignal) {
         _signalFlow.emit(signal)
     }
-
 
     // Snackbar State
     val snackbarHostState = SnackbarHostState()
@@ -114,7 +112,7 @@ class GlobalUiState(
         onActionPerformed: () -> Unit = {}
     ) {
         currentSnackbarJob?.cancel()
-        currentSnackbarJob = scope?.launch {
+        currentSnackbarJob = scope.launch {
             val result = snackbarHostState.showSnackbar(
                 message = message,
                 actionLabel = actionLabel,
@@ -126,12 +124,11 @@ class GlobalUiState(
             }
         }
     }
-
-
 }
 
-val LocalGlobalUiState = compositionLocalOf { GlobalUiState() }
-
+val LocalGlobalUiState = staticCompositionLocalOf<GlobalUiState> {
+    error("No GlobalUiState provided")
+}
 
 @Composable
 fun rememberGlobalUiState(): GlobalUiState {
@@ -140,24 +137,7 @@ fun rememberGlobalUiState(): GlobalUiState {
     val scope = rememberCoroutineScope()
 
     val state = remember(settingsRepository, scope) {
-        GlobalUiState(
-            scope = scope,
-            onLanguageChanged = { lang ->
-                scope.launch {
-                    settingsRepository.setLanguageCode(lang?.appLocale?.language)
-                }
-            },
-            onWeightUnitChanged = { unit ->
-                scope.launch {
-                    settingsRepository.setWeightUnit(unit)
-                }
-            },
-            onRotationModeChanged = { mode ->
-                scope.launch {
-                    settingsRepository.setRotationMode(mode)
-                }
-            }
-        )
+        GlobalUiState(scope, settingsRepository)
     }
 
     // Sync persistence -> State / LocalizationManager
@@ -193,7 +173,8 @@ fun ProvideGlobalUiState(
     GlobalUiState.setInstance(state)
 
     val context = LocalContext.current
-    com.nnoidea.fitnez2.core.ValidateAndCorrect.appContext = context.applicationContext
+    ValidateAndCorrect.appContext = context.applicationContext
+    
     val scope = rememberCoroutineScope()
     val database = remember { AppDatabase.getDatabase(context, scope) }
     val settingsRepository = remember { SettingsRepository(context) }

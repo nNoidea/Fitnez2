@@ -238,9 +238,14 @@ fun ExerciseHistoryList(
     // Scroll trigger: Receive signal
     LaunchedEffect(Unit) {
         globalUiState.signalFlow.collect { signal ->
-            if (signal is com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop) {
-                signal.recordId?.let { engine.prependNewRecord(it) }
-                listState.animateScrollToItem(0)
+            when (signal) {
+                is com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop -> {
+                    signal.recordId?.let { engine.prependNewRecord(it) }
+                    listState.animateScrollToItem(0)
+                }
+                is com.nnoidea.fitnez2.ui.common.UiSignal.DatabaseSeeded -> {
+                    engine.loadInitial()
+                }
             }
         }
     }

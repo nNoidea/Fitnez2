@@ -55,10 +55,12 @@ class DatabaseSeeder(
             now - oneWeek        // 1 week ago
         )
 
+        var lastInsertedId: Long = -1L
+
         timePoints.forEach { timestamp ->
             repeat(5) { i ->
                 val exercise = exercises[i % exercises.size]
-                val newId = recordDao.create(
+                lastInsertedId = recordDao.create(
                     Record(
                         exerciseId = exercise.id,
                         date = timestamp,
@@ -67,16 +69,15 @@ class DatabaseSeeder(
                         reps = 5 + i
                     )
                 )
+            }
+        }
 
-                // Emit signal so the UI prepends this record in real-time,
-                // exactly like tapping the Add button.
-                com.nnoidea.fitnez2.ui.common.GlobalUiState.instance?.let { state ->
-                    state.scope?.launch(Dispatchers.Main) {
-                        state.emitSignal(
-                            com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop(newId.toInt())
-                        )
-                    }
-                }
+        // Emit signal so the UI completely refetches history from the database in the correct chronological order
+        com.nnoidea.fitnez2.ui.common.GlobalUiState.instance?.let { state ->
+            state.scope.launch(Dispatchers.Main) {
+                state.emitSignal(
+                    com.nnoidea.fitnez2.ui.common.UiSignal.DatabaseSeeded
+                )
             }
         }
 
