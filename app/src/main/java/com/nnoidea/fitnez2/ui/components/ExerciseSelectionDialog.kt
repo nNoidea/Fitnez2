@@ -41,10 +41,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.Intent
 import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalContext
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.dao.ExerciseDao
 import com.nnoidea.fitnez2.data.entities.Exercise
+import com.nnoidea.fitnez2.MainActivity
+import com.nnoidea.fitnez2.ui.navigation.AppPage
 import kotlinx.coroutines.launch
 
 @Composable
@@ -98,6 +102,37 @@ fun ExerciseSelectionDialog(
                         }
                         .verticalScroll(scrollState)
                 ) {
+
+                    // ADDED: Create Workout Button at the top
+                    val context = LocalContext.current
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { 
+                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                onDismissRequest()
+                                val intent = Intent(context, MainActivity::class.java).apply {
+                                    putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Workout.route)
+                                }
+                                context.startActivity(intent)
+                            }
+                            .padding(vertical = 12.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Add, 
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(end = 12.dp)
+                        )
+                        Text(
+                            text = globalLocalization.labelCreateWorkout,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
 
                     // ADDED: Create Button at the top
                     Row(

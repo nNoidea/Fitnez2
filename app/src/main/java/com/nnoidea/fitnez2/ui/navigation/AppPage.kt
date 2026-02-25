@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.nnoidea.fitnez2.ui.screens.ProgramScreen
 import com.nnoidea.fitnez2.ui.screens.HomeScreen
 import com.nnoidea.fitnez2.ui.screens.SettingsScreen
+import com.nnoidea.fitnez2.ui.screens.WorkoutScreen
 import com.nnoidea.fitnez2.ui.screens.DeveloperOptionsScreen
 import androidx.compose.material.icons.filled.Build
 import com.nnoidea.fitnez2.core.localization.globalLocalization
@@ -36,6 +37,16 @@ enum class AppPage(
             label = { globalLocalization.labelSettings },
             icon = Icons.Default.Settings,
             content = { SettingsScreen(onOpenDrawer = it) }
+    ),
+    Workout(
+            route = "workout",
+            label = { "Workout" },
+            icon = Icons.AutoMirrored.Filled.List,
+            content = { _ ->
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val activity = context as? android.app.Activity
+                WorkoutScreen(onBack = { activity?.finish() })
+            }
     ),
     Developer(
             route = "developer",

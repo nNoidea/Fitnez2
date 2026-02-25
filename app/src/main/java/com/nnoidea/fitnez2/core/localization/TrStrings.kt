@@ -20,6 +20,7 @@ object TrStrings : EnStrings(
 
     override val labelAddExercise = "Egzersiz Ekle"
     override val labelCreateExercise = "Egzersiz Oluştur"
+    override val labelCreateWorkout = "Antrenman Oluştur"
     override val labelAdd = "Ekle"
     override val labelExerciseName = "Egzersiz Adı"
     override val labelSave = "Kaydet"
@@ -37,7 +38,7 @@ object TrStrings : EnStrings(
 
     override fun labelEdit(target: String): String = "$target Düzenle"
 
-    override val labelSelectExercise: String = "Egzersiz Adı"
+    override val labelSelectExercise: String = "Egzersiz veya Antrenman Seçin"
     override val labelWeightUnit: String = "Ağırlık Birimi"
     override val labelProgramPlaceholder: String = "Program Sayfası Yer Tutucusu"
     override val labelHistoryListPlaceholder: String = "Geçmiş Listesi Yer Tutucusu"
