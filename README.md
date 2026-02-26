@@ -1,8 +1,12 @@
 # Fitnez2
 
+<p align="center">
+  <img src="icon.png" width="256" alt="Fitnez2 App Icon"/>
+</p>
+
 A fitness tracking app for your weight exercises, specially made with Material 3 Expressive + own custom expressive components that go even further than the Material 3 Expressive library.
 
-Note: I cannot guarantee the databases not being reset after an update, in the future, I will implement version tracking to fix this.
+> **Note:**  I cannot guarantee the databases not being reset after an update, in the future, I will implement version tracking to fix this.
 
 ## Features
 - Track exercises and workouts with ease.
@@ -12,14 +16,18 @@ Note: I cannot guarantee the databases not being reset after an update, in the f
 
 ## Build and Run
 
-To build and run the application via command line:
+> **Note:** All release APKs provided on the GitHub Releases page are built entirely in the open by GitHub Actions.
+
+### Release Build (Manual)
+If you still want to compile the production release yourself, run:
 
 ```bash
-./gradlew build
-./gradlew installDebug
+./gradlew assembleRelease
 ```
+The compiled APK will be output to `app/build/outputs/apk/release/app-release.apk`.
 
-Or open the project in Android Studio.
+# Help
+- **Feedback Needed:** I am currently maintaining Fitnez2 based on my own workflow (primarily weightlifting) along with input from a few friends. I would love to hear from users who engage in other forms of exercise—such as running, sprinting, swimming, or team sports—to understand how the app could be improved to better support your routines. If you have any ideas or feature requests for specific workout types, please feel free to share them!
 
 ## License
 
