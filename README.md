@@ -2,12 +2,9 @@
 
 <p align="center">
   <img src="icon.png" width="256" alt="Fitnez2 App Icon"/>
-  <video src="preview_compressed.mp4" width="256" autoplay loop muted />
+  <video src="https://github.com/user-attachments/assets/ffc80f88-180a-4177-b25f-9e88c688423f" width="256" autoplay loop muted />
 </p>
 
-
-
-https://github.com/user-attachments/assets/ffc80f88-180a-4177-b25f-9e88c688423f
 
 
 
