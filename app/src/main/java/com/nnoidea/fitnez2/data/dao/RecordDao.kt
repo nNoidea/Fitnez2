@@ -50,6 +50,9 @@ abstract class RecordDao {
     @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date DESC, id DESC LIMIT :limit")
     abstract suspend fun getRecordsByExerciseId(exerciseId: Int, limit: Int = 100): List<Record>
 
+    @Query("SELECT * FROM record WHERE exerciseId IN (:exerciseIds) ORDER BY date DESC, id DESC LIMIT :limit")
+    abstract suspend fun getRecordsByExerciseIds(exerciseIds: List<Int>, limit: Int = 100): List<Record>
+
     @Query("""
         SELECT record.*, exercise.name as exerciseName 
         FROM record 
@@ -97,11 +100,17 @@ abstract class RecordDao {
     @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
     abstract suspend fun getOlderRecordsByExerciseId(exerciseId: Int, offset: Int, limit: Int = 50): List<Record>
 
+    @Query("SELECT * FROM record WHERE exerciseId IN (:exerciseIds) ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
+    abstract suspend fun getOlderRecordsByExerciseIds(exerciseIds: List<Int>, offset: Int, limit: Int = 50): List<Record>
+
     @Query("SELECT COUNT(*) FROM record")
     abstract suspend fun getTotalRecordCount(): Int
 
     @Query("SELECT COUNT(*) FROM record WHERE exerciseId = :exerciseId")
     abstract suspend fun getRecordCountByExerciseId(exerciseId: Int): Int
+
+    @Query("SELECT COUNT(*) FROM record WHERE exerciseId IN (:exerciseIds)")
+    abstract suspend fun getRecordCountByExerciseIds(exerciseIds: List<Int>): Int
 
     @Query("SELECT * FROM record")
     abstract suspend fun getAllRecords(): List<Record>
