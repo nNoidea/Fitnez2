@@ -1,20 +1,15 @@
 package com.nnoidea.fitnez2.ui.components
 
 import androidx.activity.compose.PredictiveBackHandler
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -29,25 +24,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ArrowDropDown
-
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,308 +42,102 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
-
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.unit.Velocity
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalFocusManager
-
-
-import androidx.compose.ui.platform.LocalView
-import android.view.HapticFeedbackConstants
-import android.widget.Toast
-
-
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
-import com.nnoidea.fitnez2.ui.common.UiSignal
-import androidx.compose.ui.geometry.Offset
-
-
-
-import androidx.compose.ui.platform.LocalContext
-import com.nnoidea.fitnez2.data.LocalAppDatabase
-import com.nnoidea.fitnez2.data.LocalSettingsRepository
-import com.nnoidea.fitnez2.data.entities.Exercise
-import com.nnoidea.fitnez2.data.entities.Record
-import com.nnoidea.fitnez2.core.ValidateAndCorrect
-
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 const val BUTTONHEIGHT = 45
-const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2*BUTTONHEIGHT + 70 + 15 // Approximately 40*2 + 70 + 15
+const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2 * BUTTONHEIGHT + 70 + 15
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Public entry point for the history-based Predictive Bottom Sheet.
+ */
 @Composable
 fun PredictiveBottomSheet(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val state = rememberPredictiveBottomSheetState()
+    PredictiveBottomSheet(state = state, modifier = modifier)
+}
+
+/**
+ * Modular and stateless UI for the Predictive Bottom Sheet.
+ * Operates solely on the [PredictiveBottomSheetState] interface.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PredictiveBottomSheet(
+    state: PredictiveBottomSheetState,
+    modifier: Modifier = Modifier
+) {
     val globalUiState = LocalGlobalUiState.current
     val isOverlayOpen = globalUiState.isOverlayOpen
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
 
     BoxWithConstraints(modifier = modifier) {
-        val density = LocalDensity.current
-        val scope = rememberCoroutineScope()
-
-        // DB Access
-        val database = LocalAppDatabase.current
-        val exerciseDao = database.exerciseDao()
-        val recordDao = database.recordDao()
-        val settingsRepository = LocalSettingsRepository.current
-        
-        val dbExercises by exerciseDao.getAllExercisesFlow().collectAsState(initial = emptyList())
-        val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
-        val defaultSets by settingsRepository.defaultSetsFlow.collectAsState(initial = "3")
-        val defaultReps by settingsRepository.defaultRepsFlow.collectAsState(initial = "10")
-        val defaultWeight by settingsRepository.defaultWeightFlow.collectAsState(initial = "20")
-
-        // Form state
-        var selectedExerciseId by remember { mutableStateOf<Int?>(null) }
-        var selectedExercise by remember { mutableStateOf<String?>(null) }
-        var setsValue by remember { mutableStateOf("") }
-        var repsValue by remember { mutableStateOf("") }
-        var weightValue by remember { mutableStateOf("") }
-
-        // Raw (uncommitted) values for validation before Add
-        var setsRaw by remember { mutableStateOf("") }
-        var repsRaw by remember { mutableStateOf("") }
-        var weightRaw by remember { mutableStateOf("") }
-
-
-
-
-        // Helper Functions for Categorized Logic
-        suspend fun loadInputsForExercise(exerciseId: Int) {
-            val latestForExercise = recordDao.getLatestRecordByExerciseId(exerciseId)
-            if (latestForExercise != null) {
-                setsValue = latestForExercise.record.sets.toString()
-                repsValue = latestForExercise.record.reps.toString()
-                weightValue = latestForExercise.record.weight.toString()
-            } else {
-                // Use default values if no history for this exercise
-                setsValue = defaultSets
-                repsValue = defaultReps
-                weightValue = defaultWeight
-            }
-        }
-
-        suspend fun initializeSession() {
-            val latest = recordDao.getLatestRecord()
-            if (latest != null) {
-                selectedExercise = latest.exerciseName
-                selectedExerciseId = latest.record.exerciseId
-            }
-        }
-
-        // 1. App Start: Run startup function
-        LaunchedEffect(Unit) {
-            initializeSession()
-        }
-
-        // 2. Exercise Selection: Set inputs
-        LaunchedEffect(selectedExerciseId) {
-            val id = selectedExerciseId
-            if (id != null) {
-                loadInputsForExercise(id)
-            }
-        }
-
-        // --- FALLBACK VALUES (Placeholder Fallbacks) ---
-        // These track the last valid inputs to use as fallbacks when fields are empty (e.g. during focus)
-        var setsFallback by remember { mutableStateOf("") }
-        var repsFallback by remember { mutableStateOf("") }
-        var weightFallback by remember { mutableStateOf("") }
-
-        LaunchedEffect(setsValue) { if (setsValue.isNotEmpty()) setsFallback = setsValue }
-        LaunchedEffect(repsValue) { if (repsValue.isNotEmpty()) repsFallback = repsValue }
-        LaunchedEffect(weightValue) { if (weightValue.isNotEmpty()) weightFallback = weightValue }
-
-        // --- LAYOUT CONSTANTS ---
-        // Peek height must be enough to show the input row (~160dp)
-        // Drag Handle (30) + Title/Exercise/Add (60) + Inputs (70)
-        val buttonHeight = BUTTONHEIGHT.dp
-        
-        // Peek height = DragHandle + TopPadding + ButtonRow1 + Spacing + ButtonRow2 + BottomPadding
-        // Drag Handle area is approx 32dp, plus we have 24dp vertical padding around the columns
-        val peekHeight = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp
-
-        val peekHeightPx = with(density) { peekHeight.toPx() }
-        val screenHeightPx = constraints.maxHeight.toFloat()
-        
-        // Respect status bar insets
         val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         val topPaddingPx = with(density) { topPadding.toPx() }
+        val expandedHeight = with(density) { constraints.maxHeight.toDp() } - topPadding
 
-        // Use full screen height minus status bar for expanded state
-        val expandedHeightPx = screenHeightPx - topPaddingPx
-        val expandedHeight = with(density) { expandedHeightPx.toDp() }
-
-        // 0 = Expanded, maxOffset = Collapsed
-        val maxOffset = expandedHeightPx - peekHeightPx
-        val minOffset = 0f
-
-        val offsetY = remember { Animatable(maxOffset) }
-
-        // Predictive Back State
-        var predictiveProgress by remember { mutableFloatStateOf(0f) }
-
-        var showExerciseSelection by remember { mutableStateOf(false) }
-
-        val isExpanded by remember {
-            derivedStateOf { offsetY.value < maxOffset / 2 }
-        }
-        
-        // Lazy Load Logic: Only load history once sheet is pulled up
-        var hasBeenOpened by remember { mutableStateOf(false) }
-        LaunchedEffect(Unit) {
-            androidx.compose.runtime.snapshotFlow { offsetY.value }
-                .collect { currentOffset ->
-                    if (!hasBeenOpened && currentOffset < maxOffset - 10f) {
-                        hasBeenOpened = true
-                    }
-                }
-        }
-
-        // Draggable State
-        val draggableState = rememberDraggableState { delta ->
-             if (!isOverlayOpen) {
-                 scope.launch {
-                     val newOffset = (offsetY.value + delta).coerceIn(minOffset, maxOffset)
-                     offsetY.snapTo(newOffset)
-                 }
-             }
-        }
-
-        val view = LocalView.current
-
-        // Unified Settle Logic
-        val settleSpring: suspend (Float) -> Unit = { velocity ->
-            val targetOffset = if (velocity > 1000f || (velocity >= 0 && offsetY.value > maxOffset / 2)) {
-                maxOffset // Collapse
-            } else {
-                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                minOffset // Expand
-            }
-            offsetY.animateTo(
-                targetValue = targetOffset,
-                animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)
-            )
-        }
-
-        val nestedScrollConnection = remember {
-            object : NestedScrollConnection {
-                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                    val delta = available.y
-                    // Dragging UP (delta < 0) and not yet fully expanded -> Consume
-                    if (delta < 0 && offsetY.value > minOffset + 1f) {
-                        draggableState.dispatchRawDelta(delta)
-                        return available
-                    }
-                    return Offset.Zero
-                }
-
-                override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                    val delta = available.y
-                    // Dragging DOWN (delta > 0)
-                    // Only allow if it's a direct user drag, NOT a fling
-                    if (delta > 0 && source == NestedScrollSource.UserInput) {
-                        draggableState.dispatchRawDelta(delta)
-                        return available
-                    }
-                    return Offset.Zero
-                }
-
-                override suspend fun onPreFling(available: Velocity): Velocity {
-                    if (offsetY.value > minOffset + 1f && offsetY.value < maxOffset - 1f) {
-                        settleSpring(available.y)
-                        return available
-                    }
-                    return super.onPreFling(available)
-                }
-
-                override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-                    return super.onPostFling(consumed, available)
-                }
-            }
-        }
-
-
-        // Update GlobalUiState for Snackbar positioning
-        // If expanded (open), offset is 0 (bottom of screen)
-        // If collapsed (peek), offset is peekHeight (above the sheet)
-        LaunchedEffect(isExpanded, peekHeight) {
-            globalUiState.bottomSheetSnackbarOffset = if (isExpanded) 0.dp else peekHeight
+        // Sync global UI state for snackbar positioning
+        LaunchedEffect(state.isExpanded) {
+            globalUiState.bottomSheetSnackbarOffset = if (state.isExpanded) 0.dp else PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp
         }
 
         // Predictive Back Handler
-        val progressAnim = remember { Animatable(0f) }
-        PredictiveBackHandler(enabled = isExpanded && !isOverlayOpen) { progress ->
+        PredictiveBackHandler(enabled = state.isExpanded && !isOverlayOpen) { progress ->
             try {
-                progress.collect { backEvent ->
-                    progressAnim.snapTo(backEvent.progress)
-                    predictiveProgress = progressAnim.value
-                }
-                scope.launch {
-                    offsetY.animateTo(maxOffset, spring(stiffness = Spring.StiffnessMediumLow))
-                }
-                scope.launch {
-                    progressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow)) {
-                        predictiveProgress = value
-                    }
-                }
+                progress.collect { state.onPredictiveBackProgress(it.progress) }
+                scope.launch { state.onPredictiveBackCommit() }
             } catch (e: Exception) {
-                scope.launch {
-                     progressAnim.animateTo(0f) { predictiveProgress = value }
-                }
+                state.onPredictiveBackCancel()
             }
         }
 
         // Overshoot Buffer
         val overshootBuffer = 150.dp
-        val overshootBufferPx = with(density) { overshootBuffer.toPx() }
-        val sheetHeight = expandedHeight + overshootBuffer
-        
-        // --- MAIN SHEET CONTAINER ---
+        val sheetTotalHeight = expandedHeight + overshootBuffer
+
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .height(sheetHeight)
+                .height(sheetTotalHeight)
                 .fillMaxWidth()
-                .offset { IntOffset(0, (offsetY.value + topPaddingPx).roundToInt()) }
+                .offset { IntOffset(0, (state.offsetY.value + topPaddingPx).roundToInt()) }
                 .graphicsLayer {
-                     if (predictiveProgress > 0f) {
-                         val scale = 1f - (predictiveProgress * 0.2f)
-                         scaleX = scale
-                         scaleY = scale
-                         translationY = size.height * predictiveProgress * 0.2f
-                     }
+                    if (state.predictiveProgress > 0f) {
+                        val scale = 1f - (state.predictiveProgress * 0.2f)
+                        scaleX = scale
+                        scaleY = scale
+                        translationY = size.height * state.predictiveProgress * 0.2f
+                    }
                 }
                 .background(
                     MaterialTheme.colorScheme.surfaceContainer,
                     RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
                 )
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                .nestedScroll(nestedScrollConnection)
+                .nestedScroll(state.nestedScrollConnection)
                 .draggable(
-                    state = draggableState,
-                    orientation = Orientation.Vertical,
-                    onDragStarted = {
-                        focusManager.clearFocus()
+                    state = androidx.compose.foundation.gestures.rememberDraggableState { delta ->
+                        if (!isOverlayOpen) {
+                            scope.launch {
+                                val newOffset = (state.offsetY.value + delta).coerceIn(state.minOffset, state.maxOffset)
+                                state.offsetY.snapTo(newOffset)
+                            }
+                        }
                     },
+                    orientation = Orientation.Vertical,
+                    onDragStarted = { /* handled by state focus management if needed */ },
                     onDragStopped = { velocity ->
-                        scope.launch { settleSpring(velocity) }
+                        scope.launch { state.settleSpring(velocity) }
                     }
                 )
         ) {
@@ -367,158 +147,21 @@ fun PredictiveBottomSheet(
                     .height(expandedHeight),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 1. Drag Handle
                 BottomSheetDefaults.DragHandle()
 
-                // 2. Persistent Content (Always Visible in Peek)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                SheetFormLayout(state = state)
 
-
-                    // Row: Exercise Selector + Add Button
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Button 1: Exercise Selector
-                        FilledTonalButton(
-                            onClick = {
-                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
-                                showExerciseSelection = true
-                            },
-                            modifier = Modifier
-                                .weight(2f)
-                                .height(buttonHeight),
-                            shape = RoundedCornerShape(24.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                var isOverflowing by remember { mutableStateOf(false) }
-                                Text(
-                                    text = selectedExercise ?: globalLocalization.labelSelectExercise,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                    onTextLayout = { textLayoutResult ->
-                                        isOverflowing = textLayoutResult.hasVisualOverflow
-                                    },
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                            }
-                        }
-
-                        Button(
-                            onClick = {
-                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
-                                scope.launch {
-                                    try {
-                                        val exerciseId = selectedExerciseId
-                                        if (exerciseId == null) {
-                                            Toast.makeText(context, globalLocalization.labelSelectExercise, Toast.LENGTH_SHORT).show()
-                                            return@launch
-                                        }
-
-                                        // Validate raw (uncommitted) values first
-                                        // Use raw values, falling back to committed values if empty
-                                        val inputSets = setsRaw.ifEmpty { setsValue }.ifEmpty { setsFallback }
-                                        val sets = ValidateAndCorrect.sets(inputSets)
-                                        if (sets == null) return@launch // Tooltip already shown
-
-                                        val inputReps = repsRaw.ifEmpty { repsValue }.ifEmpty { repsFallback }
-                                        val reps = ValidateAndCorrect.reps(inputReps)
-                                        if (reps == null) return@launch // Tooltip already shown
-
-                                        val inputWeight = weightRaw.ifEmpty { weightValue }.ifEmpty { weightFallback }
-                                        val weight = ValidateAndCorrect.weight(inputWeight)
-                                        if (weight == null) return@launch // Tooltip already shown
-
-                                        // All valid - clear focus (commits values) and hide keyboard
-                                        focusManager.clearFocus()
-                                        keyboardController?.hide()
-
-                                        val record = Record(
-                                            exerciseId = exerciseId,
-                                            sets = sets,
-                                            reps = reps,
-                                            weight = weight,
-                                            date = System.currentTimeMillis()
-                                        )
-
-                                        val newId = recordDao.create(record)
-
-                                        globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
-
-                                    } catch (e: Exception) {
-                                        // Handle error - could show toast or snackbar
-                                    }
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(buttonHeight),
-                            shape = RoundedCornerShape(24.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(globalLocalization.labelAdd, maxLines = 1)
-                        }
-                    }
-
-                    // Row: Sets, Reps, Weight
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        BottomSheetSetsField(
-                            value = setsValue,
-                            onValidChange = { setsValue = it },
-                            onRawValueChange = { setsRaw = it },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(buttonHeight)
-                        )
-
-                        BottomSheetRepsField(
-                            value = repsValue,
-                            onValidChange = { repsValue = it },
-                            onRawValueChange = { repsRaw = it },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(buttonHeight)
-                        )
-
-                        BottomSheetWeightField(
-                            value = weightValue.toDoubleOrNull() ?: 0.0,
-                            label = weightUnit,
-                            onValidChange = { weightValue = it },
-                            onRawValueChange = { weightRaw = it },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(buttonHeight)
-                        )
-                    }
-
-
-                }
-
-                // 3. Expanded Content (Only Visible when pulled up)
+                // Expanded History View
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f) // Takes remaining space
+                        .weight(1f)
                         .padding(top = 24.dp)
                 ) {
-                    if (hasBeenOpened && selectedExerciseId != null) {
+                    if (state.hasBeenOpened && state.selectedExerciseId != null) {
                         ExerciseHistoryList(
                             modifier = Modifier.fillMaxSize(),
-                            selectedExerciseId = selectedExerciseId,
+                            filterExerciseIds = listOfNotNull(state.selectedExerciseId),
                             useAlternatingColors = false
                         )
                     }
@@ -527,16 +170,92 @@ fun PredictiveBottomSheet(
         }
 
         ExerciseSelectionDialog(
-            show = showExerciseSelection,
-            exercises = dbExercises,
-            selectedExerciseId = selectedExerciseId,
-            exerciseDao = exerciseDao,
-            onDismissRequest = { showExerciseSelection = false },
-            onExerciseSelected = { exercise ->
-                selectedExercise = exercise.name
-                selectedExerciseId = exercise.id
-                showExerciseSelection = false
-            }
+            show = state.showExerciseSelection,
+            exercises = state.exercises,
+            selectedExerciseId = state.selectedExerciseId,
+            exerciseDao = com.nnoidea.fitnez2.data.LocalAppDatabase.current.exerciseDao(), // Still need a way to pass DAO for details
+            onDismissRequest = { state.toggleExerciseSelection(false) },
+            onExerciseSelected = { state.onExerciseSelected(it) }
         )
+    }
+}
+
+@Composable
+private fun SheetFormLayout(state: PredictiveBottomSheetState) {
+    val buttonHeight = BUTTONHEIGHT.dp
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Row: Exercise Selector + Add Button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilledTonalButton(
+                onClick = { state.toggleExerciseSelection(true) },
+                modifier = Modifier
+                    .weight(2f)
+                    .height(buttonHeight),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = state.selectedExerciseName ?: globalLocalization.labelSelectExercise,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                }
+            }
+
+            Button(
+                onClick = { state.onAddClick() },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(buttonHeight),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(globalLocalization.labelAdd, maxLines = 1)
+            }
+        }
+
+        // Row: Sets, Reps, Weight
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            BottomSheetSetsField(
+                value = state.sets,
+                onValidChange = { state.onSetsChange(it) },
+                onRawValueChange = { state.setsRaw = it },
+                modifier = Modifier.weight(1f).height(buttonHeight)
+            )
+
+            BottomSheetRepsField(
+                value = state.reps,
+                onValidChange = { state.onRepsChange(it) },
+                onRawValueChange = { state.repsRaw = it },
+                modifier = Modifier.weight(1f).height(buttonHeight)
+            )
+
+            BottomSheetWeightField(
+                value = state.weight.toDoubleOrNull() ?: 0.0,
+                label = state.weightUnit,
+                onValidChange = { state.onWeightChange(it) },
+                onRawValueChange = { state.weightRaw = it },
+                modifier = Modifier.weight(1f).height(buttonHeight)
+            )
+        }
     }
 }

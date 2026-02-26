@@ -75,6 +75,10 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.runtime.Stable
+import com.nnoidea.fitnez2.data.SettingsRepository
+import com.nnoidea.fitnez2.ui.common.GlobalUiState
+import kotlinx.coroutines.CoroutineScope
 
 sealed class HistoryUiModel {
     data class RecordItem(val record: RecordWithExercise, val isLight: Boolean) : HistoryUiModel()
@@ -103,152 +107,20 @@ private val ColorHistoryColoredContent @Composable get() = MaterialTheme.colorSc
 fun ExerciseHistoryList(
     modifier: Modifier = Modifier,
     extraBottomPadding: Dp = 0.dp,
-    selectedExerciseId: Int? = null,
+    filterExerciseIds: List<Int>? = null,
     useAlternatingColors: Boolean = true
 ) {
+    val state = rememberExerciseHistoryState(filterExerciseIds, useAlternatingColors)
+    ExerciseHistoryList(state = state, modifier = modifier, extraBottomPadding = extraBottomPadding)
+}
+
+@Composable
+fun ExerciseHistoryList(
+    state: ExerciseListState,
+    modifier: Modifier = Modifier,
+    extraBottomPadding: Dp = 0.dp,
+) {
     val scope = rememberCoroutineScope()
-    val database = LocalAppDatabase.current
-    val dao = database.recordDao()
-
-    val settingsRepository = LocalSettingsRepository.current
-    val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
-
-    val exerciseDao = database.exerciseDao()
-    val exercisesList by exerciseDao.getAllExercisesFlow().collectAsState(initial = emptyList())
-    val exerciseMap = remember(exercisesList) {
-        exercisesList.associate { it.id to it.name }
-    }
-
-    // =====================================================================
-    //  ScrollEngine — all batch/eviction/buffer logic lives here.
-    //  See ScrollEngine.kt for internals. Think twice before modifying.
-    // =====================================================================
-    val engine = remember(selectedExerciseId) {
-        ScrollEngine(dao, selectedExerciseId)
-    }
-
-    // One-shot load (or when filter changes — engine is re-created via key)
-    LaunchedEffect(engine) {
-        engine.loadInitial()
-    }
-
-    // Orphan cleanup when exercises are deleted (CASCADE)
-    LaunchedEffect(exerciseMap) {
-        if (engine.initialLoadDone && exerciseMap.isNotEmpty()) {
-            engine.removeOrphanedRecords(exerciseMap.keys)
-        }
-    }
-
-    // Build UI model for recent records (section 0)
-    val recentUiItems = remember(engine.recentRecords, exerciseMap, useAlternatingColors) {
-        buildUiItems(engine.recentRecords, exerciseMap, useAlternatingColors, section = 0)
-    }
-
-    // Build UI models for each loaded batch independently.
-    // Evicted (null) batches produce a single EvictedBatch placeholder.
-    val olderBatchUiItems = remember(engine.olderBatches, engine.batchHeights, engine.batchSizes, exerciseMap, useAlternatingColors) {
-        engine.olderBatches.mapIndexed { i, batch ->
-            if (batch != null) {
-                buildUiItems(batch, exerciseMap, useAlternatingColors, section = i + 1)
-            } else {
-                val height = engine.batchHeights[i]
-                    ?: ScrollEngine.estimateBatchHeightDp(engine.batchSizes.getOrElse(i) { ScrollEngine.OLDER_BATCH_SIZE })
-                listOf(HistoryUiModel.EvictedBatch(i, height))
-            }
-        }
-    }
-
-    // Combine into a single flat list for the LazyColumn
-    val allUiItems = remember(recentUiItems, olderBatchUiItems, engine.hasMoreOlderRecords, engine.isLoadingMore) {
-        buildList {
-            addAll(recentUiItems)
-            for ((batchIndex, batchItems) in olderBatchUiItems.withIndex()) {
-                if (batchItems.isEmpty()) continue
-
-                val isEvicted = batchItems.firstOrNull() is HistoryUiModel.EvictedBatch
-                if (!isEvicted) {
-                    val lastHeaderDate = filterIsInstance<HistoryUiModel.Header>().lastOrNull()?.date
-                    val batchStart = if (
-                        lastHeaderDate != null &&
-                        batchItems.firstOrNull() is HistoryUiModel.Header &&
-                        (batchItems.first() as HistoryUiModel.Header).date == lastHeaderDate
-                    ) batchItems.drop(1) else batchItems
-
-                    add(HistoryUiModel.BatchSeparator(batchIndex))
-                    addAll(batchStart)
-                } else {
-                    add(HistoryUiModel.BatchSeparator(batchIndex))
-                    addAll(batchItems)
-                }
-            }
-            if (olderBatchUiItems.isEmpty() && engine.hasMoreOlderRecords) {
-                add(HistoryUiModel.BatchSeparator(0))
-            }
-            if (engine.isLoadingMore) {
-                add(HistoryUiModel.LoadingMore)
-            }
-        }
-    }
-
-    val globalUiState = LocalGlobalUiState.current
-    val listState = rememberLazyListState()
-
-    // Always-fresh reference for the coroutine — avoids stale closure after eviction
-    val latestUiItems by rememberUpdatedState(allUiItems)
-
-    // ---- ScrollEngine: batch loading, eviction & reloading ----
-    LaunchedEffect(listState, engine) {
-        snapshotFlow {
-            val layoutInfo = listState.layoutInfo
-            val firstVisible = layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0
-            val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            val total = layoutInfo.totalItemsCount
-            Triple(firstVisible, lastVisible, total)
-        }.collect { (firstVisible, lastVisible, total) ->
-            // 1. Load next batch when near the bottom
-            engine.loadNextBatchIfNeeded(lastVisible, total)
-
-            // 2. Determine which batch the viewport is in
-            if (engine.olderBatches.isEmpty()) return@collect
-
-            val visibleBatches = mutableSetOf<Int>()
-            val currentItems = latestUiItems
-            for (idx in firstVisible..lastVisible) {
-                when (val item = currentItems.getOrNull(idx)) {
-                    is HistoryUiModel.BatchSeparator -> visibleBatches.add(item.index)
-                    is HistoryUiModel.EvictedBatch -> visibleBatches.add(item.index)
-                    is HistoryUiModel.RecordItem -> {
-                        for (j in idx downTo 0) {
-                            val prev = currentItems.getOrNull(j)
-                            if (prev is HistoryUiModel.BatchSeparator) {
-                                visibleBatches.add(prev.index)
-                                break
-                            }
-                        }
-                    }
-                    else -> {}
-                }
-            }
-
-            // 3. Evict far batches, reload near ones
-            engine.evictAndReload(visibleBatches.maxOrNull() ?: 0)
-        }
-    }
-
-    // Scroll trigger: Receive signal
-    LaunchedEffect(Unit) {
-        globalUiState.signalFlow.collect { signal ->
-            when (signal) {
-                is com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop -> {
-                    signal.recordId?.let { engine.prependNewRecord(it) }
-                    listState.animateScrollToItem(0)
-                }
-                is com.nnoidea.fitnez2.ui.common.UiSignal.DatabaseSeeded -> {
-                    engine.loadInitial()
-                }
-            }
-        }
-    }
 
     Box(modifier = modifier) {
         Surface(
@@ -256,40 +128,22 @@ fun ExerciseHistoryList(
             color = MaterialTheme.colorScheme.surfaceContainerLow,
             shape = RoundedCornerShape(28.dp)
         ) {
-            if (!engine.initialLoadDone) return@Surface
+            if (!state.initialLoadDone) return@Surface
 
             ExerciseHistoryListContent(
                 modifier = Modifier.fillMaxSize(),
-                listState = listState,
-                uiItems = allUiItems,
-                weightUnit = weightUnit,
+                listState = state.listState,
+                uiItems = state.uiItems,
+                weightUnit = state.weightUnit,
                 extraBottomPadding = extraBottomPadding,
-                onUpdateRequest = { updatedRecord ->
-                    scope.launch {
-                        try {
-                            engine.updateRecord(updatedRecord)
-                        } catch (_: Exception) { }
-                    }
-                },
-                onDeleteRequest = { record ->
-                    scope.launch {
-                        val ctx = engine.deleteRecord(record)
-                        globalUiState.showSnackbar(
-                            message = globalLocalization.labelRecordDeleted,
-                            actionLabel = globalLocalization.labelUndo,
-                            onActionPerformed = {
-                                scope.launch { engine.undoDelete(ctx) }
-                            }
-                        )
-                    }
-                }
+                onUpdateRequest = { state.onUpdateRequest(it) },
+                onDeleteRequest = { state.onDeleteRequest(it) }
             )
         }
 
-        // Scroll-to-top FAB — outside Surface so it's not clipped by rounded corners
         ScrollToTopButton(
-            listState = listState,
-            onClick = { scope.launch { listState.animateScrollToItem(0) } },
+            listState = state.listState,
+            onClick = { scope.launch { state.listState.animateScrollToItem(0) } },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 24.dp, bottom = 24.dp + extraBottomPadding)
