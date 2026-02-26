@@ -10,7 +10,6 @@ A fitness tracking app for your weight exercises, specially made with Material 3
 
 ## Features
 - Track exercises and workouts with ease.
-- Predicts your next set based on historical data.
 - Built-in localization support (help me add more languages).
 - Real-time UI updates for seamless workout logging.
 
