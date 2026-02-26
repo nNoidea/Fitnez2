@@ -2,8 +2,9 @@
 
 <p align="center">
   <img src="icon.png" width="256" alt="Fitnez2 App Icon"/>
-  <video src="https://github.com/nNoidea/Fitnez2/blob/main/preview.mp4?raw=true" width="256" autoplay loop muted />
+  <video src="preview_compressed.mp4" width="256" autoplay loop muted />
 </p>
+
 
 
 
