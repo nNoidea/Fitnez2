@@ -1,6 +1,6 @@
 # Fitnez2
 
-A comprehensive fitness and workout tracking application designed for Android using Jetpack Compose.
+A fitness tracking app for your weight exercises, specially made with Material 3 Expressive + own custom expressive components that go even further than the Material 3 Expressive library.
 
 Note: I cannot guarantee the databases not being reset after an update, in the future, I will implement version tracking to fix this.
 
