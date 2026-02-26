@@ -18,5 +18,6 @@ local.properties
 .agent/
 /breezy-weather-main
 .kotlin/
+*.json
 
 Fitnez/
