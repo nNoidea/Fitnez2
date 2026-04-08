@@ -45,8 +45,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import android.view.HapticFeedbackConstants
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import kotlinx.coroutines.launch
@@ -175,7 +177,8 @@ fun PredictiveBottomSheet(
             selectedExerciseId = state.selectedExerciseId,
             exerciseDao = com.nnoidea.fitnez2.data.LocalAppDatabase.current.exerciseDao(), // Still need a way to pass DAO for details
             onDismissRequest = { state.toggleExerciseSelection(false) },
-            onExerciseSelected = { state.onExerciseSelected(it) }
+            onExerciseSelected = { state.onExerciseSelected(it, closeDialog = true) },
+            onExerciseCreated = { state.onExerciseSelected(it, closeDialog = false) }
         )
     }
 }
@@ -183,6 +186,7 @@ fun PredictiveBottomSheet(
 @Composable
 private fun SheetFormLayout(state: PredictiveBottomSheetState) {
     val buttonHeight = BUTTONHEIGHT.dp
+    val view = LocalView.current
     
     Column(
         modifier = Modifier
@@ -196,7 +200,10 @@ private fun SheetFormLayout(state: PredictiveBottomSheetState) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilledTonalButton(
-                onClick = { state.toggleExerciseSelection(true) },
+                onClick = { 
+                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                    state.toggleExerciseSelection(true) 
+                },
                 modifier = Modifier
                     .weight(2f)
                     .height(buttonHeight),

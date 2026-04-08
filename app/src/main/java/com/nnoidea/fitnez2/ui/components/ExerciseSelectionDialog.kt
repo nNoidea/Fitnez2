@@ -58,7 +58,8 @@ fun ExerciseSelectionDialog(
     selectedExerciseId: Int?,
     exerciseDao: ExerciseDao,
     onDismissRequest: () -> Unit,
-    onExerciseSelected: (Exercise) -> Unit
+    onExerciseSelected: (Exercise) -> Unit,
+    onExerciseCreated: (Exercise) -> Unit = {}
 ) {
     val view = LocalView.current
     val scope = rememberCoroutineScope()
@@ -326,7 +327,8 @@ fun ExerciseSelectionDialog(
             scope.launch {
                 try {
                     val newExercise = Exercise(name = newName)
-                    exerciseDao.create(newExercise)
+                    val newId = exerciseDao.create(newExercise)
+                    onExerciseCreated(newExercise.copy(id = newId.toInt()))
                     showCreateDialog = false
                 } catch (e: Exception) {
                     // Handle existing name error if needed
