@@ -70,7 +70,7 @@ interface PredictiveBottomSheetState {
     val minOffset: Float
 
     // Actions
-    fun onExerciseSelected(exercise: Exercise)
+    fun onExerciseSelected(exercise: Exercise, closeDialog: Boolean = true)
     fun onAddClick()
     fun onSetsChange(value: String)
     fun onRepsChange(value: String)
@@ -177,10 +177,12 @@ class RecordPredictiveBottomSheetState(
         }
     }
 
-    override fun onExerciseSelected(exercise: Exercise) {
+    override fun onExerciseSelected(exercise: Exercise, closeDialog: Boolean) {
         selectedExerciseName = exercise.name
         selectedExerciseId = exercise.id
-        showExerciseSelection = false
+        if (closeDialog) {
+            showExerciseSelection = false
+        }
         scope.launch { loadInputsForExercise(exercise.id) }
     }
 

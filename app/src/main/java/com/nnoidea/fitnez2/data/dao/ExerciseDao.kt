@@ -46,7 +46,7 @@ abstract class ExerciseDao {
     // --- CREATE ---
 
     @Transaction
-    open suspend fun create(exercise: Exercise) {
+    open suspend fun create(exercise: Exercise): Long {
         if (exercise.id != 0) {
             throw IllegalArgumentException(LocalizationManager.strings.errorIdMustBeZero)
         }
@@ -58,7 +58,7 @@ abstract class ExerciseDao {
             throw IllegalArgumentException(LocalizationManager.strings.errorExerciseAlreadyExists(sanitized.name))
         }
         
-        insertInternal(sanitized)
+        return insertInternal(sanitized)
     }
 
     // --- READ ---
