@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -63,6 +64,15 @@ fun WorkoutScreen(
             val records = database.workoutDao().getRecordsForWorkout(workoutId)
             workoutItems.clear()
             workoutItems.addAll(records)
+        }
+    }
+
+    val exercises by database.exerciseDao().getAllExercisesFlow().collectAsState(initial = null)
+    androidx.compose.runtime.LaunchedEffect(exercises) {
+        val currentExercises = exercises
+        if (currentExercises != null) {
+            val validIds = currentExercises.map { it.id }.toSet()
+            workoutItems.removeAll { !validIds.contains(it.workoutRecord.exerciseId) }
         }
     }
 

@@ -153,14 +153,16 @@ fun rememberExerciseHistoryListState(
 
     // Build UI model for recent records (section 0)
     val recentUiItems = remember(state.engine.recentRecords, exerciseMap, useAlternatingColors) {
-        buildUiItems(state.engine.recentRecords, exerciseMap, useAlternatingColors, section = 0)
+        val validRecords = state.engine.recentRecords.filter { exerciseMap.containsKey(it.exerciseId) }
+        buildUiItems(validRecords, exerciseMap, useAlternatingColors, section = 0)
     }
 
     // Build UI models for each loaded batch independently.
     val olderBatchUiItems = remember(state.engine.olderBatches, state.engine.batchHeights, state.engine.batchSizes, exerciseMap, useAlternatingColors) {
         state.engine.olderBatches.mapIndexed { i, batch ->
             if (batch != null) {
-                buildUiItems(batch, exerciseMap, useAlternatingColors, section = i + 1)
+                val validRecords = batch.filter { exerciseMap.containsKey(it.exerciseId) }
+                buildUiItems(validRecords, exerciseMap, useAlternatingColors, section = i + 1)
             } else {
                 val height = state.engine.batchHeights[i]
                     ?: ScrollEngine.estimateBatchHeightDp(state.engine.batchSizes.getOrElse(i) { ScrollEngine.OLDER_BATCH_SIZE })

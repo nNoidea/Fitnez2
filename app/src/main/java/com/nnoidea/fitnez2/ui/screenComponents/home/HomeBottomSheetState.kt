@@ -77,7 +77,16 @@ class HomeBottomSheetState(
 
     init {
         scope.launch { initializeSession() }
-        scope.launch { workoutDao.getAllWorkoutsFlow().collect { workouts = it } }
+        scope.launch { 
+            workoutDao.getAllWorkoutsFlow().collect { currentWorkouts -> 
+                workouts = currentWorkouts 
+                if (selectedWorkout != null && currentWorkouts.none { it.id == selectedWorkout?.id }) {
+                    selectedWorkout = null
+                    selectedWorkoutRecords = emptyList()
+                    selectedExerciseNameSnapshot = null
+                }
+            } 
+        }
     }
 
     private suspend fun initializeSession() {
@@ -132,7 +141,6 @@ class HomeBottomSheetState(
                     }
                     dismissInput()
                     val timestamp = System.currentTimeMillis()
-                    var lastId: Long = 0
                     
                     // Insert all records in reverse order so the first item gets the highest ID
                     // and appears at the top in the history list (which orders by id DESC for same timestamps)
@@ -144,12 +152,10 @@ class HomeBottomSheetState(
                             weight = workoutRecord.workoutRecord.weight,
                             date = timestamp
                         )
-                        lastId = dao.create(record)
+                        val newId = dao.create(record)
+                        globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
                     }
-                    if (lastId > 0) {
-                        globalUiState.emitSignal(UiSignal.ScrollToTop(lastId.toInt()))
-                        onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
-                    }
+                    onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
                     return@launch
                 }
 
