@@ -18,11 +18,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.nnoidea.fitnez2.ui.components.PredictiveModal
-import com.nnoidea.fitnez2.ui.components.TopHeader
+import com.nnoidea.fitnez2.ui.components.dialog.PredictiveModal
+import com.nnoidea.fitnez2.ui.components.ScreenScaffold
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import kotlinx.coroutines.launch
-import com.nnoidea.fitnez2.ui.components.PredictiveConfirmationDialog
+import com.nnoidea.fitnez2.ui.components.dialog.PredictiveConfirmationDialog
 import kotlin.math.roundToInt
 
 @Composable
@@ -36,23 +36,10 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
     var stressTestProgressMessage by remember { mutableStateOf("") }
     var stressTestProgressValue by remember { mutableFloatStateOf(0f) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
-            // Header with Back Button
-            TopHeader {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = globalLocalization.labelBack
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Developer Options",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-
+    ScreenScaffold(
+        title = globalLocalization.labelDeveloperOptions,
+        onBack = onBack
+    ) {
             HorizontalDivider()
 
             Column(
@@ -62,8 +49,8 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
             ) {
                 // Developer Settings
                 SettingsItem(
-                    label = "Color Palette",
-                    value = "View Colors",
+                    label = globalLocalization.devColorPalette,
+                    value = globalLocalization.devViewColors,
                     onClick = { showColorPalette = true }
                 )
 
@@ -75,19 +62,18 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
 
                 // --- Database Section ---
                 Text(
-                    text = "Database",
+                    text = globalLocalization.devDatabase,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
                 )
 
                 SettingsItem(
-                    label = "Run Data Stress Test",
-                    value = "Wipe DB & Insert 1M Records",
+                    label = globalLocalization.devRunStressTest,
+                    value = globalLocalization.devStressTestDescription,
                     onClick = { showStressTestDialog = true }
                 )
             }
-        }
     }
 
     if (showColorPalette) {
@@ -101,7 +87,7 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
         PredictiveConfirmationDialog(
             show = showStressTestDialog,
             onDismissRequest = { showStressTestDialog = false },
-            title = "Run Stress Test?",
+            title = globalLocalization.devStressTestConfirmTitle,
             message = "⚠️ WARNING: This will permanently DELETE ALL existing data (exercises & records) and replace it with ~1 million generated records (2000-2025).\n\nThis process may take a minute.",
             confirmLabel = "Wipe & Generate",
             isDestructive = true,
@@ -140,7 +126,7 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Generating Data...",
+                    text = globalLocalization.devGeneratingData,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -216,7 +202,7 @@ fun HapticsTestSection() {
             .padding(16.dp)
     ) {
         Text(
-            text = "Haptics Test: ${currentType.first}",
+            text = "${globalLocalization.devHapticsTest}: ${currentType.first}",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -290,7 +276,7 @@ fun ColorPaletteDialog(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Color Palette",
+                    text = globalLocalization.devColorPalette,
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )

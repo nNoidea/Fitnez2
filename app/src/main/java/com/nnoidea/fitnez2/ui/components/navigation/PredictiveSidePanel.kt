@@ -1,4 +1,4 @@
-package com.nnoidea.fitnez2.ui.components
+package com.nnoidea.fitnez2.ui.components.navigation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

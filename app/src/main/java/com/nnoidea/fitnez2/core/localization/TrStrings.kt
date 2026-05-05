@@ -21,6 +21,7 @@ object TrStrings : EnStrings(
     override val labelAddExercise = "Egzersiz Ekle"
     override val labelCreateExercise = "Egzersiz Oluştur"
     override val labelCreateWorkout = "Antrenman Oluştur"
+    override val labelWorkoutName = "Antrenman Adı"
     override val labelAdd = "Ekle"
     override val labelExerciseName = "Egzersiz Adı"
     override val labelSave = "Kaydet"
@@ -87,6 +88,17 @@ object TrStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "Bilinmeyen Egzersiz"
     override val labelOlderRecords = "Eski Kayıtlar"
+
+    // Developer Options
+    override val devColorPalette = "Renk Paleti"
+    override val devViewColors = "Renkleri Görüntüle"
+    override val devDatabase = "Veritabanı"
+    override val devRunStressTest = "Stres Testi Çalıştır"
+    override val devStressTestDescription = "DB'yi Sil & 1M Kayıt Ekle"
+    override val devStressTestConfirmTitle = "Stres Testi Çalıştırılsın Mı?"
+    override val devStressTestConfirmMessage = "Bu işlem mevcut veritabanını silecek ve 1.000.000 sahte kayıt ekleyecektir."
+    override val devGeneratingData = "Veri Oluşturuluyor..."
+    override val devHapticsTest = "Dokunsal Test"
 
     // Validation Errors
     override val errorSetsEmpty = "Setler boş olamaz"

@@ -25,6 +25,7 @@ sealed class EnStrings(
     open val labelAddExercise: String = "Add Exercise"
     open val labelCreateExercise: String = "Create an exercise"
     open val labelCreateWorkout: String = "Create a workout"
+    open val labelWorkoutName: String = "Workout Name"
     open val labelAdd: String = "Add"
     open val labelExerciseName: String = "Exercise Name"
     open val labelSave: String = "Save"
@@ -107,6 +108,17 @@ sealed class EnStrings(
     open val unitLb: String = "lb"
     open val labelUnknownExercise: String = "Unknown Exercise"
     open val labelOlderRecords: String = "Older Records"
+
+    // Developer Options
+    open val devColorPalette: String = "Color Palette"
+    open val devViewColors: String = "View Colors"
+    open val devDatabase: String = "Database"
+    open val devRunStressTest: String = "Run Data Stress Test"
+    open val devStressTestDescription: String = "Wipe DB & Insert 1M Records"
+    open val devStressTestConfirmTitle: String = "Run Stress Test?"
+    open val devStressTestConfirmMessage: String = "This will wipe the existing database and insert 1,000,000 fake records."
+    open val devGeneratingData: String = "Generating Data..."
+    open val devHapticsTest: String = "Haptics Test"
 
     // Validation Errors
     open val errorSetsEmpty: String = "Sets cannot be empty"

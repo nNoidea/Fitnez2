@@ -1,4 +1,4 @@
-package com.nnoidea.fitnez2.ui.components
+package com.nnoidea.fitnez2.ui.screenComponents.workout
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +17,12 @@ import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
+import com.nnoidea.fitnez2.ui.components.SwipeToDeleteContainer
+import com.nnoidea.fitnez2.ui.components.history.HistoryGridRow
+import com.nnoidea.fitnez2.ui.components.history.HeaderLabel
+import com.nnoidea.fitnez2.ui.components.history.HistoryRecordCard
+import com.nnoidea.fitnez2.ui.components.history.computeColorParityByName
+import com.nnoidea.fitnez2.ui.components.history.recordCardShape
 
 @Composable
 fun WorkoutExerciseList(
@@ -46,51 +52,21 @@ fun WorkoutExerciseList(
                 )
             }
 
+            // Precompute color parity once per list change — O(n) instead of O(n²)
+            val colorParity = computeColorParityByName(items)
+
             itemsIndexed(
                 items = items,
                 key = { _, item -> item.record.id }
             ) { index, item ->
-                // Compute isLight manually based on previous item
-                // Alternately, just use true/false parity by index or grouped by exercise.
                 val prevItem = if (index > 0) items[index - 1] else null
                 val nextItem = if (index < items.lastIndex) items[index + 1] else null
-                
-                // Keep the color parity stable per exercise
-                // We'll mimic the toggled color per exercise name change
-                var currentIsLight = true
-                if (index > 0) {
-                    var isLightAcc = true
-                    var lastExe = items[0].exerciseName
-                    for(i in 1..index) {
-                        if (items[i].exerciseName != lastExe) {
-                            isLightAcc = !isLightAcc
-                            lastExe = items[i].exerciseName
-                        }
-                    }
-                    currentIsLight = isLightAcc
-                }
 
                 val prevIsSame = prevItem != null && prevItem.exerciseName == item.exerciseName
                 val nextIsSame = nextItem != null && nextItem.exerciseName == item.exerciseName
 
                 val showTitle = !prevIsSame
-
-                val shape = when {
-                    !prevIsSame && !nextIsSame -> RoundedCornerShape(28.dp)
-                    !prevIsSame && nextIsSame -> RoundedCornerShape(
-                        topStart = 28.dp,
-                        topEnd = 28.dp,
-                        bottomStart = 4.dp,
-                        bottomEnd = 4.dp
-                    )
-                    prevIsSame && !nextIsSame -> RoundedCornerShape(
-                        topStart = 4.dp,
-                        topEnd = 4.dp,
-                        bottomStart = 28.dp,
-                        bottomEnd = 28.dp
-                    )
-                    else -> RoundedCornerShape(4.dp)
-                }
+                val shape = recordCardShape(prevIsSame, nextIsSame)
 
                 SwipeToDeleteContainer(
                     onDelete = { onDeleteRequest(item.record) },
@@ -98,7 +74,7 @@ fun WorkoutExerciseList(
                 ) {
                     HistoryRecordCard(
                         item = item,
-                        isLight = currentIsLight,
+                        isLight = colorParity.getOrElse(index) { true },
                         showTitle = showTitle,
                         weightUnit = weightUnit,
                         shape = shape,
