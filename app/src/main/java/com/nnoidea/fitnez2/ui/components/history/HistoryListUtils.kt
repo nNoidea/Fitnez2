@@ -50,10 +50,10 @@ fun computeColorParityByName(items: List<RecordWithExercise>): BooleanArray {
 
     val isLightArray = BooleanArray(items.size)
     var currentIsLight = true
-    var lastExerciseName = items.first().exerciseName
-    isLightArray[0] = currentIsLight
+    var lastExerciseName = items.last().exerciseName
+    isLightArray[items.lastIndex] = currentIsLight
 
-    for (i in 1 until items.size) {
+    for (i in items.lastIndex - 1 downTo 0) {
         if (items[i].exerciseName != lastExerciseName) {
             currentIsLight = !currentIsLight
             lastExerciseName = items[i].exerciseName
@@ -70,10 +70,10 @@ fun computeColorParityByName(items: List<com.nnoidea.fitnez2.data.models.Workout
 
     val isLightArray = BooleanArray(items.size)
     var currentIsLight = true
-    var lastExerciseName = items.first().exerciseName
-    isLightArray[0] = currentIsLight
+    var lastExerciseName = items.last().exerciseName
+    isLightArray[items.lastIndex] = currentIsLight
 
-    for (i in 1 until items.size) {
+    for (i in items.lastIndex - 1 downTo 0) {
         if (items[i].exerciseName != lastExerciseName) {
             currentIsLight = !currentIsLight
             lastExerciseName = items[i].exerciseName

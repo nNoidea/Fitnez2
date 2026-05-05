@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,6 +31,7 @@ fun WorkoutExerciseList(
     items: List<WorkoutRecordWithExercise>,
     weightUnit: String,
     modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
     extraBottomPadding: Dp = 0.dp,
     onDeleteRequest: (WorkoutRecord) -> Unit,
     onUpdateRequest: (WorkoutRecord) -> Unit
@@ -39,6 +42,7 @@ fun WorkoutExerciseList(
         shape = RoundedCornerShape(28.dp)
     ) {
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 80.dp + extraBottomPadding)
         ) {
@@ -70,7 +74,7 @@ fun WorkoutExerciseList(
 
                 SwipeToDeleteContainer(
                     onDelete = { onDeleteRequest(item.workoutRecord) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().animateItem()
                 ) {
                     HistoryRecordCard(
                         exerciseName = item.exerciseName,
