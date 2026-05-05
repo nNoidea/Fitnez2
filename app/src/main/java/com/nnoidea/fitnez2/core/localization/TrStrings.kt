@@ -26,6 +26,7 @@ object TrStrings : EnStrings(
     override val labelExerciseName = "Egzersiz Adı"
     override val labelSave = "Kaydet"
     override val labelCancel = "İptal"
+    override val labelClose = "Kapat"
     override val labelDelete = "Sil"
     override val labelSwitchLanguage = "Dili Değiştir"
 
@@ -57,6 +58,7 @@ object TrStrings : EnStrings(
     override val labelToday: String = "Bugün"
     override val labelYesterday: String = "Dün"
     override val labelDeleteExerciseWarning = "Bu işlem tüm kayıtları silecek ve geri alınamaz"
+    override val labelDeleteWorkoutWarning = "Bu antrenmanı silmek istediğinizden emin misiniz?"
 
     override val labelExerciseNamePlaceholder: String = "örn. Bench Press"
 
@@ -96,9 +98,11 @@ object TrStrings : EnStrings(
     override val devRunStressTest = "Stres Testi Çalıştır"
     override val devStressTestDescription = "DB'yi Sil & 1M Kayıt Ekle"
     override val devStressTestConfirmTitle = "Stres Testi Çalıştırılsın Mı?"
-    override val devStressTestConfirmMessage = "Bu işlem mevcut veritabanını silecek ve 1.000.000 sahte kayıt ekleyecektir."
+    override val devStressTestConfirmMessage = "⚠️ UYARI: Bu işlem mevcut tüm verileri (egzersizler ve kayıtlar) kalıcı olarak SİLECEK ve yerine ~1 milyon rastgele kayıt (2000-2025) ekleyecektir.\n\nBu işlem bir dakika sürebilir."
+    override val devWipeAndGenerate = "Sil ve Oluştur"
     override val devGeneratingData = "Veri Oluşturuluyor..."
     override val devHapticsTest = "Dokunsal Test"
+    override val devMoveSlider = "Farklı titreşimleri hissetmek için kaydırıcıyı hareket ettirin"
 
     // Validation Errors
     override val errorSetsEmpty = "Setler boş olamaz"
