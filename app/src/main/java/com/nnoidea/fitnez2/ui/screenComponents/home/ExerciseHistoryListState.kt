@@ -24,6 +24,7 @@ import com.nnoidea.fitnez2.ui.components.history.buildUiItems
 import com.nnoidea.fitnez2.ui.components.history.HistoryUiModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlin.collections.buildList
 
 /**
@@ -98,7 +99,25 @@ class DatabaseExerciseHistoryListState(
     }
 
     override suspend fun scrollToTop(recordId: Int?) {
-        recordId?.let { engine.prependNewRecord(it) }
+        if (recordId == null) {
+            listState.animateScrollToItem(0)
+            return
+        }
+
+        // 1. Add the new UI element to the backing list
+        engine.prependNewRecord(recordId)
+
+        // 2. Wait programmatically until the record item has been built and inserted into the UI state (confirmation)
+        kotlinx.coroutines.withTimeoutOrNull(5000) {
+            androidx.compose.runtime.snapshotFlow { uiItems }
+                .first { items ->
+                    items.any { item ->
+                        item is HistoryUiModel.RecordItem && item.record.record.id == recordId
+                    }
+                }
+        }
+
+        // 3. Now that the layout and items are confirmed to be present, scroll smoothly to the top
         listState.animateScrollToItem(0)
     }
 
