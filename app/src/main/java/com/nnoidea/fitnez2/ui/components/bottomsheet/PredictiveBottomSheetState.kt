@@ -64,6 +64,18 @@ abstract class PredictiveBottomSheetState(
     var showExerciseSelection by mutableStateOf(false)
     var exercises by mutableStateOf<List<Exercise>>(emptyList())
 
+    // Clear selection if the selected exercise gets deleted from the database
+    init {
+        scope.launch {
+            snapshotFlow { exercises }.collect { currentExercises ->
+                if (selectedExerciseId != null && currentExercises.none { it.id == selectedExerciseId }) {
+                    selectedExerciseId = null
+                    selectedExerciseNameSnapshot = null
+                }
+            }
+        }
+    }
+
     // ── Animation State ──────────────────────────────────────────────────
 
     val offsetY = Animatable(maxOffset)
