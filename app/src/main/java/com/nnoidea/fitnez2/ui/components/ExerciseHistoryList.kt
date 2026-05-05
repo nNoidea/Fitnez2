@@ -93,11 +93,11 @@ sealed class HistoryUiModel {
 // UI Style Constants - Change these to tweak the list's look
 // -----------------------------------------------------------------------------
 
-private val ColorHistoryNeutralContainer @Composable get() = MaterialTheme.colorScheme.primary
-private val ColorHistoryNeutralContent @Composable get() = MaterialTheme.colorScheme.onPrimary
+internal val ColorHistoryNeutralContainer @Composable get() = MaterialTheme.colorScheme.primary
+internal val ColorHistoryNeutralContent @Composable get() = MaterialTheme.colorScheme.onPrimary
 
-private val ColorHistoryColoredContainer @Composable get() = MaterialTheme.colorScheme.secondaryContainer
-private val ColorHistoryColoredContent @Composable get() = MaterialTheme.colorScheme.onSecondaryContainer
+internal val ColorHistoryColoredContainer @Composable get() = MaterialTheme.colorScheme.secondaryContainer
+internal val ColorHistoryColoredContent @Composable get() = MaterialTheme.colorScheme.onSecondaryContainer
 
 // -----------------------------------------------------------------------------
 // Public Smart Component
@@ -424,7 +424,7 @@ private fun LoadingMoreIndicator(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun HistoryGridRow(
+internal fun HistoryGridRow(
     modifier: Modifier = Modifier,
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     col1: @Composable BoxScope.() -> Unit,
@@ -520,7 +520,7 @@ private fun HistoryDateHeader(
 }
 
 @Composable
-private fun HeaderLabel(text: String) {
+internal fun HeaderLabel(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall.copy(
@@ -534,7 +534,7 @@ private fun HeaderLabel(text: String) {
 
 
 @Composable
-private fun HistoryRecordCard(
+internal fun HistoryRecordCard(
     item: RecordWithExercise,
     isLight: Boolean,
     showTitle: Boolean,
