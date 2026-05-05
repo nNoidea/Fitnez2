@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import com.nnoidea.fitnez2.ui.components.SelectionDialog
+import com.nnoidea.fitnez2.ui.components.dialog.SelectionDialog
 import com.nnoidea.fitnez2.ui.components.SettingsItem
 
 import androidx.compose.material3.HorizontalDivider
@@ -32,8 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
-import com.nnoidea.fitnez2.ui.components.HamburgerMenu
-import com.nnoidea.fitnez2.ui.components.TopHeader
+import com.nnoidea.fitnez2.ui.components.ScreenScaffold
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
@@ -45,7 +44,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.KeyboardType
 import com.nnoidea.fitnez2.core.localization.EnStrings
 import com.nnoidea.fitnez2.data.SettingsRepository
-import com.nnoidea.fitnez2.ui.components.PredictiveAlertDialog
+import com.nnoidea.fitnez2.ui.components.dialog.PredictiveAlertDialog
 import com.nnoidea.fitnez2.core.ValidateAndCorrect
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -107,27 +106,10 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
-            // Header with Hamburger
-            TopHeader {
-                HamburgerMenu(
-                    onClick = onOpenDrawer
-                )
-                // HamburgerMenu has 16dp end padding built-in? No
-                // HamburgerMenu has: start=8, top=8, end=16, bottom=8.
-                // So we don't need a Spacer(16.dp) if we rely on that, but ProgramScreen ADDED a Spacer(16.dp).
-                // If HamburgerMenu has 16dp end padding, adding Spacer(16.dp) makes 32dp gap.
-                // Let's check ProgramScreen again.
-                // ProgramScreen: HamburgerMenu() -> Spacer(16.dp) -> Text.
-                // I should duplicate that structure for consistency.
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = globalLocalization.labelSettings,
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-
+    ScreenScaffold(
+        title = globalLocalization.labelSettings,
+        onOpenDrawer = onOpenDrawer
+    ) {
             HorizontalDivider()
 
             // Language Setting
@@ -208,9 +190,6 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                    context.startActivity(intent)
                 }
             )
-        }
-
-
     }
 
     SelectionDialog(

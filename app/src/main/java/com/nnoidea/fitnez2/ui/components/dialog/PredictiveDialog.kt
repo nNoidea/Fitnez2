@@ -1,4 +1,4 @@
-package com.nnoidea.fitnez2.ui.components
+package com.nnoidea.fitnez2.ui.components.dialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

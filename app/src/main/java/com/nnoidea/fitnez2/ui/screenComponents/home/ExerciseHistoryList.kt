@@ -1,5 +1,13 @@
-package com.nnoidea.fitnez2.ui.components
+package com.nnoidea.fitnez2.ui.screenComponents.home
 
+import com.nnoidea.fitnez2.ui.components.history.HistoryGridRow
+import com.nnoidea.fitnez2.ui.components.history.HeaderLabel
+import com.nnoidea.fitnez2.ui.components.history.HistoryRecordCard
+import com.nnoidea.fitnez2.ui.components.ScrollEngine
+import com.nnoidea.fitnez2.ui.components.history.computeColorParityByName
+import com.nnoidea.fitnez2.ui.components.history.computeColorParity
+import com.nnoidea.fitnez2.ui.components.history.recordCardShape
+import com.nnoidea.fitnez2.ui.components.history.HistoryUiModel
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
@@ -78,26 +86,19 @@ import java.util.Locale
 import androidx.compose.runtime.Stable
 import com.nnoidea.fitnez2.data.SettingsRepository
 import com.nnoidea.fitnez2.ui.common.GlobalUiState
+import com.nnoidea.fitnez2.ui.components.SwipeToDeleteContainer
+import com.nnoidea.fitnez2.ui.components.HistorySetsField
+import com.nnoidea.fitnez2.ui.components.HistoryRepsField
+import com.nnoidea.fitnez2.ui.components.HistoryWeightField
 import kotlinx.coroutines.CoroutineScope
 
-sealed class HistoryUiModel {
-    data class RecordItem(val record: RecordWithExercise, val isLight: Boolean) : HistoryUiModel()
-    data class Header(val date: Long, val section: Int = 0) : HistoryUiModel()
-    data class BatchSeparator(val index: Int) : HistoryUiModel()
-    /** Placeholder for an evicted batch — preserves scroll height. */
-    data class EvictedBatch(val index: Int, val heightDp: Int) : HistoryUiModel()
-    data object LoadingMore : HistoryUiModel()
-}
+// HistoryUiModel moved to SharedHistoryComponents.kt
 
 // -----------------------------------------------------------------------------
 // UI Style Constants - Change these to tweak the list's look
 // -----------------------------------------------------------------------------
 
-internal val ColorHistoryNeutralContainer @Composable get() = MaterialTheme.colorScheme.primary
-internal val ColorHistoryNeutralContent @Composable get() = MaterialTheme.colorScheme.onPrimary
-
-internal val ColorHistoryColoredContainer @Composable get() = MaterialTheme.colorScheme.secondaryContainer
-internal val ColorHistoryColoredContent @Composable get() = MaterialTheme.colorScheme.onSecondaryContainer
+// -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
 // Public Smart Component
@@ -110,13 +111,13 @@ fun ExerciseHistoryList(
     filterExerciseIds: List<Int>? = null,
     useAlternatingColors: Boolean = true
 ) {
-    val state = rememberExerciseHistoryState(filterExerciseIds, useAlternatingColors)
+    val state = rememberExerciseHistoryListState(filterExerciseIds, useAlternatingColors)
     ExerciseHistoryList(state = state, modifier = modifier, extraBottomPadding = extraBottomPadding)
 }
 
 @Composable
 fun ExerciseHistoryList(
-    state: ExerciseListState,
+    state: ExerciseHistoryListState,
     modifier: Modifier = Modifier,
     extraBottomPadding: Dp = 0.dp,
 ) {
@@ -190,56 +191,7 @@ private fun ScrollToTopButton(
     }
 }
 
-/**
- * Builds the flat UI list from raw records (DESC order from DB).
- * Computes isLight by walking from the oldest record (bottom) upward,
- * toggling when exerciseId changes. This keeps colors stable when new
- * records are added at the top.
- * Inserts date headers between days.
- *
- * @param section Used to generate unique header keys across batches.
- *                Section 0 = recent, 1+ = older batches.
- */
-private fun buildUiItems(
-    records: List<Record>,
-    exerciseMap: Map<Int, String>,
-    useAlternatingColors: Boolean,
-    section: Int = 0
-): List<HistoryUiModel> {
-    if (records.isEmpty()) return emptyList()
 
-    // 1. Compute isLight for each record (walk from oldest = last index)
-    val isLightArray = BooleanArray(records.size)
-    var currentIsLight = true
-    var lastExerciseId = records.last().exerciseId
-    isLightArray[records.lastIndex] = currentIsLight
-
-    for (i in records.lastIndex - 1 downTo 0) {
-        if (records[i].exerciseId != lastExerciseId) {
-            currentIsLight = !currentIsLight
-            lastExerciseId = records[i].exerciseId
-        }
-        isLightArray[i] = currentIsLight
-    }
-
-    // 2. Build flat list with date headers inserted
-    val result = mutableListOf<HistoryUiModel>()
-    for (i in records.indices) {
-        val record = records[i]
-        val exerciseName = exerciseMap[record.exerciseId] ?: globalLocalization.labelUnknownExercise
-        val recordWithExercise = RecordWithExercise(record, exerciseName)
-        val isLight = if (!useAlternatingColors) true else isLightArray[i]
-
-        // Insert header if this is the first record or a new day
-        if (i == 0 || !TimeUtils.isSameDay(records[i - 1].date, record.date)) {
-            result.add(HistoryUiModel.Header(record.date, section))
-        }
-
-        result.add(HistoryUiModel.RecordItem(recordWithExercise, isLight))
-    }
-
-    return result
-}
 
 
 // -----------------------------------------------------------------------------
@@ -341,22 +293,7 @@ private fun ExerciseHistoryListContent(
                              true
                         }
 
-                        val shape = when {
-                            !prevIsSame && !nextIsSame -> RoundedCornerShape(28.dp)
-                            !prevIsSame && nextIsSame -> RoundedCornerShape(
-                                topStart = 28.dp,
-                                topEnd = 28.dp,
-                                bottomStart = 4.dp,
-                                bottomEnd = 4.dp
-                            )
-                            prevIsSame && !nextIsSame -> RoundedCornerShape(
-                                topStart = 4.dp,
-                                topEnd = 4.dp,
-                                bottomStart = 28.dp,
-                                bottomEnd = 28.dp
-                            )
-                            else -> RoundedCornerShape(4.dp)
-                        }
+                        val shape = recordCardShape(prevIsSame, nextIsSame)
 
                         SwipeToDeleteContainer(
                             onDelete = { onDeleteRequest(item.record.record) },
@@ -423,42 +360,7 @@ private fun LoadingMoreIndicator(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-internal fun HistoryGridRow(
-    modifier: Modifier = Modifier,
-    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
-    col1: @Composable BoxScope.() -> Unit,
-    col2: @Composable BoxScope.() -> Unit,
-    col3: @Composable BoxScope.() -> Unit,
-    col4: @Composable BoxScope.() -> Unit
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = verticalAlignment,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // Col 1: Date/Name (Flexible)
-        // If we want to change the width ratio simply change this weight!
-        Box(modifier = Modifier.weight(1.5f)) {
-            col1()
-        }
-
-        // Col 2: Sets (Fixed)
-        Box(modifier = Modifier.width(60.dp), contentAlignment = Alignment.Center) {
-            col2()
-        }
-
-        // Col 3: Reps (Fixed)
-        Box(modifier = Modifier.width(60.dp), contentAlignment = Alignment.Center) {
-            col3()
-        }
-
-        // Col 4: Weight (Fixed)
-        Box(modifier = Modifier.width(70.dp), contentAlignment = Alignment.Center) {
-            col4()
-        }
-    }
-}
+// Extracted to SharedHistoryComponents.kt
 
 @Composable
 private fun HistoryDateHeader(
@@ -519,117 +421,4 @@ private fun HistoryDateHeader(
     )
 }
 
-@Composable
-internal fun HeaderLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall.copy(
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        ),
-        textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
-
-@Composable
-internal fun HistoryRecordCard(
-    item: RecordWithExercise,
-    isLight: Boolean,
-    showTitle: Boolean,
-    weightUnit: String,
-    shape: androidx.compose.ui.graphics.Shape,
-    onUpdate: (Record) -> Unit
-) {
-    val containerColor = if (isLight) ColorHistoryNeutralContainer else ColorHistoryColoredContainer
-    val contentColor = if (isLight) ColorHistoryNeutralContent else ColorHistoryColoredContent
-
-    var isExpanded by remember { mutableStateOf(false) }
-
-    if (isExpanded) {
-        LaunchedEffect(Unit) {
-            delay(5000)
-            isExpanded = false
-        }
-    }
-
-    val timestamp = remember(item.record.date) {
-        // Format: 14:05:30
-        SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(item.record.date))
-    }
-
-    val view = LocalView.current
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 2.dp)
-            .clip(shape)
-            .clickable { 
-                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
-                isExpanded = !isExpanded 
-            }, // Toggle expansion
-        shape = shape,
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(modifier = Modifier.animateContentSize()) {
-            HistoryGridRow(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                col1 = {
-                    if (showTitle) {
-                        Text(
-                            text = item.exerciseName,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.Unspecified // Inherit from Card
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        // Maintain spacing if needed or just empty
-                        Spacer(modifier = Modifier.height(0.dp))
-                    }
-                },
-                col2 = {
-                    HistorySetsField(
-                        value = item.record.sets,
-                        contentColor = contentColor,
-                        onValidChange = { onUpdate(item.record.copy(sets = it)) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                col3 = {
-                    HistoryRepsField(
-                        value = item.record.reps,
-                        contentColor = contentColor,
-                        onValidChange = { onUpdate(item.record.copy(reps = it)) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                col4 = {
-                    HistoryWeightField(
-                        value = item.record.weight,
-                        contentColor = contentColor,
-                        onValidChange = { onUpdate(item.record.copy(weight = it)) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            )
-            
-            if (isExpanded) {
-                Text(
-                    text = timestamp,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = contentColor.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
-                )
-            }
-        }
-    }
-}
+// Extracted to SharedHistoryComponents.kt

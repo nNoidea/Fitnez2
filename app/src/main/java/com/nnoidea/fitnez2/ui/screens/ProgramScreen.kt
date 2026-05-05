@@ -6,27 +6,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
-import com.nnoidea.fitnez2.ui.components.HamburgerMenu
-import com.nnoidea.fitnez2.ui.components.TopHeader
+import com.nnoidea.fitnez2.ui.components.ScreenScaffold
 
 @Composable
 fun ProgramScreen(onOpenDrawer: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
+    ScreenScaffold(
+        title = globalLocalization.labelProgram,
+        onOpenDrawer = onOpenDrawer
     ) {
-        TopHeader {
-            HamburgerMenu(onClick = onOpenDrawer)
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = globalLocalization.labelProgram,
-                style = MaterialTheme.typography.headlineMedium
-            )
-        }
-
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 text = globalLocalization.labelProgramPlaceholder,

@@ -1,4 +1,4 @@
-package com.nnoidea.fitnez2.ui.components
+package com.nnoidea.fitnez2.ui.components.navigation
 
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.foundation.shape.RoundedCornerShape

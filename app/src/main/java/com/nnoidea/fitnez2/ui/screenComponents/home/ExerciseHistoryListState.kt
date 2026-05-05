@@ -1,4 +1,4 @@
-package com.nnoidea.fitnez2.ui.components
+package com.nnoidea.fitnez2.ui.screenComponents.home
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -19,6 +19,9 @@ import com.nnoidea.fitnez2.data.SettingsRepository
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.ui.common.GlobalUiState
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
+import com.nnoidea.fitnez2.ui.components.ScrollEngine
+import com.nnoidea.fitnez2.ui.components.history.buildUiItems
+import com.nnoidea.fitnez2.ui.components.history.HistoryUiModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.collections.buildList
@@ -28,7 +31,7 @@ import kotlin.collections.buildList
  * This can be used for standard history, live workout sessions, or even fake data for previews.
  */
 @Stable
-interface ExerciseListState {
+interface ExerciseHistoryListState {
     val listState: LazyListState
     val uiItems: List<HistoryUiModel>
     val weightUnit: String
@@ -43,7 +46,7 @@ interface ExerciseListState {
  * Standard implementation that pulls data from the App Database using [ScrollEngine].
  */
 @Stable
-class DatabaseExerciseListState(
+class DatabaseExerciseHistoryListState(
     private val scope: CoroutineScope,
     private val dao: com.nnoidea.fitnez2.data.dao.RecordDao,
     private val exerciseDao: com.nnoidea.fitnez2.data.dao.ExerciseDao,
@@ -51,7 +54,7 @@ class DatabaseExerciseListState(
     private val globalUiState: GlobalUiState,
     val filterExerciseIds: List<Int>? = null,
     private val useAlternatingColors: Boolean = true
-) : ExerciseListState {
+) : ExerciseHistoryListState {
     
     override val listState = LazyListState()
     
@@ -113,10 +116,10 @@ class DatabaseExerciseListState(
 }
 
 @Composable
-fun rememberExerciseHistoryState(
+fun rememberExerciseHistoryListState(
     filterExerciseIds: List<Int>? = null,
     useAlternatingColors: Boolean = true
-): ExerciseListState {
+): ExerciseHistoryListState {
     val scope = rememberCoroutineScope()
     val database = LocalAppDatabase.current
     val dao = database.recordDao()
@@ -125,7 +128,7 @@ fun rememberExerciseHistoryState(
     val globalUiState = LocalGlobalUiState.current
 
     val state = remember(filterExerciseIds, useAlternatingColors) {
-        DatabaseExerciseListState(
+        DatabaseExerciseHistoryListState(
             scope = scope,
             dao = dao,
             exerciseDao = exerciseDao,
@@ -150,14 +153,14 @@ fun rememberExerciseHistoryState(
 
     // Build UI model for recent records (section 0)
     val recentUiItems = remember(state.engine.recentRecords, exerciseMap, useAlternatingColors) {
-        buildUiItemsInternal(state.engine.recentRecords, exerciseMap, useAlternatingColors, section = 0)
+        buildUiItems(state.engine.recentRecords, exerciseMap, useAlternatingColors, section = 0)
     }
 
     // Build UI models for each loaded batch independently.
     val olderBatchUiItems = remember(state.engine.olderBatches, state.engine.batchHeights, state.engine.batchSizes, exerciseMap, useAlternatingColors) {
         state.engine.olderBatches.mapIndexed { i, batch ->
             if (batch != null) {
-                buildUiItemsInternal(batch, exerciseMap, useAlternatingColors, section = i + 1)
+                buildUiItems(batch, exerciseMap, useAlternatingColors, section = i + 1)
             } else {
                 val height = state.engine.batchHeights[i]
                     ?: ScrollEngine.estimateBatchHeightDp(state.engine.batchSizes.getOrElse(i) { ScrollEngine.OLDER_BATCH_SIZE })
@@ -253,37 +256,4 @@ fun rememberExerciseHistoryState(
     return state
 }
 
-/**
- * Copy of buildUiItems from ExerciseHistoryList.kt to keep the state logic independent.
- */
-private fun buildUiItemsInternal(
-    records: List<Record>,
-    exerciseMap: Map<Int, String>,
-    useAlternatingColors: Boolean,
-    section: Int = 0
-): List<HistoryUiModel> {
-    if (records.isEmpty()) return emptyList()
-    val isLightArray = BooleanArray(records.size)
-    var currentIsLight = true
-    var lastExerciseId = records.last().exerciseId
-    isLightArray[records.lastIndex] = currentIsLight
-    for (i in records.lastIndex - 1 downTo 0) {
-        if (records[i].exerciseId != lastExerciseId) {
-            currentIsLight = !currentIsLight
-            lastExerciseId = records[i].exerciseId
-        }
-        isLightArray[i] = currentIsLight
-    }
-    val result = mutableListOf<HistoryUiModel>()
-    for (i in records.indices) {
-        val record = records[i]
-        val exerciseName = exerciseMap[record.exerciseId] ?: globalLocalization.labelUnknownExercise
-        val recordWithExercise = com.nnoidea.fitnez2.data.models.RecordWithExercise(record, exerciseName)
-        val isLight = if (!useAlternatingColors) true else isLightArray[i]
-        if (i == 0 || !com.nnoidea.fitnez2.core.TimeUtils.isSameDay(records[i - 1].date, record.date)) {
-            result.add(HistoryUiModel.Header(record.date, section))
-        }
-        result.add(HistoryUiModel.RecordItem(recordWithExercise, isLight))
-    }
-    return result
-}
+

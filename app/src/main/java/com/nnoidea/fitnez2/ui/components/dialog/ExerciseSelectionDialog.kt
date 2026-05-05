@@ -1,4 +1,4 @@
-package com.nnoidea.fitnez2.ui.components
+package com.nnoidea.fitnez2.ui.components.dialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,7 +59,8 @@ fun ExerciseSelectionDialog(
     exerciseDao: ExerciseDao,
     onDismissRequest: () -> Unit,
     onExerciseSelected: (Exercise) -> Unit,
-    onExerciseCreated: (Exercise) -> Unit = {}
+    onExerciseCreated: (Exercise) -> Unit = {},
+    showCreateWorkout: Boolean = true
 ) {
     val view = LocalView.current
     val scope = rememberCoroutineScope()
@@ -104,35 +105,37 @@ fun ExerciseSelectionDialog(
                         .verticalScroll(scrollState)
                 ) {
 
-                    // ADDED: Create Workout Button at the top
-                    val context = LocalContext.current
+                    // Create Workout Button (hidden on workout screen)
+                    if (showCreateWorkout) {
+                        val context = LocalContext.current
                     
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { 
-                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
-                                onDismissRequest()
-                                val intent = Intent(context, MainActivity::class.java).apply {
-                                    putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Workout.route)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { 
+                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                    onDismissRequest()
+                                    val intent = Intent(context, MainActivity::class.java).apply {
+                                        putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Workout.route)
+                                    }
+                                    context.startActivity(intent)
                                 }
-                                context.startActivity(intent)
-                            }
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Add, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        Text(
-                            text = globalLocalization.labelCreateWorkout,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Add, 
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(end = 12.dp)
+                            )
+                            Text(
+                                text = globalLocalization.labelCreateWorkout,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     // ADDED: Create Button at the top
