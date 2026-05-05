@@ -1,0 +1,65 @@
+package com.nnoidea.fitnez2.data.dao
+
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import com.nnoidea.fitnez2.data.entities.Workout
+import com.nnoidea.fitnez2.data.entities.WorkoutRecord
+import com.nnoidea.fitnez2.data.models.WorkoutRecordWithExercise
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface WorkoutDao {
+
+    // --- Workout Queries ---
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWorkout(workout: Workout): Long
+
+    @Update
+    suspend fun updateWorkout(workout: Workout)
+
+    @Delete
+    suspend fun deleteWorkout(workout: Workout)
+
+    @Query("SELECT * FROM workout WHERE id = :workoutId LIMIT 1")
+    suspend fun getWorkoutById(workoutId: Int): Workout?
+
+    @Query("SELECT * FROM workout ORDER BY id ASC")
+    fun getAllWorkoutsFlow(): Flow<List<Workout>>
+
+    // --- WorkoutRecord Queries ---
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWorkoutRecord(record: WorkoutRecord): Long
+
+    @Update
+    suspend fun updateWorkoutRecord(record: WorkoutRecord)
+
+    @Delete
+    suspend fun deleteWorkoutRecord(record: WorkoutRecord)
+
+    @Query("DELETE FROM workout_record WHERE workoutId = :workoutId")
+    suspend fun deleteRecordsByWorkoutId(workoutId: Int)
+
+    @Query("""
+        SELECT wr.*, e.name as exerciseName 
+        FROM workout_record wr 
+        INNER JOIN exercise e ON wr.exerciseId = e.id 
+        WHERE wr.workoutId = :workoutId 
+        ORDER BY wr.id ASC
+    """)
+    fun getRecordsForWorkoutFlow(workoutId: Int): Flow<List<WorkoutRecordWithExercise>>
+
+    @Query("""
+        SELECT wr.*, e.name as exerciseName 
+        FROM workout_record wr 
+        INNER JOIN exercise e ON wr.exerciseId = e.id 
+        WHERE wr.workoutId = :workoutId 
+        ORDER BY wr.id ASC
+    """)
+    suspend fun getRecordsForWorkout(workoutId: Int): List<WorkoutRecordWithExercise>
+}

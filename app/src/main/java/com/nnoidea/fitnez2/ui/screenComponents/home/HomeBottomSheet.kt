@@ -45,6 +45,7 @@ import com.nnoidea.fitnez2.ui.screenComponents.home.ExerciseHistoryList
  */
 @Composable
 fun HomeBottomSheet(modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val state = rememberHomeBottomSheetState()
 
     PredictiveBottomSheet(state = state, modifier = modifier) {
@@ -70,11 +71,25 @@ fun HomeBottomSheet(modifier: Modifier = Modifier) {
     ExerciseSelectionDialog(
         show = state.showExerciseSelection,
         exercises = state.exercises,
+        workouts = state.workouts,
         selectedExerciseId = state.selectedExerciseId,
         exerciseDao = com.nnoidea.fitnez2.data.LocalAppDatabase.current.exerciseDao(),
+        workoutDao = com.nnoidea.fitnez2.data.LocalAppDatabase.current.workoutDao(),
         onDismissRequest = { state.toggleExerciseSelection(false) },
         onExerciseSelected = { state.onExerciseSelected(it, closeDialog = true) },
         onExerciseCreated = { state.onExerciseSelected(it, closeDialog = false) },
+        onWorkoutSelected = { 
+            // "we gonna implement the add future later on"
+            android.widget.Toast.makeText(context, "Workout selected: ${it.name}", android.widget.Toast.LENGTH_SHORT).show()
+        },
+        onWorkoutEdit = { workout ->
+            state.toggleExerciseSelection(false)
+            val intent = android.content.Intent(context, com.nnoidea.fitnez2.MainActivity::class.java).apply {
+                putExtra(com.nnoidea.fitnez2.MainActivity.EXTRA_PAGE_ROUTE, com.nnoidea.fitnez2.ui.navigation.AppPage.Workout.route)
+                putExtra("extra_workout_id", workout.id)
+            }
+            context.startActivity(intent)
+        },
         showCreateWorkout = true
     )
 }

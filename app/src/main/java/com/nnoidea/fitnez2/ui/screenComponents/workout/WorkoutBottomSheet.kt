@@ -31,6 +31,7 @@ fun WorkoutBottomSheet(
         exercises = state.exercises,
         selectedExerciseId = state.selectedExerciseId,
         exerciseDao = com.nnoidea.fitnez2.data.LocalAppDatabase.current.exerciseDao(),
+        workoutDao = com.nnoidea.fitnez2.data.LocalAppDatabase.current.workoutDao(),
         onDismissRequest = { state.toggleExerciseSelection(false) },
         onExerciseSelected = { state.onExerciseSelected(it, closeDialog = true) },
         onExerciseCreated = { state.onExerciseSelected(it, closeDialog = false) },

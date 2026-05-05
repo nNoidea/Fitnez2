@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
-import com.nnoidea.fitnez2.data.entities.Record
-import com.nnoidea.fitnez2.data.models.RecordWithExercise
+import com.nnoidea.fitnez2.data.entities.WorkoutRecord
+import com.nnoidea.fitnez2.data.models.WorkoutRecordWithExercise
 import com.nnoidea.fitnez2.ui.components.SwipeToDeleteContainer
 import com.nnoidea.fitnez2.ui.components.history.HistoryGridRow
 import com.nnoidea.fitnez2.ui.components.history.HeaderLabel
@@ -26,12 +26,12 @@ import com.nnoidea.fitnez2.ui.components.history.recordCardShape
 
 @Composable
 fun WorkoutExerciseList(
-    items: List<RecordWithExercise>,
+    items: List<WorkoutRecordWithExercise>,
     weightUnit: String,
     modifier: Modifier = Modifier,
     extraBottomPadding: Dp = 0.dp,
-    onDeleteRequest: (Record) -> Unit,
-    onUpdateRequest: (Record) -> Unit
+    onDeleteRequest: (WorkoutRecord) -> Unit,
+    onUpdateRequest: (WorkoutRecord) -> Unit
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -57,7 +57,7 @@ fun WorkoutExerciseList(
 
             itemsIndexed(
                 items = items,
-                key = { _, item -> item.record.id }
+                key = { _, item -> item.workoutRecord.id }
             ) { index, item ->
                 val prevItem = if (index > 0) items[index - 1] else null
                 val nextItem = if (index < items.lastIndex) items[index + 1] else null
@@ -69,16 +69,22 @@ fun WorkoutExerciseList(
                 val shape = recordCardShape(prevIsSame, nextIsSame)
 
                 SwipeToDeleteContainer(
-                    onDelete = { onDeleteRequest(item.record) },
+                    onDelete = { onDeleteRequest(item.workoutRecord) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     HistoryRecordCard(
-                        item = item,
+                        exerciseName = item.exerciseName,
+                        sets = item.workoutRecord.sets,
+                        reps = item.workoutRecord.reps,
+                        weight = item.workoutRecord.weight,
+                        timestamp = null,
                         isLight = colorParity.getOrElse(index) { true },
                         showTitle = showTitle,
                         weightUnit = weightUnit,
                         shape = shape,
-                        onUpdate = onUpdateRequest
+                        onUpdate = { sets, reps, weight ->
+                            onUpdateRequest(item.workoutRecord.copy(sets = sets, reps = reps, weight = weight))
+                        }
                     )
                 }
             }

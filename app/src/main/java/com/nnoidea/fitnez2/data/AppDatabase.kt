@@ -7,15 +7,19 @@ import com.nnoidea.fitnez2.data.dao.ExerciseDao
 import com.nnoidea.fitnez2.data.dao.RecordDao
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
+import com.nnoidea.fitnez2.data.entities.Workout
+import com.nnoidea.fitnez2.data.entities.WorkoutRecord
+import com.nnoidea.fitnez2.data.dao.WorkoutDao
 
 @Database(
-    entities = [Exercise::class, Record::class],
-    version = 1,
+    entities = [Exercise::class, Record::class, Workout::class, WorkoutRecord::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
     abstract fun recordDao(): RecordDao
+    abstract fun workoutDao(): WorkoutDao
 
     companion object {
         @Volatile
@@ -29,7 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "fitnez2_database"
                 )
                 .addCallback(DatabaseSeeder({ INSTANCE!! }, scope))
-                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration(true)
                 .build()
                 INSTANCE = instance
                 instance

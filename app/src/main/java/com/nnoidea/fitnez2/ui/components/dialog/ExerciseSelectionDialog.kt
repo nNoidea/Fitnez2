@@ -46,7 +46,9 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.ui.platform.LocalContext
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.dao.ExerciseDao
+import com.nnoidea.fitnez2.data.dao.WorkoutDao
 import com.nnoidea.fitnez2.data.entities.Exercise
+import com.nnoidea.fitnez2.data.entities.Workout
 import com.nnoidea.fitnez2.MainActivity
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import kotlinx.coroutines.launch
@@ -55,10 +57,14 @@ import kotlinx.coroutines.launch
 fun ExerciseSelectionDialog(
     show: Boolean,
     exercises: List<Exercise>,
+    workouts: List<Workout> = emptyList(),
     selectedExerciseId: Int?,
     exerciseDao: ExerciseDao,
+    workoutDao: WorkoutDao? = null,
     onDismissRequest: () -> Unit,
     onExerciseSelected: (Exercise) -> Unit,
+    onWorkoutSelected: (Workout) -> Unit = {},
+    onWorkoutEdit: (Workout) -> Unit = {},
     onExerciseCreated: (Exercise) -> Unit = {},
     showCreateWorkout: Boolean = true
 ) {
@@ -67,6 +73,7 @@ fun ExerciseSelectionDialog(
     
     var exerciseToDelete by remember { mutableStateOf<Exercise?>(null) }
     var exerciseToEdit by remember { mutableStateOf<Exercise?>(null) }
+    var workoutToDelete by remember { mutableStateOf<Workout?>(null) }
     var showCreateDialog by remember { mutableStateOf(false) }
 
 
@@ -78,10 +85,9 @@ fun ExerciseSelectionDialog(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = globalLocalization.labelSelectExercise,
-                style = MaterialTheme.typography.headlineSmall
-            )
+            val sortedWorkouts = remember(workouts) {
+                workouts.sortedBy { it.name.lowercase() }
+            }
 
             // List - Sorted alphabetically (case-insensitive)
             val sortedExercises = remember(exercises) {
@@ -166,6 +172,65 @@ fun ExerciseSelectionDialog(
                         modifier = Modifier.padding(vertical = 4.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
+
+                    if (sortedWorkouts.isNotEmpty()) {
+                        sortedWorkouts.forEach { workout ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color.Transparent, RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                        onWorkoutSelected(workout)
+                                    }
+                                    .padding(vertical = 12.dp, horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = workout.name,
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                )
+                                
+                                if (workoutDao != null) {
+                                    IconButton(
+                                        onClick = { 
+                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                            onWorkoutEdit(workout)
+                                        },
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Edit, 
+                                            contentDescription = globalLocalization.labelEdit(workout.name),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    
+                                    IconButton(
+                                        onClick = { 
+                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                            workoutToDelete = workout 
+                                        },
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete, 
+                                            contentDescription = globalLocalization.labelDelete,
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
 
                     sortedExercises.forEach { exercise ->
                         val isSelected = exercise.id == selectedExerciseId
@@ -311,6 +376,25 @@ fun ExerciseSelectionDialog(
                     } catch (e: Exception) {
                         // Error handling could be added here
                     }
+                }
+            }
+        }
+    )
+
+    // Delete Confirmation Dialog for Workout
+    PredictiveConfirmationDialog(
+        show = workoutToDelete != null,
+        onDismissRequest = { workoutToDelete = null },
+        title = globalLocalization.labelDelete,
+        message = "Are you sure you want to delete this workout?", // Add localization later if needed
+        confirmLabel = globalLocalization.labelDelete,
+        cancelLabel = globalLocalization.labelCancel,
+        isDestructive = true,
+        onConfirm = {
+            workoutToDelete?.let { workout ->
+                scope.launch {
+                    workoutDao?.deleteWorkout(workout)
+                    workoutToDelete = null
                 }
             }
         }

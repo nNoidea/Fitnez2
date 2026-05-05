@@ -17,8 +17,8 @@ import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.LocalAppDatabase
 import com.nnoidea.fitnez2.data.LocalSettingsRepository
-import com.nnoidea.fitnez2.data.entities.Record
-import com.nnoidea.fitnez2.data.models.RecordWithExercise
+import com.nnoidea.fitnez2.data.entities.WorkoutRecord
+import com.nnoidea.fitnez2.data.models.WorkoutRecordWithExercise
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PredictiveBottomSheetState
 import kotlinx.coroutines.launch
@@ -38,7 +38,7 @@ class WorkoutBottomSheetState(
     maxOffset: Float,
     minOffset: Float,
     onHapticFeedback: (Int) -> Unit,
-    private val onRecordCreated: (RecordWithExercise) -> Unit
+    private val onRecordCreated: (WorkoutRecordWithExercise) -> Unit
 ) : PredictiveBottomSheetState(
     scope = scope,
     exerciseDao = exerciseDao,
@@ -76,14 +76,14 @@ class WorkoutBottomSheetState(
 
                 dismissInput()
 
-                val record = RecordWithExercise(
-                    record = Record(
+                val record = WorkoutRecordWithExercise(
+                    workoutRecord = WorkoutRecord(
                         id = System.nanoTime().toInt(), // Dummy ID
+                        workoutId = 0, // Placeholder
                         exerciseId = exerciseId,
                         sets = validatedSets,
                         reps = validatedReps,
-                        weight = validatedWeight,
-                        date = System.currentTimeMillis()
+                        weight = validatedWeight
                     ),
                     exerciseName = exerciseName
                 )
@@ -99,7 +99,7 @@ class WorkoutBottomSheetState(
 
 @Composable
 fun rememberWorkoutBottomSheetState(
-    onRecordCreated: (RecordWithExercise) -> Unit
+    onRecordCreated: (WorkoutRecordWithExercise) -> Unit
 ): PredictiveBottomSheetState {
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
