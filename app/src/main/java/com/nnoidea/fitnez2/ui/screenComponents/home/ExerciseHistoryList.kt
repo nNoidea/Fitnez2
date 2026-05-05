@@ -299,13 +299,23 @@ private fun ExerciseHistoryListContent(
                             onDelete = { onDeleteRequest(item.record.record) },
                             modifier = Modifier.animateItem()
                         ) {
+                            val timestamp = remember(item.record.record.date) {
+                                java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(item.record.record.date))
+                            }
+
                             HistoryRecordCard(
-                                item = item.record,
+                                exerciseName = item.record.exerciseName,
+                                sets = item.record.record.sets,
+                                reps = item.record.record.reps,
+                                weight = item.record.record.weight,
+                                timestamp = timestamp,
                                 isLight = isLight,
                                 showTitle = showTitle,
                                 weightUnit = weightUnit,
                                 shape = shape,
-                                onUpdate = onUpdateRequest
+                                onUpdate = { sets, reps, weight ->
+                                    onUpdateRequest(item.record.record.copy(sets = sets, reps = reps, weight = weight))
+                                }
                             )
                         }
                     }

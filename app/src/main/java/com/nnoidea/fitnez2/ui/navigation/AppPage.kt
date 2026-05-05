@@ -45,7 +45,8 @@ enum class AppPage(
             content = { _ ->
                 val context = androidx.compose.ui.platform.LocalContext.current
                 val activity = context as? android.app.Activity
-                WorkoutScreen(onBack = { activity?.finish() })
+                val workoutId = activity?.intent?.getIntExtra("extra_workout_id", -1)?.takeIf { it != -1 }
+                WorkoutScreen(workoutId = workoutId, onBack = { activity?.finish() })
             }
     ),
     Developer(

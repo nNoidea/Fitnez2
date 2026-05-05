@@ -32,17 +32,37 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.nnoidea.fitnez2.core.localization.globalLocalization
-import com.nnoidea.fitnez2.data.models.RecordWithExercise
+import com.nnoidea.fitnez2.data.LocalAppDatabase
+import com.nnoidea.fitnez2.data.entities.Workout
+import com.nnoidea.fitnez2.data.models.WorkoutRecordWithExercise
+import kotlinx.coroutines.launch
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP
 import com.nnoidea.fitnez2.ui.screenComponents.workout.WorkoutExerciseList
 import com.nnoidea.fitnez2.ui.screenComponents.workout.rememberWorkoutBottomSheetState
 import com.nnoidea.fitnez2.ui.screenComponents.workout.WorkoutBottomSheet
 
 @Composable
-fun WorkoutScreen(onBack: () -> Unit) {
+fun WorkoutScreen(
+    workoutId: Int? = null,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
+    val database = LocalAppDatabase.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     var workoutName by remember { mutableStateOf("") }
-    val workoutItems = remember { mutableStateListOf<RecordWithExercise>() }
+    val workoutItems = remember { mutableStateListOf<WorkoutRecordWithExercise>() }
+
+    androidx.compose.runtime.LaunchedEffect(workoutId) {
+        if (workoutId != null) {
+            val workout = database.workoutDao().getWorkoutById(workoutId)
+            if (workout != null) {
+                workoutName = workout.name
+            }
+            val records = database.workoutDao().getRecordsForWorkout(workoutId)
+            workoutItems.clear()
+            workoutItems.addAll(records)
+        }
+    }
 
     val bottomSheetState = rememberWorkoutBottomSheetState { newRecord ->
         workoutItems.add(newRecord)
@@ -85,8 +105,24 @@ fun WorkoutScreen(onBack: () -> Unit) {
                     onClick = {
                         if (workoutName.isBlank()) {
                             Toast.makeText(context, "please fill in a name", Toast.LENGTH_SHORT).show()
+                        } else if (workoutItems.isEmpty()) {
+                            Toast.makeText(context, "please add at least one exercise", Toast.LENGTH_SHORT).show()
                         } else {
-                            onBack()
+                            scope.launch {
+                                val targetWorkoutId = if (workoutId != null) {
+                                    database.workoutDao().updateWorkout(Workout(id = workoutId, name = workoutName))
+                                    database.workoutDao().deleteRecordsByWorkoutId(workoutId)
+                                    workoutId
+                                } else {
+                                    database.workoutDao().insertWorkout(Workout(name = workoutName)).toInt()
+                                }
+                                
+                                workoutItems.forEach { item ->
+                                    val newRecord = item.workoutRecord.copy(id = 0, workoutId = targetWorkoutId)
+                                    database.workoutDao().insertWorkoutRecord(newRecord)
+                                }
+                                onBack()
+                            }
                         }
                     },
                     modifier = Modifier
@@ -107,12 +143,12 @@ fun WorkoutScreen(onBack: () -> Unit) {
                 modifier = Modifier.weight(1f),
                 extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp,
                 onDeleteRequest = { recordToDelete ->
-                    workoutItems.removeAll { it.record.id == recordToDelete.id }
+                    workoutItems.removeAll { it.workoutRecord.id == recordToDelete.id }
                 },
                 onUpdateRequest = { updatedRecord ->
-                    val index = workoutItems.indexOfFirst { it.record.id == updatedRecord.id }
+                    val index = workoutItems.indexOfFirst { it.workoutRecord.id == updatedRecord.id }
                     if (index != -1) {
-                        workoutItems[index] = workoutItems[index].copy(record = updatedRecord)
+                        workoutItems[index] = workoutItems[index].copy(workoutRecord = updatedRecord)
                     }
                 }
             )

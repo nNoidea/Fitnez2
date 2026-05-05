@@ -100,12 +100,16 @@ fun HeaderLabel(text: String) {
 
 @Composable
 fun HistoryRecordCard(
-    item: RecordWithExercise,
+    exerciseName: String,
+    sets: Int,
+    reps: Int,
+    weight: Double,
+    timestamp: String?,
     isLight: Boolean,
     showTitle: Boolean,
     weightUnit: String,
     shape: androidx.compose.ui.graphics.Shape,
-    onUpdate: (Record) -> Unit
+    onUpdate: (sets: Int, reps: Int, weight: Double) -> Unit
 ) {
     val containerColor = if (isLight) ColorHistoryNeutralContainer else ColorHistoryColoredContainer
     val contentColor = if (isLight) ColorHistoryNeutralContent else ColorHistoryColoredContent
@@ -119,10 +123,6 @@ fun HistoryRecordCard(
         }
     }
 
-    val timestamp = remember(item.record.date) {
-        SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(item.record.date))
-    }
-
     val view = LocalView.current
 
     Card(
@@ -130,7 +130,7 @@ fun HistoryRecordCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 2.dp)
             .clip(shape)
-            .clickable { 
+            .clickable(enabled = timestamp != null) { 
                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
                 isExpanded = !isExpanded 
             },
@@ -148,7 +148,7 @@ fun HistoryRecordCard(
                 col1 = {
                     if (showTitle) {
                         Text(
-                            text = item.exerciseName,
+                            text = exerciseName,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.Unspecified
@@ -161,31 +161,31 @@ fun HistoryRecordCard(
                 },
                 col2 = {
                     HistorySetsField(
-                        value = item.record.sets,
+                        value = sets,
                         contentColor = contentColor,
-                        onValidChange = { onUpdate(item.record.copy(sets = it)) },
+                        onValidChange = { onUpdate(it, reps, weight) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 },
                 col3 = {
                     HistoryRepsField(
-                        value = item.record.reps,
+                        value = reps,
                         contentColor = contentColor,
-                        onValidChange = { onUpdate(item.record.copy(reps = it)) },
+                        onValidChange = { onUpdate(sets, it, weight) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 },
                 col4 = {
                     HistoryWeightField(
-                        value = item.record.weight,
+                        value = weight,
                         contentColor = contentColor,
-                        onValidChange = { onUpdate(item.record.copy(weight = it)) },
+                        onValidChange = { onUpdate(sets, reps, it) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
             )
             
-            if (isExpanded) {
+            if (isExpanded && timestamp != null) {
                 Text(
                     text = timestamp,
                     style = MaterialTheme.typography.bodySmall,

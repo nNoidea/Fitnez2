@@ -19,6 +19,10 @@ import com.nnoidea.fitnez2.data.LocalAppDatabase
 import com.nnoidea.fitnez2.data.LocalSettingsRepository
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
+import com.nnoidea.fitnez2.data.entities.Workout
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.nnoidea.fitnez2.ui.common.GlobalUiState
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.common.UiSignal
@@ -34,6 +38,7 @@ import kotlinx.coroutines.launch
 class HomeBottomSheetState(
     scope: kotlinx.coroutines.CoroutineScope,
     private val dao: com.nnoidea.fitnez2.data.dao.RecordDao,
+    private val workoutDao: com.nnoidea.fitnez2.data.dao.WorkoutDao,
     exerciseDao: com.nnoidea.fitnez2.data.dao.ExerciseDao,
     settingsRepository: com.nnoidea.fitnez2.data.SettingsRepository,
     private val globalUiState: GlobalUiState,
@@ -55,8 +60,11 @@ class HomeBottomSheetState(
     onHapticFeedback = onHapticFeedback
 ) {
 
+    var workouts by mutableStateOf<List<Workout>>(emptyList())
+
     init {
         scope.launch { initializeSession() }
+        scope.launch { workoutDao.getAllWorkoutsFlow().collect { workouts = it } }
     }
 
     private suspend fun initializeSession() {
@@ -120,7 +128,7 @@ class HomeBottomSheetState(
 }
 
 @Composable
-fun rememberHomeBottomSheetState(): PredictiveBottomSheetState {
+fun rememberHomeBottomSheetState(): HomeBottomSheetState {
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -145,6 +153,7 @@ fun rememberHomeBottomSheetState(): PredictiveBottomSheetState {
         HomeBottomSheetState(
             scope = scope,
             dao = database.recordDao(),
+            workoutDao = database.workoutDao(),
             exerciseDao = database.exerciseDao(),
             settingsRepository = settingsRepository,
             globalUiState = globalUiState,

@@ -64,6 +64,26 @@ fun computeColorParityByName(items: List<RecordWithExercise>): BooleanArray {
     return isLightArray
 }
 
+@JvmName("computeColorParityByWorkoutName")
+fun computeColorParityByName(items: List<com.nnoidea.fitnez2.data.models.WorkoutRecordWithExercise>): BooleanArray {
+    if (items.isEmpty()) return BooleanArray(0)
+
+    val isLightArray = BooleanArray(items.size)
+    var currentIsLight = true
+    var lastExerciseName = items.first().exerciseName
+    isLightArray[0] = currentIsLight
+
+    for (i in 1 until items.size) {
+        if (items[i].exerciseName != lastExerciseName) {
+            currentIsLight = !currentIsLight
+            lastExerciseName = items[i].exerciseName
+        }
+        isLightArray[i] = currentIsLight
+    }
+
+    return isLightArray
+}
+
 /**
  * Computes the rounded corner shape for a record card based on
  * whether adjacent items share the same group (color parity).
