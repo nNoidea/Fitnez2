@@ -228,8 +228,19 @@ class WorkoutPredictiveBottomSheetState(
     }
 
     override suspend fun onPredictiveBackCommit() {
-        offsetY.animateTo(maxOffset, spring(stiffness = Spring.StiffnessMediumLow))
-        predictiveProgress = 0f
+        kotlinx.coroutines.coroutineScope {
+            launch {
+                offsetY.animateTo(maxOffset, spring(stiffness = Spring.StiffnessMediumLow))
+            }
+            launch {
+                Animatable(predictiveProgress).animateTo(
+                    targetValue = 0f,
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                ) {
+                    predictiveProgress = value
+                }
+            }
+        }
     }
 
     override fun onPredictiveBackCancel() {
