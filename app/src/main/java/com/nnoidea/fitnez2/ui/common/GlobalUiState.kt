@@ -5,6 +5,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -45,6 +46,23 @@ class GlobalUiState(
         
         fun setInstance(state: GlobalUiState) {
             instance = state
+        }
+
+        private val activeInstances = java.util.Collections.synchronizedList(mutableListOf<GlobalUiState>())
+
+        fun register(state: GlobalUiState) {
+            activeInstances.add(state)
+        }
+
+        fun unregister(state: GlobalUiState) {
+            activeInstances.remove(state)
+        }
+
+        suspend fun emitToAll(signal: UiSignal) {
+            val instances = synchronized(activeInstances) { activeInstances.toList() }
+            instances.forEach { instance ->
+                instance.emitSignal(signal)
+            }
         }
     }
 
@@ -171,6 +189,13 @@ fun ProvideGlobalUiState(
     content: @Composable () -> Unit
 ) {
     GlobalUiState.setInstance(state)
+
+    DisposableEffect(state) {
+        GlobalUiState.register(state)
+        onDispose {
+            GlobalUiState.unregister(state)
+        }
+    }
 
     val context = LocalContext.current
     ValidateAndCorrect.appContext = context.applicationContext

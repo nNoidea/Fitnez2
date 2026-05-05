@@ -24,9 +24,34 @@ data class ExportedRecord(
     val date: Long
 )
 
+data class ExportedWorkoutRecord(
+    @SerializedName("id")
+    val id: Int = 0,
+    @SerializedName("exerciseId")
+    val exerciseId: Int,
+    @SerializedName("sets")
+    val sets: Int,
+    @SerializedName("reps")
+    val reps: Int,
+    @SerializedName("weight")
+    val weight: Double
+)
+
+data class ExportedWorkout(
+    @SerializedName("id")
+    val id: Int = 0,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("records")
+    val records: List<ExportedWorkoutRecord>
+)
+
 data class BackupData(
     @SerializedName("version")
     val version: Int = 2,
     @SerializedName("data")
-    val data: List<ExportedExercise>
+    val data: List<ExportedExercise>,
+    @SerializedName("workouts")
+    val workouts: List<ExportedWorkout>? = null
 )
+

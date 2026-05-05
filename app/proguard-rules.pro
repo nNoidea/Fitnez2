@@ -14,9 +14,7 @@
 -keep class kotlin.reflect.jvm.internal.** { *; }
 
 # Keep Backup data models for GSON serialization/deserialization
--keep class com.nnoidea.fitnez2.data.models.BackupData { *; }
--keep class com.nnoidea.fitnez2.data.models.ExportedExercise { *; }
--keep class com.nnoidea.fitnez2.data.models.ExportedRecord { *; }
+-keep class com.nnoidea.fitnez2.data.models.** { *; }
 
 # Keep GSON annotations and ensure they are visible at runtime
 -keepattributes Signature, *Annotation*

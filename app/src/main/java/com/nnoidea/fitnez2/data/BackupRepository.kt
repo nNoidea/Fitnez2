@@ -6,9 +6,13 @@ import android.util.Log
 import com.google.gson.Gson
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
+import com.nnoidea.fitnez2.data.entities.Workout
+import com.nnoidea.fitnez2.data.entities.WorkoutRecord
 import com.nnoidea.fitnez2.data.models.BackupData
 import com.nnoidea.fitnez2.data.models.ExportedExercise
 import com.nnoidea.fitnez2.data.models.ExportedRecord
+import com.nnoidea.fitnez2.data.models.ExportedWorkout
+import com.nnoidea.fitnez2.data.models.ExportedWorkoutRecord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStreamReader
@@ -25,8 +29,11 @@ class BackupRepository(
         try {
             val exercises = database.exerciseDao().getAllExercises()
             val records = database.recordDao().getAllRecordsOrdered()
+            val workouts = database.workoutDao().getAllWorkouts()
+            val workoutRecords = database.workoutDao().getAllWorkoutRecords()
 
             val recordsByExercise = records.groupBy { it.exerciseId }
+            val workoutRecordsByWorkout = workoutRecords.groupBy { it.workoutId }
 
             // Group records by exercise, preserving IDs for ordering
             val exportedData = exercises.map { exercise ->
@@ -35,7 +42,25 @@ class BackupRepository(
                 ExportedExercise(exercise.id, exercise.name, exerciseRecords)
             }
 
-            val backupData = BackupData(data = exportedData)
+            // Map workouts
+            val exportedWorkouts = workouts.map { workout ->
+                val records = (workoutRecordsByWorkout[workout.id] ?: emptyList()).map {
+                    ExportedWorkoutRecord(
+                        id = it.id,
+                        exerciseId = it.exerciseId,
+                        sets = it.sets,
+                        reps = it.reps,
+                        weight = it.weight
+                    )
+                }
+                ExportedWorkout(
+                    id = workout.id,
+                    name = workout.name,
+                    records = records
+                )
+            }
+
+            val backupData = BackupData(data = exportedData, workouts = exportedWorkouts)
 
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 OutputStreamWriter(outputStream).use { writer ->
@@ -51,23 +76,21 @@ class BackupRepository(
 
     suspend fun importDatabase(uri: Uri): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            var backupData = context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            var rawJsonString = ""
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 InputStreamReader(inputStream).use { reader ->
-                    gson.fromJson(reader, BackupData::class.java)
+                    rawJsonString = reader.readText()
                 }
             }
+
+            var backupData = gson.fromJson(rawJsonString, BackupData::class.java)
 
             // FALLBACK: If the file was exported while R8 was obfuscating (keys "a", "b", etc.)
             // we try to parse it into a Map and convert it.
             if (backupData == null || backupData.data == null) {
                 Log.d("BackupRepository", "Attempting legacy/minified import fallback...")
                 try {
-                    val rawMap = context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                        InputStreamReader(inputStream).use { reader ->
-                            gson.fromJson(reader, Map::class.java)
-                        }
-                    } as? Map<String, Any>
-                    
+                    val rawMap = gson.fromJson(rawJsonString, Map::class.java) as? Map<String, Any>
                     val minifiedData = rawMap?.get("a") as? List<Map<String, Any>>
                     if (minifiedData != null) {
                         val convertedExercises = minifiedData.map { exMap ->
@@ -99,12 +122,16 @@ class BackupRepository(
                 // Delete records first, then exercises (though CASCADE would handle it)
                 database.recordDao().deleteAllRecords()
                 database.exerciseDao().deleteAllExercises()
+                database.workoutDao().deleteAllWorkouts()
+
+                val exerciseIdMap = mutableMapOf<Int, Int>()
 
                 // 2. Recreate with original IDs to preserve ordering
                 backupData.data.forEach { exported ->
                     val exerciseId = if (exported.id != 0) exported.id else 0
                     val exercise = Exercise(id = exerciseId, name = exported.name)
                     val newExerciseId = database.exerciseDao().insertInternal(exercise).toInt()
+                    exerciseIdMap[exported.id] = newExerciseId
 
                     exported.records?.forEach { r ->
                         val record = Record(
@@ -116,6 +143,26 @@ class BackupRepository(
                             date = r.date
                         )
                         database.recordDao().insertInternal(record)
+                    }
+                }
+
+                // 3. Recreate workouts and workout records
+                backupData.workouts?.forEach { exportedWorkout ->
+                    val workoutId = if (exportedWorkout.id != 0) exportedWorkout.id else 0
+                    val workout = Workout(id = workoutId, name = exportedWorkout.name)
+                    val newWorkoutId = database.workoutDao().insertWorkout(workout).toInt()
+
+                    exportedWorkout.records?.forEach { r ->
+                        val resolvedExerciseId = exerciseIdMap[r.exerciseId] ?: r.exerciseId
+                        val workoutRecord = WorkoutRecord(
+                            id = if (r.id != 0) r.id else 0,
+                            workoutId = newWorkoutId,
+                            exerciseId = resolvedExerciseId,
+                            sets = r.sets,
+                            reps = r.reps,
+                            weight = r.weight
+                        )
+                        database.workoutDao().insertWorkoutRecord(workoutRecord)
                     }
                 }
             }
