@@ -62,4 +62,13 @@ interface WorkoutDao {
         ORDER BY wr.id ASC
     """)
     suspend fun getRecordsForWorkout(workoutId: Int): List<WorkoutRecordWithExercise>
+
+    @Query("SELECT * FROM workout ORDER BY id ASC")
+    suspend fun getAllWorkouts(): List<Workout>
+
+    @Query("SELECT * FROM workout_record ORDER BY id ASC")
+    suspend fun getAllWorkoutRecords(): List<WorkoutRecord>
+
+    @Query("DELETE FROM workout")
+    suspend fun deleteAllWorkouts()
 }

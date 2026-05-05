@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
+import com.nnoidea.fitnez2.ui.common.UiSignal
 import com.nnoidea.fitnez2.ui.components.ScreenScaffold
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -326,6 +327,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                             scope.launch {
                                 val result = backupRepository.importDatabase(uri)
                                 if (result.isSuccess) {
+                                    com.nnoidea.fitnez2.ui.common.GlobalUiState.emitToAll(UiSignal.DatabaseSeeded)
                                     Toast.makeText(context, globalLocalization.labelImportSuccess, Toast.LENGTH_SHORT).show()
                                 } else {
                                     Toast.makeText(context, globalLocalization.labelImportFailed, Toast.LENGTH_SHORT).show()

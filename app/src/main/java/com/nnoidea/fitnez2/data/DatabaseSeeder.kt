@@ -73,13 +73,9 @@ class DatabaseSeeder(
         }
 
         // Emit signal so the UI completely refetches history from the database in the correct chronological order
-        com.nnoidea.fitnez2.ui.common.GlobalUiState.instance?.let { state ->
-            state.scope.launch(Dispatchers.Main) {
-                state.emitSignal(
-                    com.nnoidea.fitnez2.ui.common.UiSignal.DatabaseSeeded
-                )
-            }
-        }
+        com.nnoidea.fitnez2.ui.common.GlobalUiState.emitToAll(
+            com.nnoidea.fitnez2.ui.common.UiSignal.DatabaseSeeded
+        )
 
         Log.d("DatabaseSeeder", "Seeding complete.")
     }
