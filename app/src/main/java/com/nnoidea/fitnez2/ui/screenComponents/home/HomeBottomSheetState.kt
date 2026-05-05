@@ -23,6 +23,7 @@ import com.nnoidea.fitnez2.data.entities.Workout
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import com.nnoidea.fitnez2.data.models.WorkoutRecordWithExercise
 import com.nnoidea.fitnez2.ui.common.GlobalUiState
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.common.UiSignal
@@ -61,6 +62,18 @@ class HomeBottomSheetState(
 ) {
 
     var workouts by mutableStateOf<List<Workout>>(emptyList())
+    var selectedWorkout by mutableStateOf<Workout?>(null)
+    var selectedWorkoutRecords by mutableStateOf<List<WorkoutRecordWithExercise>>(emptyList())
+
+    override var selectedExerciseName: String?
+        get() = if (selectedWorkout != null) {
+            workouts.find { it.id == selectedWorkout?.id }?.name ?: selectedExerciseNameSnapshot
+        } else {
+            exercises.find { it.id == selectedExerciseId }?.name ?: selectedExerciseNameSnapshot
+        }
+        set(value) {
+            selectedExerciseNameSnapshot = value
+        }
 
     init {
         scope.launch { initializeSession() }
@@ -91,12 +104,55 @@ class HomeBottomSheetState(
 
     override fun onExerciseSelected(exercise: Exercise, closeDialog: Boolean) {
         super.onExerciseSelected(exercise, closeDialog)
+        selectedWorkout = null
+        selectedWorkoutRecords = emptyList()
         scope.launch { loadInputsForExercise(exercise.id) }
+    }
+
+    fun onWorkoutSelected(workout: Workout, closeDialog: Boolean) {
+        selectedWorkout = workout
+        selectedExerciseId = null
+        selectedExerciseName = workout.name
+        if (closeDialog) {
+            showExerciseSelection = false
+        }
+        scope.launch {
+            selectedWorkoutRecords = workoutDao.getRecordsForWorkout(workout.id)
+        }
     }
 
     override fun onAddClick() {
         scope.launch {
             try {
+                val workout = selectedWorkout
+                if (workout != null) {
+                    if (selectedWorkoutRecords.isEmpty()) {
+                        Toast.makeText(context, "Workout is empty", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+                    dismissInput()
+                    val timestamp = System.currentTimeMillis()
+                    var lastId: Long = 0
+                    
+                    // Insert all records in reverse order so the first item gets the highest ID
+                    // and appears at the top in the history list (which orders by id DESC for same timestamps)
+                    for (workoutRecord in selectedWorkoutRecords.reversed()) {
+                        val record = Record(
+                            exerciseId = workoutRecord.workoutRecord.exerciseId,
+                            sets = workoutRecord.workoutRecord.sets,
+                            reps = workoutRecord.workoutRecord.reps,
+                            weight = workoutRecord.workoutRecord.weight,
+                            date = timestamp
+                        )
+                        lastId = dao.create(record)
+                    }
+                    if (lastId > 0) {
+                        globalUiState.emitSignal(UiSignal.ScrollToTop(lastId.toInt()))
+                        onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
+                    }
+                    return@launch
+                }
+
                 val exerciseId = selectedExerciseId
                 if (exerciseId == null) {
                     Toast.makeText(context, globalLocalization.labelSelectExercise, Toast.LENGTH_SHORT).show()

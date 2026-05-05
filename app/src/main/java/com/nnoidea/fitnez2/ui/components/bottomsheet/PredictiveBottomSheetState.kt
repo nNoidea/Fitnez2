@@ -47,7 +47,12 @@ abstract class PredictiveBottomSheetState(
     // ── Form Fields ──────────────────────────────────────────────────────
 
     var selectedExerciseId by mutableStateOf<Int?>(null)
-    var selectedExerciseName by mutableStateOf<String?>(null)
+    var selectedExerciseNameSnapshot by mutableStateOf<String?>(null)
+    open var selectedExerciseName: String?
+        get() = exercises.find { it.id == selectedExerciseId }?.name ?: selectedExerciseNameSnapshot
+        set(value) {
+            selectedExerciseNameSnapshot = value
+        }
     var sets by mutableStateOf("")
     var reps by mutableStateOf("")
     var weight by mutableStateOf("")

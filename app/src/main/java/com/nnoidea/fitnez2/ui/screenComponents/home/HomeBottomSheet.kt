@@ -51,19 +51,27 @@ fun HomeBottomSheet(modifier: Modifier = Modifier) {
     PredictiveBottomSheet(state = state, modifier = modifier) {
         SheetFormRow(state = state)
 
-        // Expanded: exercise history for selected exercise
+        // Expanded: exercise history for selected exercise or workout
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(top = 24.dp)
         ) {
-            if (state.hasBeenOpened && state.selectedExerciseId != null) {
-                ExerciseHistoryList(
-                    modifier = Modifier.fillMaxSize(),
-                    filterExerciseIds = listOfNotNull(state.selectedExerciseId),
-                    useAlternatingColors = false
-                )
+            if (state.hasBeenOpened) {
+                val filterIds = if (state.selectedWorkout != null) {
+                    state.selectedWorkoutRecords.map { it.workoutRecord.exerciseId }.distinct()
+                } else if (state.selectedExerciseId != null) {
+                    listOf(state.selectedExerciseId!!)
+                } else null
+
+                if (filterIds != null && filterIds.isNotEmpty()) {
+                    ExerciseHistoryList(
+                        modifier = Modifier.fillMaxSize(),
+                        filterExerciseIds = filterIds,
+                        useAlternatingColors = state.selectedWorkout != null
+                    )
+                }
             }
         }
     }
@@ -73,14 +81,14 @@ fun HomeBottomSheet(modifier: Modifier = Modifier) {
         exercises = state.exercises,
         workouts = state.workouts,
         selectedExerciseId = state.selectedExerciseId,
+        selectedWorkoutId = (state as? HomeBottomSheetState)?.selectedWorkout?.id,
         exerciseDao = com.nnoidea.fitnez2.data.LocalAppDatabase.current.exerciseDao(),
         workoutDao = com.nnoidea.fitnez2.data.LocalAppDatabase.current.workoutDao(),
         onDismissRequest = { state.toggleExerciseSelection(false) },
         onExerciseSelected = { state.onExerciseSelected(it, closeDialog = true) },
         onExerciseCreated = { state.onExerciseSelected(it, closeDialog = false) },
         onWorkoutSelected = { 
-            // "we gonna implement the add future later on"
-            android.widget.Toast.makeText(context, "Workout selected: ${it.name}", android.widget.Toast.LENGTH_SHORT).show()
+            state.onWorkoutSelected(it, closeDialog = true)
         },
         onWorkoutEdit = { workout ->
             state.toggleExerciseSelection(false)
@@ -152,32 +160,36 @@ internal fun SheetFormRow(state: PredictiveBottomSheetState) {
             }
         }
 
-        // Row: Sets, Reps, Weight
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            BottomSheetSetsField(
-                value = state.sets,
-                onValidChange = { state.onSetsChange(it) },
-                onRawValueChange = { state.setsRaw = it },
-                modifier = Modifier.weight(1f).height(buttonHeight)
-            )
+        // Row: Sets, Reps, Weight (Hide if workout is selected)
+        if (state !is HomeBottomSheetState || state.selectedWorkout == null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                BottomSheetSetsField(
+                    value = state.sets,
+                    onValidChange = { state.onSetsChange(it) },
+                    onRawValueChange = { state.setsRaw = it },
+                    modifier = Modifier.weight(1f).height(buttonHeight)
+                )
 
-            BottomSheetRepsField(
-                value = state.reps,
-                onValidChange = { state.onRepsChange(it) },
-                onRawValueChange = { state.repsRaw = it },
-                modifier = Modifier.weight(1f).height(buttonHeight)
-            )
+                BottomSheetRepsField(
+                    value = state.reps,
+                    onValidChange = { state.onRepsChange(it) },
+                    onRawValueChange = { state.repsRaw = it },
+                    modifier = Modifier.weight(1f).height(buttonHeight)
+                )
 
-            BottomSheetWeightField(
-                value = state.weight.toDoubleOrNull() ?: 0.0,
-                label = state.weightUnit,
-                onValidChange = { state.onWeightChange(it) },
-                onRawValueChange = { state.weightRaw = it },
-                modifier = Modifier.weight(1f).height(buttonHeight)
-            )
+                BottomSheetWeightField(
+                    value = state.weight.toDoubleOrNull() ?: 0.0,
+                    label = state.weightUnit,
+                    onValidChange = { state.onWeightChange(it) },
+                    onRawValueChange = { state.weightRaw = it },
+                    modifier = Modifier.weight(1f).height(buttonHeight)
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.fillMaxWidth().height(buttonHeight))
         }
     }
 }

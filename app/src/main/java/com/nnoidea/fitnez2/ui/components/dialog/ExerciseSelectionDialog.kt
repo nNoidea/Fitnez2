@@ -59,6 +59,7 @@ fun ExerciseSelectionDialog(
     exercises: List<Exercise>,
     workouts: List<Workout> = emptyList(),
     selectedExerciseId: Int?,
+    selectedWorkoutId: Int? = null,
     exerciseDao: ExerciseDao,
     workoutDao: WorkoutDao? = null,
     onDismissRequest: () -> Unit,
@@ -175,10 +176,14 @@ fun ExerciseSelectionDialog(
 
                     if (sortedWorkouts.isNotEmpty()) {
                         sortedWorkouts.forEach { workout ->
+                            val isSelected = workout.id == selectedWorkoutId
+                            val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                            val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary
+                            
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(Color.Transparent, RoundedCornerShape(12.dp))
+                                    .background(containerColor, RoundedCornerShape(12.dp))
                                     .clip(RoundedCornerShape(12.dp))
                                     .clickable {
                                         view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
@@ -190,9 +195,9 @@ fun ExerciseSelectionDialog(
                                 Text(
                                     text = workout.name,
                                     style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
+                                        fontWeight = FontWeight.Bold
                                     ),
+                                    color = contentColor,
                                     modifier = Modifier.weight(1f)
                                 )
                                 
@@ -206,7 +211,7 @@ fun ExerciseSelectionDialog(
                                         Icon(
                                             Icons.Default.Edit, 
                                             contentDescription = globalLocalization.labelEdit(workout.name),
-                                            tint = MaterialTheme.colorScheme.primary
+                                            tint = if (isSelected) contentColor else MaterialTheme.colorScheme.primary
                                         )
                                     }
                                     
