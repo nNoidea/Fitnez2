@@ -30,6 +30,7 @@ sealed class EnStrings(
     open val labelExerciseName: String = "Exercise Name"
     open val labelSave: String = "Save"
     open val labelCancel: String = "Cancel"
+    open val labelClose: String = "Close"
     open val labelDelete: String = "Delete"
     open val labelSwitchLanguage: String = "Switch Language"
 
@@ -77,6 +78,7 @@ sealed class EnStrings(
     open val labelToday: String = "Today"
     open val labelYesterday: String = "Yesterday"
     open val labelDeleteExerciseWarning: String = "This action will delete all records and cannot be undone"
+    open val labelDeleteWorkoutWarning: String = "Are you sure you want to delete this workout?"
     
     open val labelExerciseNamePlaceholder: String = "e.g. Bench Press"
     
@@ -116,9 +118,11 @@ sealed class EnStrings(
     open val devRunStressTest: String = "Run Data Stress Test"
     open val devStressTestDescription: String = "Wipe DB & Insert 1M Records"
     open val devStressTestConfirmTitle: String = "Run Stress Test?"
-    open val devStressTestConfirmMessage: String = "This will wipe the existing database and insert 1,000,000 fake records."
+    open val devStressTestConfirmMessage: String = "⚠️ WARNING: This will permanently DELETE ALL existing data (exercises & records) and replace it with ~1 million generated records (2000-2025).\n\nThis process may take a minute."
+    open val devWipeAndGenerate: String = "Wipe & Generate"
     open val devGeneratingData: String = "Generating Data..."
     open val devHapticsTest: String = "Haptics Test"
+    open val devMoveSlider: String = "Move slider to feel different vibrations"
 
     // Validation Errors
     open val errorSetsEmpty: String = "Sets cannot be empty"

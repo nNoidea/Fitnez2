@@ -88,8 +88,8 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
             show = showStressTestDialog,
             onDismissRequest = { showStressTestDialog = false },
             title = globalLocalization.devStressTestConfirmTitle,
-            message = "⚠️ WARNING: This will permanently DELETE ALL existing data (exercises & records) and replace it with ~1 million generated records (2000-2025).\n\nThis process may take a minute.",
-            confirmLabel = "Wipe & Generate",
+            message = globalLocalization.devStressTestConfirmMessage,
+            confirmLabel = globalLocalization.devWipeAndGenerate,
             isDestructive = true,
             onConfirm = {
                 showStressTestDialog = false
@@ -220,7 +220,7 @@ fun HapticsTestSection() {
         )
 
         Text(
-            text = "Move slider to feel different vibrations",
+            text = globalLocalization.devMoveSlider,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -325,7 +325,7 @@ fun ColorPaletteDialog(
                     onClick = onDismissRequest,
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    Text("Close")
+                    Text(globalLocalization.labelClose)
                 }
             }
         }

@@ -391,7 +391,7 @@ fun ExerciseSelectionDialog(
         show = workoutToDelete != null,
         onDismissRequest = { workoutToDelete = null },
         title = globalLocalization.labelDelete,
-        message = "Are you sure you want to delete this workout?", // Add localization later if needed
+        message = globalLocalization.labelDeleteWorkoutWarning,
         confirmLabel = globalLocalization.labelDelete,
         cancelLabel = globalLocalization.labelCancel,
         isDestructive = true,
