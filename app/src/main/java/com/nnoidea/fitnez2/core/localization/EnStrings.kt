@@ -34,8 +34,8 @@ sealed class EnStrings(
     open val labelDelete: String = "Delete"
     open val labelSwitchLanguage: String = "Switch Language"
 
-    open val labelHome: String = "Home"
-    open val labelProgram: String = "Programs"
+    open val labelTimeline: String = "Timeline"
+    open val labelMonthly: String = "Monthly"
     open val labelSettings: String = "Settings"
 
     open val labelSets: String = "Sets"
@@ -110,6 +110,8 @@ sealed class EnStrings(
     open val unitLb: String = "lb"
     open val labelUnknownExercise: String = "Unknown Exercise"
     open val labelOlderRecords: String = "Older Records"
+    open val labelRestDay: String = "Rest Day"
+    open fun labelExercisesCount(count: Int): String = if (count == 1) "1 exercise" else "$count exercises"
 
     // Developer Options
     open val devColorPalette: String = "Color Palette"
@@ -138,6 +140,8 @@ sealed class EnStrings(
     open val errorWeightEmpty: String = "Weight cannot be empty"
     open val errorWeightFormat: String = "Invalid weight format"
     open val errorWeightInvalid: String = "Invalid weight value"
+    
+    open val labelGoToCurrentMonth: String = "Go to current month"
 }
 
 /**

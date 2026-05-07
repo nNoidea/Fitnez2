@@ -46,6 +46,7 @@ fun ScreenScaffold(
     onOpenDrawer: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     headerContent: (@Composable RowScope.() -> Unit)? = null,
+    actions: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
@@ -55,37 +56,45 @@ fun ScreenScaffold(
     ) {
         // Header
         TopHeader {
-            when {
-                // Custom header content takes full priority
-                headerContent != null -> headerContent()
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                when {
+                    // Custom header content takes full priority
+                    headerContent != null -> headerContent()
 
-                // Back button mode
-                onBack != null -> {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = globalLocalization.labelBack
-                        )
+                    // Back button mode
+                    onBack != null -> {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = globalLocalization.labelBack
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        if (title != null) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    if (title != null) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+
+                    // Hamburger menu mode
+                    onOpenDrawer != null -> {
+                        HamburgerMenu(onClick = onOpenDrawer)
+                        if (title != null) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.headlineMedium
+                            )
+                        }
                     }
                 }
-
-                // Hamburger menu mode
-                onOpenDrawer != null -> {
-                    HamburgerMenu(onClick = onOpenDrawer)
-                    if (title != null) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                    }
-                }
+            }
+            if (actions != null) {
+                actions()
             }
         }
 
