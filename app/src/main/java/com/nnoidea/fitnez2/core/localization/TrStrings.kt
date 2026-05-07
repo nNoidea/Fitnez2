@@ -30,8 +30,8 @@ object TrStrings : EnStrings(
     override val labelDelete = "Sil"
     override val labelSwitchLanguage = "Dili Değiştir"
 
-    override val labelHome = "Ana Sayfa"
-    override val labelProgram = "Programlar"
+    override val labelTimeline = "Zaman Tüneli"
+    override val labelMonthly = "Aylık"
     override val labelSettings = "Ayarlar"
 
     override val labelSets = "Setler"
@@ -90,6 +90,8 @@ object TrStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "Bilinmeyen Egzersiz"
     override val labelOlderRecords = "Eski Kayıtlar"
+    override val labelRestDay = "Dinlenme Günü"
+    override fun labelExercisesCount(count: Int) = "$count egzersiz"
 
     // Developer Options
     override val devColorPalette = "Renk Paleti"
@@ -118,4 +120,6 @@ object TrStrings : EnStrings(
     override val errorWeightEmpty = "Ağırlık boş olamaz"
     override val errorWeightFormat = "Geçersiz ağırlık formatı"
     override val errorWeightInvalid = "Geçersiz ağırlık değeri"
+    
+    override val labelGoToCurrentMonth = "Mevcut aya git"
 }

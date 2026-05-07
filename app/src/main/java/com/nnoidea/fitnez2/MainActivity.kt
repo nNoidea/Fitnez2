@@ -32,8 +32,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         // Identify which page this instance should represent
-        val route = intent.getStringExtra(EXTRA_PAGE_ROUTE) ?: AppPage.Home.route
-        val currentPage = AppPage.entries.find { it.route == route } ?: AppPage.Home
+        val route = intent.getStringExtra(EXTRA_PAGE_ROUTE) ?: AppPage.Timeline.route
+        val currentPage = AppPage.entries.find { it.route == route } ?: AppPage.Timeline
 
         setContent {
             Fitnez2Theme {
@@ -72,9 +72,17 @@ class MainActivity : ComponentActivity() {
                                     PredictiveSidePanel(
                                         currentRoute = currentPage.route,
                                         onItemClick = { clickedRoute ->
-                                            if (clickedRoute != currentPage.route) {
-                                                if (clickedRoute == AppPage.Home.route) {
-                                                    if (currentPage != AppPage.Home) {
+                                            val sourceRoute = intent.getStringExtra("extra_source_route")
+                                            if (clickedRoute == sourceRoute) {
+                                                // If navigating to the screen we jumped from, simply finish the jumped timeline
+                                                // to return back to the already running screen!
+                                                scope.launch {
+                                                    drawerState.snapTo(DrawerValue.Closed)
+                                                    finish()
+                                                }
+                                            } else if (clickedRoute != currentPage.route) {
+                                                if (clickedRoute == AppPage.Timeline.route) {
+                                                    if (!isTaskRoot) {
                                                         scope.launch {
                                                             drawerState.snapTo(DrawerValue.Closed)
                                                             finish()
@@ -97,13 +105,21 @@ class MainActivity : ComponentActivity() {
 
                                                         startActivity(intent)
 
-                                                        if (currentPage != AppPage.Home) {
+                                                        if (!isTaskRoot) {
                                                             finish()
                                                         }
                                                     }
                                                 }
                                             } else {
-                                                scope.launch { drawerState.close() }
+                                                // If we clicked the same route we are currently on, check if we are on a jumped Timeline
+                                                if (clickedRoute == AppPage.Timeline.route && !isTaskRoot) {
+                                                    scope.launch {
+                                                        drawerState.snapTo(DrawerValue.Closed)
+                                                        finish()
+                                                    }
+                                                } else {
+                                                    scope.launch { drawerState.close() }
+                                                }
                                             }
                                         }
                                     )

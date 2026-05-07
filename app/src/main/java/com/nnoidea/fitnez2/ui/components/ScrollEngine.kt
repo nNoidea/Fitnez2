@@ -146,18 +146,21 @@ class ScrollEngine(
         if (lastVisible < totalItems - 5) return
 
         isLoadingMore = true
-        val offset = RECENT_LIMIT + totalOlderLoaded
-        val batch = if (exerciseIds.isNullOrEmpty()) {
-            dao.getOlderRecords(offset = offset, limit = OLDER_BATCH_SIZE)
-        } else {
-            dao.getOlderRecordsByExerciseIds(exerciseIds, offset = offset, limit = OLDER_BATCH_SIZE)
+        try {
+            val offset = RECENT_LIMIT + totalOlderLoaded
+            val batch = if (exerciseIds.isNullOrEmpty()) {
+                dao.getOlderRecords(offset = offset, limit = OLDER_BATCH_SIZE)
+            } else {
+                dao.getOlderRecordsByExerciseIds(exerciseIds, offset = offset, limit = OLDER_BATCH_SIZE)
+            }
+            if (batch.isNotEmpty()) {
+                olderBatches = olderBatches + listOf(batch)
+                batchSizes = batchSizes + batch.size
+            }
+            hasMoreOlderRecords = batch.size == OLDER_BATCH_SIZE
+        } finally {
+            isLoadingMore = false
         }
-        if (batch.isNotEmpty()) {
-            olderBatches = olderBatches + listOf(batch)
-            batchSizes = batchSizes + batch.size
-        }
-        hasMoreOlderRecords = batch.size == OLDER_BATCH_SIZE
-        isLoadingMore = false
     }
 
     // -------------------------------------------------------------------------

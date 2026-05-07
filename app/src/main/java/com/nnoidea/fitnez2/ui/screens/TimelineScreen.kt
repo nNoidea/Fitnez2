@@ -17,7 +17,7 @@ import com.nnoidea.fitnez2.ui.screenComponents.home.HomeBottomSheet
 
 
 @Composable
-fun HomeScreen(onOpenDrawer: () -> Unit) {
+fun TimelineScreen(onOpenDrawer: () -> Unit) {
     val globalUiState = LocalGlobalUiState.current
 
     Box(modifier = Modifier.fillMaxSize()) {

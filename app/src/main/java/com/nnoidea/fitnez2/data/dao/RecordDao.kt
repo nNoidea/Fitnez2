@@ -115,6 +115,15 @@ abstract class RecordDao {
     @Query("SELECT * FROM record")
     abstract suspend fun getAllRecords(): List<Record>
 
+    @Query("SELECT * FROM record WHERE date >= :startDate AND date <= :endDate ORDER BY date DESC, id DESC")
+    abstract fun getRecordsByDateRangeFlow(startDate: Long, endDate: Long): kotlinx.coroutines.flow.Flow<List<Record>>
+
+    @Query("SELECT * FROM record ORDER BY date DESC, id DESC")
+    abstract fun getAllRecordsFlow(): kotlinx.coroutines.flow.Flow<List<Record>>
+
+    @Query("SELECT COUNT(*) FROM record")
+    abstract fun getRecordCountFlow(): kotlinx.coroutines.flow.Flow<Int>
+
     @Query("SELECT * FROM record ORDER BY date ASC, id ASC")
     abstract suspend fun getAllRecordsOrdered(): List<Record>
 

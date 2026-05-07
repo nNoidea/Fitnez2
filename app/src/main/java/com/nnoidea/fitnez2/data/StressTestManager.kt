@@ -13,6 +13,7 @@ object StressTestManager {
     suspend fun performStressTest(database: AppDatabase, onProgress: (Float, String) -> Unit) = withContext(Dispatchers.IO) {
         onProgress(0f, "Clearing existing data...")
         database.recordDao().deleteAllRecords()
+        database.workoutDao().deleteAllWorkouts()
         database.exerciseDao().deleteAllExercises()
 
         onProgress(0.1f, "Creating 20 exercises...")
@@ -28,25 +29,24 @@ object StressTestManager {
         }
 
         onProgress(0.2f, "Generating records...")
-        val startDate = LocalDate.of(1990, 1, 1) // Starting from 2020
+        val startDate = LocalDate.of(2000, 1, 1) // Starting from 2000 as dialog says
         val daysToSimulate = 10000
         val recordsPerDay = 100
-        val records = ArrayList<Record>()
+        val batchSize = 10000
+        val records = ArrayList<Record>(batchSize)
 
         for (day in 0 until daysToSimulate) {
-            if (day % 10 == 0) {
-                val p = 0.2f + (0.3f * (day.toFloat() / daysToSimulate.toFloat()))
-                onProgress(p, "Generating day ${day + 1}...")
+            if (day % 100 == 0) {
+                val p = 0.2f + (0.8f * (day.toFloat() / daysToSimulate.toFloat()))
+                onProgress(p, "Generating and inserting day ${day + 1}...")
             }
 
             val currentDate = startDate.plusDays(day.toLong())
-            // Use UTC start of day for consistency
             val timestamp = currentDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
             repeat(recordsPerDay) {
                 val exercise = savedExercises.random()
                 
-                // Randomize data slightly
                 val sets = Random.nextInt(1, 6)
                 val reps = Random.nextInt(5, 16)
                 val weight = Random.nextDouble(10.0, 100.0)
@@ -62,10 +62,18 @@ object StressTestManager {
                     )
                 )
             }
+
+            // Insert in batches to prevent OutOfMemory crashes and massive SQL transactions
+            if (records.size >= batchSize) {
+                database.recordDao().insertAll(records)
+                records.clear()
+            }
         }
         
-        onProgress(0.5f, "Inserting ${records.size} records...")
-        database.recordDao().insertAll(records)
+        // Insert any remaining records
+        if (records.isNotEmpty()) {
+            database.recordDao().insertAll(records)
+        }
 
         onProgress(1.0f, "Stress test complete. Created 20 exercises and ${records.size} records.")
     }

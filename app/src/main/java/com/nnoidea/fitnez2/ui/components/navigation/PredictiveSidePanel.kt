@@ -61,16 +61,17 @@ fun PredictiveSidePanel(
             Spacer(modifier = Modifier.height(16.dp))
 
             item(
-                label = AppPage.Home.label(),
-                icon = AppPage.Home.icon,
-                selected = currentRoute == AppPage.Home.route,
-                onClick = { onItemClick(AppPage.Home.route) }
+                label = AppPage.Timeline.label(),
+                icon = AppPage.Timeline.icon,
+                selected = currentRoute == AppPage.Timeline.route,
+                onClick = { onItemClick(AppPage.Timeline.route) }
             )
+
             item(
-                label = AppPage.Program.label(),
-                icon = AppPage.Program.icon,
-                selected = currentRoute == AppPage.Program.route,
-                onClick = { onItemClick(AppPage.Program.route) }
+                label = AppPage.Monthly.label(),
+                icon = AppPage.Monthly.icon,
+                selected = currentRoute == AppPage.Monthly.route,
+                onClick = { onItemClick(AppPage.Monthly.route) }
             )
 
             Spacer(modifier = Modifier.weight(1f))

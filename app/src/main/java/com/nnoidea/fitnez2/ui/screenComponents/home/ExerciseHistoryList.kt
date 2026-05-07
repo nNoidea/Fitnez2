@@ -129,7 +129,12 @@ fun ExerciseHistoryList(
             color = MaterialTheme.colorScheme.surfaceContainerLow,
             shape = RoundedCornerShape(28.dp)
         ) {
-            if (!state.initialLoadDone) return@Surface
+            if (!state.initialLoadDone) {
+                androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+                return@Surface
+            }
 
             ExerciseHistoryListContent(
                 modifier = Modifier.fillMaxSize(),

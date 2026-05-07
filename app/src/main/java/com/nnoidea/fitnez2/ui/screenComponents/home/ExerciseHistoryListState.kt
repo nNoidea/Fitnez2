@@ -166,8 +166,27 @@ fun rememberExerciseHistoryListState(
         exercisesList.associate { it.id to it.name }
     }
 
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(state, lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                scope.launch {
+                    state.loadInitial()
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // Ensures initial data loading is triggered immediately upon composition.
+    // This resolves potential lifecycle gaps when navigating via internal Compose routes.
     LaunchedEffect(state) {
-        state.loadInitial()
+        if (!state.engine.initialLoadDone) {
+            state.loadInitial()
+        }
     }
 
     // Build UI model for recent records (section 0)
@@ -227,6 +246,23 @@ fun rememberExerciseHistoryListState(
     LaunchedEffect(weightUnit) { state.updateWeightUnit(weightUnit) }
     LaunchedEffect(state.engine.initialLoadDone) { state.updateInitialLoadDone(state.engine.initialLoadDone) }
 
+    // Handle intent target date scrolling
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activity = context as? android.app.Activity
+    LaunchedEffect(allUiItems, activity) {
+        val intent = activity?.intent
+        val targetDate = intent?.getLongExtra("extra_target_date", -1L)?.takeIf { it != -1L }
+        if (targetDate != null && allUiItems.isNotEmpty()) {
+            val targetIndex = allUiItems.indexOfFirst {
+                it is HistoryUiModel.Header && com.nnoidea.fitnez2.core.TimeUtils.isSameDay(it.date, targetDate)
+            }
+            if (targetIndex >= 0) {
+                state.listState.scrollToItem(targetIndex)
+                intent.removeExtra("extra_target_date")
+            }
+        }
+    }
+
     // Handle signals
     LaunchedEffect(state, globalUiState) {
         globalUiState.signalFlow.collect { signal ->
@@ -242,7 +278,8 @@ fun rememberExerciseHistoryListState(
     }
 
     // ScrollEngine integration
-    LaunchedEffect(state.listState, state.engine, allUiItems) {
+    val currentAllUiItems by androidx.compose.runtime.rememberUpdatedState(allUiItems)
+    LaunchedEffect(state.listState, state.engine) {
         snapshotFlow {
             val layoutInfo = state.listState.layoutInfo
             val firstVisible = layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0
@@ -254,12 +291,12 @@ fun rememberExerciseHistoryListState(
             if (state.engine.olderBatches.isNotEmpty()) {
                 val visibleBatches = mutableSetOf<Int>()
                 for (idx in firstVisible..lastVisible) {
-                    when (val item = allUiItems.getOrNull(idx)) {
+                    when (val item = currentAllUiItems.getOrNull(idx)) {
                         is HistoryUiModel.BatchSeparator -> visibleBatches.add(item.index)
                         is HistoryUiModel.EvictedBatch -> visibleBatches.add(item.index)
                         is HistoryUiModel.RecordItem -> {
                             for (j in idx downTo 0) {
-                                val prev = allUiItems.getOrNull(j)
+                                val prev = currentAllUiItems.getOrNull(j)
                                 if (prev is HistoryUiModel.BatchSeparator) {
                                     visibleBatches.add(prev.index)
                                     break

@@ -1,13 +1,15 @@
 package com.nnoidea.fitnez2.ui.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.CalendarViewWeek
+import androidx.compose.material.icons.filled.CalendarViewMonth
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.nnoidea.fitnez2.ui.screens.ProgramScreen
-import com.nnoidea.fitnez2.ui.screens.HomeScreen
+import com.nnoidea.fitnez2.ui.screens.TimelineScreen
+import com.nnoidea.fitnez2.ui.screens.MonthlyScreen
 import com.nnoidea.fitnez2.ui.screens.SettingsScreen
 import com.nnoidea.fitnez2.ui.screens.WorkoutScreen
 import com.nnoidea.fitnez2.ui.screens.DeveloperOptionsScreen
@@ -20,17 +22,17 @@ enum class AppPage(
         val icon: ImageVector,
         val content: @Composable (onOpenDrawer: () -> Unit) -> Unit
 ) {
-    Home(
-            route = "home",
-            label = { globalLocalization.labelHome },
-            icon = Icons.Default.Home,
-            content = { HomeScreen(onOpenDrawer = it) }
+    Timeline(
+            route = "timeline",
+            label = { globalLocalization.labelTimeline },
+            icon = Icons.Default.Timeline,
+            content = { TimelineScreen(onOpenDrawer = it) }
     ),
-    Program(
-            route = "program",
-            label = { globalLocalization.labelProgram },
-            icon = Icons.AutoMirrored.Filled.List,
-            content = { ProgramScreen(onOpenDrawer = it) }
+    Monthly(
+            route = "monthly",
+            label = { globalLocalization.labelMonthly },
+            icon = Icons.Default.CalendarViewMonth,
+            content = { MonthlyScreen(onOpenDrawer = it) }
     ),
     Settings(
             route = "settings",
