@@ -40,6 +40,35 @@ class GlobalUiState(
     val scope: CoroutineScope,
     private val settingsRepository: SettingsRepository
 ) {
+    // State: Day Change Tracker Key (invalidated automatically at midnight)
+    var currentDayKey by mutableStateOf(System.currentTimeMillis())
+        private set
+
+    init {
+        startDayChangeTracker()
+    }
+
+    private fun startDayChangeTracker() {
+        scope.launch {
+            while (true) {
+                val delayMillis = getMillisUntilNextMidnight()
+                kotlinx.coroutines.delay(delayMillis)
+                currentDayKey = System.currentTimeMillis()
+            }
+        }
+    }
+
+    private fun getMillisUntilNextMidnight(): Long {
+        val calendar = java.util.Calendar.getInstance()
+        val now = calendar.timeInMillis
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        calendar.set(java.util.Calendar.MINUTE, 0)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        return (calendar.timeInMillis - now).coerceAtLeast(1000)
+    }
+
     companion object {
         var instance: GlobalUiState? = null
             private set

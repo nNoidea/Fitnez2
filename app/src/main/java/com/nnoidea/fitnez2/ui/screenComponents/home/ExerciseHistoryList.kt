@@ -378,9 +378,10 @@ private fun HistoryDateHeader(
     weightUnit: String,
     modifier: Modifier = Modifier
 ) {
+    val globalUiState = LocalGlobalUiState.current
     val currentLocale = globalLocalization.appLocale
-    val isToday = remember(date) { android.text.format.DateUtils.isToday(date) }
-    val isYesterday = remember(date) {
+    val isToday = remember(date, globalUiState.currentDayKey) { android.text.format.DateUtils.isToday(date) }
+    val isYesterday = remember(date, globalUiState.currentDayKey) {
         android.text.format.DateUtils.isToday(date + android.text.format.DateUtils.DAY_IN_MILLIS)
     }
 
