@@ -124,7 +124,7 @@ internal fun SheetFormRow(state: PredictiveBottomSheetState) {
         ) {
             FilledTonalButton(
                 onClick = {
-                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                     state.toggleExerciseSelection(true)
                 },
                 modifier = Modifier
