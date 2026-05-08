@@ -105,6 +105,7 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
             if (isNotCurrentMonth) {
                 IconButton(
                     onClick = {
+                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                         coroutineScope.launch {
                             val diff = kotlin.math.abs(pagerState.currentPage - initialPage)
                             if (diff > 1) {
