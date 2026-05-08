@@ -172,7 +172,7 @@ private fun <T> SmartValidatedInput(
     LaunchedEffect(isFocused) {
         if (isFocused) {
             // Focus gained - save and clear
-            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
             savedValue = internalValue
             internalValue = ""
             wasFocused = true

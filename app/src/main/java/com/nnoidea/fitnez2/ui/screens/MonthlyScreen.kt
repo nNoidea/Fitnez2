@@ -145,7 +145,7 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(vertical = 16.dp) // Removed horizontal padding from master container
+                        .padding(top = 16.dp, bottom = 24.dp) // Increase bottom padding to 24.dp to make day tiles shorter
                 ) {
                     // Weekday Headers Row
                     Row(
@@ -245,13 +245,13 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                                 .toList()
                                         }
 
-                                        // Apply large 24.dp corners to the 4 outermost layout grid corners, tiny soft 4.dp inside
+                                        // Apply large 18.dp corners to the 4 outermost layout grid corners, tiny soft 4.dp inside
                                         val cellShape = remember(gridIndex) {
                                             when (gridIndex) {
-                                                0 -> RoundedCornerShape(topStart = 24.dp, topEnd = 4.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
-                                                6 -> RoundedCornerShape(topStart = 4.dp, topEnd = 24.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
-                                                35 -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomEnd = 4.dp, bottomStart = 24.dp)
-                                                41 -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomEnd = 24.dp, bottomStart = 4.dp)
+                                                0 -> RoundedCornerShape(topStart = 18.dp, topEnd = 4.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
+                                                6 -> RoundedCornerShape(topStart = 4.dp, topEnd = 18.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
+                                                35 -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomEnd = 4.dp, bottomStart = 18.dp)
+                                                41 -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomEnd = 18.dp, bottomStart = 4.dp)
                                                 else -> RoundedCornerShape(4.dp)
                                             }
                                         }
@@ -272,7 +272,7 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                                     else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)
                                                 )
                                                 .clickable(enabled = hasExercises) {
-                                                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                                     // Jump directly to the Timeline position for that day
                                                     val epochMillis = day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                                                     val intent = Intent(context, MainActivity::class.java).apply {
@@ -293,20 +293,24 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                             ) {
                                                  Box(
                                                      modifier = if (isToday) {
-                                                         val circleBgColor = if (isCurrentMonth) {
-                                                             MaterialTheme.colorScheme.onPrimaryContainer
-                                                         } else {
-                                                             MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.35f)
-                                                         }
-                                                         Modifier
-                                                             .width(28.dp)
-                                                             .height(20.dp)
-                                                             .background(color = circleBgColor, shape = CircleShape)
-                                                     } else {
-                                                         Modifier
-                                                             .width(28.dp)
-                                                             .height(20.dp)
-                                                     },
+                                                          val pillBgColor = if (isCurrentMonth) {
+                                                              MaterialTheme.colorScheme.onPrimaryContainer
+                                                          } else {
+                                                              MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.35f)
+                                                          }
+                                                          Modifier
+                                                              .width(28.dp)
+                                                              .height(20.dp)
+                                                              .background(
+                                                                  color = pillBgColor,
+                                                                  // Logical pill shape: since height is 20.dp, half of height (10.dp) makes left and right fully rounded
+                                                                  shape = RoundedCornerShape(10.dp)
+                                                              )
+                                                      } else {
+                                                          Modifier
+                                                              .width(28.dp)
+                                                              .height(20.dp)
+                                                      },
                                                      contentAlignment = Alignment.Center
                                                  ) {
                                                      Text(
@@ -374,7 +378,7 @@ private fun ExercisePill(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 0.5.dp) // Tight vertical spacing
-            .clip(RoundedCornerShape(3.dp))
+            .clip(RoundedCornerShape(4.dp))
             .background(containerColor)
             .padding(horizontal = 2.dp, vertical = 1.dp), // Minimal inner padding
         contentAlignment = Alignment.Center

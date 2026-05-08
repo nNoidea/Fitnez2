@@ -180,7 +180,7 @@ private fun ScrollToTopButton(
     ) {
         SmallFloatingActionButton(
             onClick = {
-                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                 onClick()
             },
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -402,39 +402,44 @@ private fun HistoryDateHeader(
 
     // Aligned with the content inside the cards
     // Card Padding (16) + Card Internal Padding (16) = 32dp start offset
-    HistoryGridRow(
+    Column(
         modifier = modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.Bottom,
-        col1 = {
-            Column {
-                // First: Numerical Date (smaller)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        // Full width Day Name at the top to prevent wrapping of long strings!
+        Text(
+            text = dayName,
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Grid alignment row underneath for the date string and column headers
+        HistoryGridRow(
+            verticalAlignment = Alignment.Bottom,
+            col1 = {
                 Text(
                     text = dateString,
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 )
-                // Second: Day Name (bigger)
-                Text(
-                    text = dayName,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                )
+            },
+            col2 = {
+                HeaderLabel(globalLocalization.labelSets)
+            },
+            col3 = {
+                HeaderLabel(globalLocalization.labelReps)
+            },
+            col4 = {
+                HeaderLabel(weightUnit)
             }
-        },
-        col2 = {
-            HeaderLabel(globalLocalization.labelSets)
-        },
-        col3 = {
-            HeaderLabel(globalLocalization.labelReps)
-        },
-        col4 = {
-            HeaderLabel(weightUnit)
-        }
-    )
+        )
+    }
 }
 
 // Extracted to SharedHistoryComponents.kt

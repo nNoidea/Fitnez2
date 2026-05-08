@@ -120,7 +120,7 @@ fun ExerciseSelectionDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { 
-                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                     onDismissRequest()
                                     val intent = Intent(context, MainActivity::class.java).apply {
                                         putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Workout.route)
@@ -150,7 +150,7 @@ fun ExerciseSelectionDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { 
-                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                 showCreateDialog = true 
                             }
                             .padding(vertical = 12.dp, horizontal = 8.dp),
@@ -186,7 +186,7 @@ fun ExerciseSelectionDialog(
                                     .background(containerColor, RoundedCornerShape(12.dp))
                                     .clip(RoundedCornerShape(12.dp))
                                     .clickable {
-                                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                         onWorkoutSelected(workout)
                                     }
                                     .padding(vertical = 12.dp, horizontal = 12.dp),
@@ -204,7 +204,7 @@ fun ExerciseSelectionDialog(
                                 if (workoutDao != null) {
                                     IconButton(
                                         onClick = { 
-                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                             onWorkoutEdit(workout)
                                         },
                                     ) {
@@ -217,7 +217,7 @@ fun ExerciseSelectionDialog(
                                     
                                     IconButton(
                                         onClick = { 
-                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                             workoutToDelete = workout 
                                         },
                                     ) {
@@ -248,7 +248,7 @@ fun ExerciseSelectionDialog(
                                 .background(containerColor, RoundedCornerShape(12.dp))
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
-                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                     onExerciseSelected(exercise)
                                 }
                                 .padding(vertical = 12.dp, horizontal = 12.dp),
@@ -265,7 +265,7 @@ fun ExerciseSelectionDialog(
                             
                             IconButton(
                                 onClick = { 
-                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                     exerciseToEdit = exercise
                                 },
                             ) {
@@ -278,7 +278,7 @@ fun ExerciseSelectionDialog(
                             
                             IconButton(
                                 onClick = { 
-                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                     exerciseToDelete = exercise 
                                 },
                             ) {

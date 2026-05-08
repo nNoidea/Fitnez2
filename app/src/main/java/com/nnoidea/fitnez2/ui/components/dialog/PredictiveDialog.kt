@@ -237,7 +237,7 @@ fun PredictiveInputDialog(
         confirmButton = {
             androidx.compose.material3.Button(
                 onClick = {
-                    view.performHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
+                    view.performHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
                     keyboardController?.hide()
                     if (text.isNotBlank()) {
                         onConfirm(text)
@@ -290,7 +290,7 @@ fun PredictiveConfirmationDialog(
         confirmButton = {
             androidx.compose.material3.Button(
                 onClick = {
-                    view.performHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
+                    view.performHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
                     onConfirm()
                 },
                 colors = if (isDestructive) {

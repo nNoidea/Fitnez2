@@ -155,7 +155,7 @@ class HomeBottomSheetState(
                         val newId = dao.create(record)
                         globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
                     }
-                    onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
+                    onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
                     return@launch
                 }
 
@@ -182,7 +182,7 @@ class HomeBottomSheetState(
                 val newId = dao.create(record)
                 globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
 
-                onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
+                onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
 
             } catch (_: Exception) { }
         }

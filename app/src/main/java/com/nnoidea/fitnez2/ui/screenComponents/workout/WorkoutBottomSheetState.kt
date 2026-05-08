@@ -90,7 +90,7 @@ class WorkoutBottomSheetState(
 
                 onRecordCreated(record)
 
-                onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_END)
+                onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
 
             } catch (_: Exception) { }
         }

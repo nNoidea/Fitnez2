@@ -131,7 +131,7 @@ fun HistoryRecordCard(
             .padding(horizontal = 16.dp, vertical = 2.dp)
             .clip(shape)
             .clickable(enabled = timestamp != null) { 
-                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                 isExpanded = !isExpanded 
             },
         shape = shape,

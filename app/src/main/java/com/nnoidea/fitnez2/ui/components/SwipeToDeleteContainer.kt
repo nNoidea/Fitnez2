@@ -179,7 +179,7 @@ fun SwipeToDeleteContainer(
                             if ((-finalOffset) >= dismissThreshold) {
                                 // Delete
                                 scope.launch {
-                                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                     // Animate away
                                     // User requested 50% faster animation. Default is usually ~300-400ms.
                                     // using tween(200) ensures a snappy exit.
