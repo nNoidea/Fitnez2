@@ -50,6 +50,9 @@ abstract class RecordDao {
     @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date DESC, id DESC LIMIT :limit")
     abstract suspend fun getRecordsByExerciseId(exerciseId: Int, limit: Int = 100): List<Record>
 
+    @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date ASC")
+    abstract fun getRecordsByExerciseIdFlow(exerciseId: Int): kotlinx.coroutines.flow.Flow<List<Record>>
+
     @Query("SELECT * FROM record WHERE exerciseId IN (:exerciseIds) ORDER BY date DESC, id DESC LIMIT :limit")
     abstract suspend fun getRecordsByExerciseIds(exerciseIds: List<Int>, limit: Int = 100): List<Record>
 

@@ -142,6 +142,14 @@ sealed class EnStrings(
     open val errorWeightInvalid: String = "Invalid weight value"
     
     open val labelGoToCurrentMonth: String = "Go to current month"
+    
+    // Graph Screen Translations
+    open val labelGraph: String = "Graph"
+    open val labelNoDataForExercise: String = "No record history for this exercise yet"
+    open val labelMaxWeight: String = "Personal Record"
+    open val labelCurrentWeight: String = "Latest Weight"
+    open val labelProgress: String = "Progress"
+    open val labelNoExercises: String = "No exercises found. Create an exercise first!"
 }
 
 /**

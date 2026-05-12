@@ -124,15 +124,46 @@ class ScrollEngine(
     }
 
     // -------------------------------------------------------------------------
-    //  Prepend a newly created record (scroll-to-top signal)
+    //  Insert Record into Buffer (Sorted)
     // -------------------------------------------------------------------------
 
-    suspend fun prependNewRecord(recordId: Int) {
-        val newRecord = dao.getRecordById(recordId)
-        if (newRecord != null && recentRecords.none { it.id == newRecord.id }) {
-            // Only prepend if it matches the current filter
-            if (exerciseIds.isNullOrEmpty() || newRecord.exerciseId in exerciseIds) {
-                recentRecords = listOf(newRecord) + recentRecords
+    suspend fun insertRecordIntoBuffer(recordId: Int) {
+        val newRecord = dao.getRecordById(recordId) ?: return
+        if (!exerciseIds.isNullOrEmpty() && newRecord.exerciseId !in exerciseIds) return
+        
+        // Ensure it's not already somewhere
+        if (recentRecords.any { it.id == recordId }) return
+        if (olderBatches.any { it?.any { r -> r.id == recordId } == true }) return
+
+        val mutableRecent = recentRecords.toMutableList()
+        val insertIdxRecent = mutableRecent.indexOfFirst {
+            it.date < newRecord.date || (it.date == newRecord.date && it.id < newRecord.id)
+        }
+        
+        if (insertIdxRecent != -1) {
+            mutableRecent.add(insertIdxRecent, newRecord)
+            recentRecords = mutableRecent
+            return
+        } else if (recentRecords.size < RECENT_LIMIT) {
+            mutableRecent.add(newRecord)
+            recentRecords = mutableRecent
+            return
+        }
+
+        for (i in olderBatches.indices) {
+            val batch = olderBatches[i]
+            if (batch != null) {
+                val insertIdxBatch = batch.indexOfFirst {
+                    it.date < newRecord.date || (it.date == newRecord.date && it.id < newRecord.id)
+                }
+                if (insertIdxBatch != -1) {
+                    val mutableBatch = batch.toMutableList()
+                    mutableBatch.add(insertIdxBatch, newRecord)
+                    val newBatches = olderBatches.toMutableList()
+                    newBatches[i] = mutableBatch
+                    olderBatches = newBatches
+                    return
+                }
             }
         }
     }
@@ -214,9 +245,7 @@ class ScrollEngine(
     //  Buffer-aware update
     // -------------------------------------------------------------------------
 
-    suspend fun updateRecord(updatedRecord: Record) {
-        dao.update(updatedRecord)
-
+    fun updateRecordInBuffer(updatedRecord: Record) {
         if (recentRecords.any { it.id == updatedRecord.id }) {
             recentRecords = recentRecords.map {
                 if (it.id == updatedRecord.id) updatedRecord else it
@@ -233,74 +262,16 @@ class ScrollEngine(
     }
 
     // -------------------------------------------------------------------------
-    //  Buffer-aware delete (returns info needed for undo)
+    //  Buffer-aware delete
     // -------------------------------------------------------------------------
 
-    /** Snapshot of where a deleted record lived, so undo can restore it correctly. */
-    data class DeleteContext(
-        val freshRecord: Record,
-        val wasInRecent: Boolean,
-        val ownerBatchIndex: Int
-    )
-
-    /**
-     * Deletes a record from DB and the correct in-memory buffer.
-     * Returns a [DeleteContext] that [undoDelete] needs to restore it.
-     */
-    suspend fun deleteRecord(record: Record): DeleteContext {
-        val freshRecord = dao.getRecordById(record.id) ?: record
-
-        val wasInRecent = recentRecords.any { it.id == record.id }
-        val ownerBatchIndex = if (!wasInRecent) {
-            olderBatches.indexOfFirst { batch -> batch?.any { it.id == record.id } == true }
-        } else -1
-
-        dao.delete(record.id)
-
-        if (wasInRecent) {
-            recentRecords = recentRecords.filter { it.id != record.id }
-        } else if (ownerBatchIndex >= 0) {
-            olderBatches = olderBatches.mapIndexed { i, batch ->
-                if (i == ownerBatchIndex) {
-                    batch?.filter { it.id != record.id }?.ifEmpty { null }
-                } else batch
+    fun removeRecordFromBuffer(recordId: Int) {
+        if (recentRecords.any { it.id == recordId }) {
+            recentRecords = recentRecords.filter { it.id != recordId }
+        } else {
+            olderBatches = olderBatches.map { batch ->
+                batch?.filter { it.id != recordId }?.ifEmpty { null }
             }
-        }
-
-        return DeleteContext(freshRecord, wasInRecent, ownerBatchIndex)
-    }
-
-    /**
-     * Restores a previously deleted record into the correct buffer.
-     * If the target batch was evicted, the record is already in DB and will
-     * appear when the batch is reloaded on scroll-back.
-     */
-    suspend fun undoDelete(ctx: DeleteContext) {
-        val newId = dao.create(ctx.freshRecord)
-        val restored = ctx.freshRecord.copy(id = newId.toInt())
-
-        if (ctx.wasInRecent) {
-            val mutable = recentRecords.toMutableList()
-            val insertIdx = mutable.indexOfFirst {
-                it.date < restored.date || (it.date == restored.date && it.id < restored.id)
-            }
-            if (insertIdx == -1) mutable.add(restored) else mutable.add(insertIdx, restored)
-            recentRecords = mutable
-        } else if (ctx.ownerBatchIndex >= 0) {
-            val targetIdx = ctx.ownerBatchIndex.coerceAtMost(olderBatches.lastIndex)
-            if (targetIdx >= 0 && olderBatches[targetIdx] != null) {
-                olderBatches = olderBatches.mapIndexed { i, batch ->
-                    if (i == targetIdx) {
-                        val mutable = (batch ?: emptyList()).toMutableList()
-                        val insertIdx = mutable.indexOfFirst {
-                            it.date < restored.date || (it.date == restored.date && it.id < restored.id)
-                        }
-                        if (insertIdx == -1) mutable.add(restored) else mutable.add(insertIdx, restored)
-                        mutable
-                    } else batch
-                }
-            }
-            // If evicted → record is already in DB, will appear on reload.
         }
     }
 }

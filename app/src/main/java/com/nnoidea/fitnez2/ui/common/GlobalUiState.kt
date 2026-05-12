@@ -33,6 +33,9 @@ import kotlinx.coroutines.launch
 // Simple global UI signals
 sealed interface UiSignal {
     data class ScrollToTop(val recordId: Int? = null) : UiSignal
+    data class RecordInserted(val recordId: Int) : UiSignal
+    data class RecordUpdated(val record: com.nnoidea.fitnez2.data.entities.Record) : UiSignal
+    data class RecordDeleted(val recordId: Int) : UiSignal
     data object DatabaseSeeded : UiSignal
 }
 

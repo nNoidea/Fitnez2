@@ -74,6 +74,13 @@ fun PredictiveSidePanel(
                 onClick = { onItemClick(AppPage.Monthly.route) }
             )
 
+            item(
+                label = AppPage.Graph.label(),
+                icon = AppPage.Graph.icon,
+                selected = currentRoute == AppPage.Graph.route,
+                onClick = { onItemClick(AppPage.Graph.route) }
+            )
+
             Spacer(modifier = Modifier.weight(1f))
 
             // Footer Section
