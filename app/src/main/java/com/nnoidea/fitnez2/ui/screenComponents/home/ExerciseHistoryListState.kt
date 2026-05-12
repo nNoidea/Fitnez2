@@ -19,6 +19,7 @@ import com.nnoidea.fitnez2.data.SettingsRepository
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.ui.common.GlobalUiState
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
+import com.nnoidea.fitnez2.ui.common.UiSignal
 import com.nnoidea.fitnez2.ui.components.ScrollEngine
 import com.nnoidea.fitnez2.ui.components.history.buildUiItems
 import com.nnoidea.fitnez2.ui.components.history.HistoryUiModel
@@ -78,20 +79,25 @@ class DatabaseExerciseHistoryListState(
     override fun onUpdateRequest(updatedRecord: Record) {
         scope.launch {
             try {
-                engine.updateRecord(updatedRecord)
+                dao.update(updatedRecord)
+                GlobalUiState.emitToAll(UiSignal.RecordUpdated(updatedRecord))
             } catch (_: Exception) { }
         }
     }
 
     override fun onDeleteRequest(record: Record) {
         scope.launch {
-            val ctx = engine.deleteRecord(record)
+            val freshRecord = dao.getRecordById(record.id) ?: record
+            dao.delete(record.id)
+            GlobalUiState.emitToAll(UiSignal.RecordDeleted(record.id))
+
             globalUiState.showSnackbar(
                 message = globalLocalization.labelRecordDeleted,
                 actionLabel = globalLocalization.labelUndo,
                 onActionPerformed = {
-                    scope.launch { 
-                        engine.undoDelete(ctx) 
+                    scope.launch {
+                        val newId = dao.create(freshRecord.copy(id = 0))
+                        GlobalUiState.emitToAll(UiSignal.RecordInserted(newId.toInt()))
                     }
                 }
             )
@@ -104,10 +110,7 @@ class DatabaseExerciseHistoryListState(
             return
         }
 
-        // 1. Add the new UI element to the backing list
-        engine.prependNewRecord(recordId)
-
-        // 2. Wait programmatically until the record item has been built and inserted into the UI state (confirmation)
+        // Wait for the record to appear in the UI (inserted by RecordInserted signal)
         kotlinx.coroutines.withTimeoutOrNull(5000) {
             androidx.compose.runtime.snapshotFlow { uiItems }
                 .first { items ->
@@ -117,7 +120,7 @@ class DatabaseExerciseHistoryListState(
                 }
         }
 
-        // 3. Now that the layout and items are confirmed to be present, scroll smoothly to the top
+        // Scroll smoothly to the top
         listState.animateScrollToItem(0)
     }
 
@@ -267,12 +270,11 @@ fun rememberExerciseHistoryListState(
     LaunchedEffect(state, globalUiState) {
         globalUiState.signalFlow.collect { signal ->
             when (signal) {
-                is com.nnoidea.fitnez2.ui.common.UiSignal.ScrollToTop -> {
-                    state.scrollToTop(signal.recordId)
-                }
-                is com.nnoidea.fitnez2.ui.common.UiSignal.DatabaseSeeded -> {
-                    state.loadInitial()
-                }
+                is UiSignal.ScrollToTop -> state.scrollToTop(signal.recordId)
+                is UiSignal.RecordInserted -> state.engine.insertRecordIntoBuffer(signal.recordId)
+                is UiSignal.RecordUpdated -> state.engine.updateRecordInBuffer(signal.record)
+                is UiSignal.RecordDeleted -> state.engine.removeRecordFromBuffer(signal.recordId)
+                is UiSignal.DatabaseSeeded -> state.loadInitial()
             }
         }
     }

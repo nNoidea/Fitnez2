@@ -144,6 +144,7 @@ class HomeBottomSheetState(
                     
                     // Insert all records in reverse order so the first item gets the highest ID
                     // and appears at the top in the history list (which orders by id DESC for same timestamps)
+                    var lastInsertedId = 0
                     for (workoutRecord in selectedWorkoutRecords.reversed()) {
                         val record = Record(
                             exerciseId = workoutRecord.workoutRecord.exerciseId,
@@ -153,8 +154,10 @@ class HomeBottomSheetState(
                             date = timestamp
                         )
                         val newId = dao.create(record)
-                        globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
+                        lastInsertedId = newId.toInt()
+                        GlobalUiState.emitToAll(UiSignal.RecordInserted(lastInsertedId))
                     }
+                    GlobalUiState.emitToAll(UiSignal.ScrollToTop(lastInsertedId))
                     onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
                     return@launch
                 }
@@ -180,7 +183,8 @@ class HomeBottomSheetState(
                 )
 
                 val newId = dao.create(record)
-                globalUiState.emitSignal(UiSignal.ScrollToTop(newId.toInt()))
+                GlobalUiState.emitToAll(UiSignal.RecordInserted(newId.toInt()))
+                GlobalUiState.emitToAll(UiSignal.ScrollToTop(newId.toInt()))
 
                 onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
 

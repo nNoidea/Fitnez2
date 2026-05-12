@@ -122,4 +122,12 @@ object TrStrings : EnStrings(
     override val errorWeightInvalid = "Geçersiz ağırlık değeri"
     
     override val labelGoToCurrentMonth = "Mevcut aya git"
+    
+    // Graph Screen Translations
+    override val labelGraph = "Grafik"
+    override val labelNoDataForExercise = "Bu egzersiz için henüz kayıt geçmişi yok"
+    override val labelMaxWeight = "Kişisel Rekor"
+    override val labelCurrentWeight = "Son Ağırlık"
+    override val labelProgress = "İlerleme"
+    override val labelNoExercises = "Egzersiz bulunamadı. Önce bir egzersiz oluşturun!"
 }

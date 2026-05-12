@@ -10,10 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.nnoidea.fitnez2.ui.screens.TimelineScreen
 import com.nnoidea.fitnez2.ui.screens.MonthlyScreen
+import com.nnoidea.fitnez2.ui.screens.GraphScreen
 import com.nnoidea.fitnez2.ui.screens.SettingsScreen
 import com.nnoidea.fitnez2.ui.screens.WorkoutScreen
 import com.nnoidea.fitnez2.ui.screens.DeveloperOptionsScreen
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 
 enum class AppPage(
@@ -33,6 +35,12 @@ enum class AppPage(
             label = { globalLocalization.labelMonthly },
             icon = Icons.Default.CalendarViewMonth,
             content = { MonthlyScreen(onOpenDrawer = it) }
+    ),
+    Graph(
+            route = "graph",
+            label = { globalLocalization.labelGraph },
+            icon = Icons.AutoMirrored.Filled.ShowChart,
+            content = { GraphScreen(onOpenDrawer = it) }
     ),
     Settings(
             route = "settings",
