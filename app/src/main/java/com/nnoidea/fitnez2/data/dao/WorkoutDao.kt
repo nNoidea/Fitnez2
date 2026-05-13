@@ -66,6 +66,9 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout ORDER BY id ASC")
     suspend fun getAllWorkouts(): List<Workout>
 
+    @Query("SELECT * FROM workout WHERE name = :name LIMIT 1")
+    suspend fun getWorkoutByName(name: String): Workout?
+
     @Query("SELECT * FROM workout_record ORDER BY id ASC")
     suspend fun getAllWorkoutRecords(): List<WorkoutRecord>
 

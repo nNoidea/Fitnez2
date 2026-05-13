@@ -18,6 +18,10 @@ object TrStrings : EnStrings(
     override fun errorExerciseRenameConflict(name: String) = "'$name' ismi başka bir egzersiz tarafından kullanılıyor."
     override fun errorExerciseNotFoundById(id: Int) = "$id ID'li egzersiz bulunamadı."
 
+    override val errorWorkoutNameBlank = "Lütfen bir isim girin"
+    override fun errorWorkoutAlreadyExists(name: String) = "'$name' adında bir antrenman zaten mevcut."
+    override val errorWorkoutNoExercises = "Lütfen en az bir egzersiz ekleyin"
+
     override val labelAddExercise = "Egzersiz Ekle"
     override val labelCreateExercise = "Egzersiz Oluştur"
     override val labelCreateWorkout = "Antrenman Oluştur"
@@ -130,4 +134,17 @@ object TrStrings : EnStrings(
     override val labelCurrentWeight = "Son Ağırlık"
     override val labelProgress = "İlerleme"
     override val labelNoExercises = "Egzersiz bulunamadı. Önce bir egzersiz oluşturun!"
+
+    // Unsaved Work Dialog
+    override val titleNoName = "İsim Yok"
+    override val msgNoName = "Vazgeçmek mi yoksa bir isim girip kaydetmek mi istersiniz?"
+    override val titleUnsavedWork = "Kaydedilmemiş Çalışma"
+    override val msgUnsavedWork = "Vazgeçmek mi yoksa kaydetmek mi istersiniz?"
+    override val labelDiscard = "Vazgeç"
+    override val labelKeepEditing = "Düzenlemeye Devam Et"
+    override val labelEditAction = "Düzenle"
+
+    // Exercise Selection Dialog Separators
+    override val labelWorkouts = "Antrenmanlar"
+    override val labelExercises = "Egzersizler"
 }
