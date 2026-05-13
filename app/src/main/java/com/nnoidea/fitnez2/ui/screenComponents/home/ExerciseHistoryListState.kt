@@ -105,8 +105,14 @@ class DatabaseExerciseHistoryListState(
     }
 
     override suspend fun scrollToTop(recordId: Int?) {
+        val wasAtTop = listState.firstVisibleItemIndex <= 1
+
         if (recordId == null) {
-            listState.animateScrollToItem(0)
+            if (wasAtTop) {
+                listState.scrollToItem(0)
+            } else {
+                listState.animateScrollToItem(0)
+            }
             return
         }
 
@@ -120,8 +126,11 @@ class DatabaseExerciseHistoryListState(
                 }
         }
 
-        // Scroll smoothly to the top
-        listState.animateScrollToItem(0)
+        if (wasAtTop) {
+            listState.scrollToItem(0)
+        } else {
+            listState.animateScrollToItem(0)
+        }
     }
 
     fun updateUiItems(items: List<HistoryUiModel>) {
