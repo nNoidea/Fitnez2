@@ -116,9 +116,14 @@ fun WorkoutScreen(
     }
 
     val bottomSheetState = rememberWorkoutBottomSheetState(workoutId = workoutId) { newRecord ->
+        val wasAtTop = listState.firstVisibleItemIndex <= 1
         workoutItems.add(0, newRecord)
         scope.launch {
-            listState.animateScrollToItem(0)
+            if (wasAtTop) {
+                listState.scrollToItem(0)
+            } else {
+                listState.animateScrollToItem(0)
+            }
         }
     }
 
