@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,7 +37,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 const val BUTTONHEIGHT = 45
-const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2 * BUTTONHEIGHT + 70 + 15
+const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2 * BUTTONHEIGHT + 70 - 9
 
 /**
  * Generic, reusable Predictive Bottom Sheet animation shell.
@@ -138,7 +140,17 @@ fun PredictiveBottomSheet(
                     .height(expandedHeight),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                BottomSheetDefaults.DragHandle()
+                // Custom Drag Handle with halved vertical padding (10.dp instead of standard 20-22.dp)
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = 10.dp)
+                        .width(32.dp)
+                        .height(4.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                )
 
                 // Screen-specific content goes here
                 content()
