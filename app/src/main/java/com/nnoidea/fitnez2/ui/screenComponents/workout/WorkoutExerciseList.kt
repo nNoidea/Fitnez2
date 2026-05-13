@@ -91,6 +91,8 @@ fun WorkoutExerciseList(
                         showTitle = showTitle,
                         weightUnit = weightUnit,
                         shape = shape,
+                        prevIsSame = prevIsSame,
+                        nextIsSame = nextIsSame,
                         onUpdate = { sets, reps, weight ->
                             onUpdateRequest(item.workoutRecord.copy(sets = sets, reps = reps, weight = weight))
                         }
