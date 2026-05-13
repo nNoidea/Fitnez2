@@ -115,7 +115,7 @@ fun WorkoutScreen(
         }
     }
 
-    val bottomSheetState = rememberWorkoutBottomSheetState { newRecord ->
+    val bottomSheetState = rememberWorkoutBottomSheetState(workoutId = workoutId) { newRecord ->
         workoutItems.add(0, newRecord)
         scope.launch {
             listState.animateScrollToItem(0)
