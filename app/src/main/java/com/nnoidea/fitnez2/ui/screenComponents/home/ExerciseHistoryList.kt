@@ -322,6 +322,8 @@ private fun ExerciseHistoryListContent(
                                 showTitle = showTitle,
                                 weightUnit = weightUnit,
                                 shape = shape,
+                                prevIsSame = prevIsSame,
+                                nextIsSame = nextIsSame,
                                 onUpdate = { sets, reps, weight ->
                                     onUpdateRequest(item.record.record.copy(sets = sets, reps = reps, weight = weight))
                                 }

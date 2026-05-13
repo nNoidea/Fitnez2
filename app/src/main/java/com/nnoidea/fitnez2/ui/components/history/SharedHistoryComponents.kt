@@ -109,6 +109,8 @@ fun HistoryRecordCard(
     showTitle: Boolean,
     weightUnit: String,
     shape: androidx.compose.ui.graphics.Shape,
+    prevIsSame: Boolean = false,
+    nextIsSame: Boolean = false,
     onUpdate: (sets: Int, reps: Int, weight: Double) -> Unit
 ) {
     val containerColor = if (isLight) ColorHistoryNeutralContainer else ColorHistoryColoredContainer
@@ -125,10 +127,13 @@ fun HistoryRecordCard(
 
     val view = LocalView.current
 
+    val topPadding = if (prevIsSame) 1.5.dp else 2.dp
+    val bottomPadding = if (nextIsSame) 1.5.dp else 2.dp
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 2.dp)
+            .padding(start = 16.dp, end = 16.dp, top = topPadding, bottom = bottomPadding)
             .clip(shape)
             .clickable(enabled = timestamp != null) { 
                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
@@ -143,7 +148,7 @@ fun HistoryRecordCard(
     ) {
         Column(modifier = Modifier.animateContentSize()) {
             HistoryGridRow(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 col1 = {
                     if (showTitle) {
