@@ -240,6 +240,10 @@ private fun ExerciseHistoryListContent(
             state = listState,
             contentPadding = PaddingValues(bottom = 80.dp + extraBottomPadding)
         ) {
+            item(key = "top_spacer_anchor") {
+                Spacer(modifier = Modifier.height(1.dp))
+            }
+
             itemsIndexed(
                 items = uiItems,
                 key = { _, model ->
