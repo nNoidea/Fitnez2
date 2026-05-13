@@ -17,6 +17,7 @@ import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.LocalAppDatabase
 import com.nnoidea.fitnez2.data.LocalSettingsRepository
+import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.WorkoutRecord
 import com.nnoidea.fitnez2.data.models.WorkoutRecordWithExercise
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP
@@ -31,12 +32,15 @@ import kotlinx.coroutines.launch
 class WorkoutBottomSheetState(
     scope: kotlinx.coroutines.CoroutineScope,
     exerciseDao: com.nnoidea.fitnez2.data.dao.ExerciseDao,
+    private val dao: com.nnoidea.fitnez2.data.dao.RecordDao,
+    private val workoutDao: com.nnoidea.fitnez2.data.dao.WorkoutDao,
     settingsRepository: com.nnoidea.fitnez2.data.SettingsRepository,
     keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?,
     focusManager: androidx.compose.ui.focus.FocusManager,
     context: android.content.Context,
     maxOffset: Float,
     minOffset: Float,
+    private val workoutId: Int?,
     onHapticFeedback: (Int) -> Unit,
     private val onRecordCreated: (WorkoutRecordWithExercise) -> Unit
 ) : PredictiveBottomSheetState(
@@ -53,10 +57,51 @@ class WorkoutBottomSheetState(
 
     init {
         scope.launch {
+            if (workoutId != null) {
+                val records = workoutDao.getRecordsForWorkout(workoutId)
+                if (records.isNotEmpty()) {
+                    val latestRecord = records.last()
+                    selectedExerciseId = latestRecord.workoutRecord.exerciseId
+                    selectedExerciseName = latestRecord.exerciseName
+                    loadInputsForExercise(latestRecord.workoutRecord.exerciseId)
+                } else {
+                    initializeSession()
+                }
+            } else {
+                initializeSession()
+            }
+        }
+    }
+
+    private suspend fun initializeSession() {
+        val latest = dao.getLatestRecord()
+        if (latest != null) {
+            selectedExerciseName = latest.exerciseName
+            selectedExerciseId = latest.record.exerciseId
+            loadInputsForExercise(latest.record.exerciseId)
+        } else {
             sets = defaultSets
             reps = defaultReps
             weight = defaultWeight
         }
+    }
+
+    private suspend fun loadInputsForExercise(exerciseId: Int) {
+        val latestForExercise = dao.getLatestRecordByExerciseId(exerciseId)
+        if (latestForExercise != null) {
+            sets = latestForExercise.record.sets.toString()
+            reps = latestForExercise.record.reps.toString()
+            weight = latestForExercise.record.weight.toString()
+        } else {
+            sets = defaultSets
+            reps = defaultReps
+            weight = defaultWeight
+        }
+    }
+
+    override fun onExerciseSelected(exercise: Exercise, closeDialog: Boolean) {
+        super.onExerciseSelected(exercise, closeDialog)
+        scope.launch { loadInputsForExercise(exercise.id) }
     }
 
     override fun onAddClick() {
@@ -99,6 +144,7 @@ class WorkoutBottomSheetState(
 
 @Composable
 fun rememberWorkoutBottomSheetState(
+    workoutId: Int? = null,
     onRecordCreated: (WorkoutRecordWithExercise) -> Unit
 ): PredictiveBottomSheetState {
     val context = LocalContext.current
@@ -120,16 +166,19 @@ fun rememberWorkoutBottomSheetState(
     val maxOffset = screenHeightPx - topPaddingPx - peekHeightPx
     val minOffset = 0f
 
-    return remember(maxOffset, minOffset) {
+    return remember(maxOffset, minOffset, workoutId) {
         WorkoutBottomSheetState(
             scope = scope,
             exerciseDao = database.exerciseDao(),
+            dao = database.recordDao(),
+            workoutDao = database.workoutDao(),
             settingsRepository = settingsRepository,
             keyboardController = keyboardController,
             focusManager = focusManager,
             context = context,
             maxOffset = maxOffset,
             minOffset = minOffset,
+            workoutId = workoutId,
             onHapticFeedback = { view.performHapticFeedback(it) },
             onRecordCreated = onRecordCreated
         )
