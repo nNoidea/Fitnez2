@@ -169,16 +169,36 @@ fun ExerciseSelectionDialog(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant
-                    )
+                    // Labeled divider: "Workouts" (only if workouts exist)
+                    if (sortedWorkouts.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            HorizontalDivider(
+                                modifier = Modifier.weight(1f),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            Text(
+                                text = globalLocalization.labelWorkouts,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.weight(1f),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                        }
+                    }
 
                     if (sortedWorkouts.isNotEmpty()) {
                         sortedWorkouts.forEach { workout ->
                             val isSelected = workout.id == selectedWorkoutId
                             val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                            val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary
+                            val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             
                             Row(
                                 modifier = Modifier
@@ -231,10 +251,31 @@ fun ExerciseSelectionDialog(
                             }
                         }
 
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
+                    }
+
+                    // Labeled divider: "Exercises" (only if exercises exist)
+                    if (sortedExercises.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            HorizontalDivider(
+                                modifier = Modifier.weight(1f),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            Text(
+                                text = globalLocalization.labelExercises,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.weight(1f),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                        }
                     }
 
                     sortedExercises.forEach { exercise ->
@@ -406,6 +447,7 @@ fun ExerciseSelectionDialog(
     )
 
     // Create Dialog
+    val createDialogContext = LocalContext.current
     PredictiveInputDialog(
         show = showCreateDialog,
         title = globalLocalization.labelCreateExercise,
@@ -423,7 +465,7 @@ fun ExerciseSelectionDialog(
                     onExerciseCreated(newExercise.copy(id = newId.toInt()))
                     showCreateDialog = false
                 } catch (e: Exception) {
-                    // Handle existing name error if needed
+                    android.widget.Toast.makeText(createDialogContext, e.message, android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
         }

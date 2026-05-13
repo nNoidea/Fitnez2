@@ -22,6 +22,10 @@ sealed class EnStrings(
     open fun errorExerciseRenameConflict(name: String): String = "Exercise name '$name' is already used by another exercise."
     open fun errorExerciseNotFoundById(id: Int): String = "Exercise with ID $id does not exist."
 
+    open val errorWorkoutNameBlank: String = "Please fill in a name"
+    open fun errorWorkoutAlreadyExists(name: String): String = "Workout with name '$name' already exists."
+    open val errorWorkoutNoExercises: String = "Please add at least one exercise"
+
     open val labelAddExercise: String = "Add Exercise"
     open val labelCreateExercise: String = "Create an exercise"
     open val labelCreateWorkout: String = "Create a workout"
@@ -150,6 +154,19 @@ sealed class EnStrings(
     open val labelCurrentWeight: String = "Latest Weight"
     open val labelProgress: String = "Progress"
     open val labelNoExercises: String = "No exercises found. Create an exercise first!"
+
+    // Unsaved Work Dialog
+    open val titleNoName: String = "No Name"
+    open val msgNoName: String = "Would you like to discard or fill in a name and save?"
+    open val titleUnsavedWork: String = "Unsaved Work"
+    open val msgUnsavedWork: String = "Would you like to discard or save?"
+    open val labelDiscard: String = "Discard"
+    open val labelKeepEditing: String = "Keep Editing"
+    open val labelEditAction: String = "Edit"
+
+    // Exercise Selection Dialog Separators
+    open val labelWorkouts: String = "Workouts"
+    open val labelExercises: String = "Exercises"
 }
 
 /**
