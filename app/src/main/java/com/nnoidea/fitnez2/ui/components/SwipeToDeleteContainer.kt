@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import android.view.HapticFeedbackConstants
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -46,21 +47,21 @@ fun SwipeToDeleteContainer(
 ) {
     val view = LocalView.current
     val density = LocalDensity.current
-    
+
     // Offset state
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
-    
+
     // Thresholds
     // User requested using Screen Width instead of Item Width.
     val configuration = LocalConfiguration.current
     val screenWidthPx = with(LocalDensity.current) { configuration.screenWidthDp.dp.toPx() }
     val dismissThreshold = screenWidthPx * 0.4f
-    
+
     // We still track itemWidth for visual reveal progress if needed, or just remove if unused for logic.
     // But existing code uses itemWidth for revealProgress and target animation (`-itemWidth`).
     // So we keep itemWidth for visuals/animation targets, but use screenWidth for the *Decision* threshold.
-    var itemWidth by remember { mutableStateOf(0f) }
+    var itemWidth by remember { mutableFloatStateOf(0f) }
 
     Box(
         modifier = modifier
@@ -72,27 +73,27 @@ fun SwipeToDeleteContainer(
         val isSwipingLeft by remember { derivedStateOf { offsetX.value < 0 } }
 
         if (isSwipingLeft) {
-             val backgroundColor = MaterialTheme.colorScheme.errorContainer
-             val iconScale = if ((-offsetX.value) > dismissThreshold) 1.2f else 1.0f
+            val backgroundColor = MaterialTheme.colorScheme.errorContainer
+            val iconScale = if ((-offsetX.value) > dismissThreshold) 1.2f else 1.0f
 
-             Surface(
-                 modifier = Modifier.matchParentSize(),
-                 color = backgroundColor,
-                 contentColor = MaterialTheme.colorScheme.onErrorContainer
-             ) {
-                 Box(
-                     modifier = Modifier
-                         .fillMaxSize()
-                         .padding(horizontal = 24.dp),
-                     contentAlignment = Alignment.CenterEnd
-                 ) {
-                     Icon(
-                         imageVector = Icons.Default.Delete,
-                         contentDescription = "Delete",
-                         modifier = Modifier.scale(iconScale)
-                     )
-                 }
-             }
+            Surface(
+                modifier = Modifier.matchParentSize(),
+                color = backgroundColor,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        modifier = Modifier.scale(iconScale)
+                    )
+                }
+            }
         }
 
         // 2. Content
@@ -100,23 +101,23 @@ fun SwipeToDeleteContainer(
             modifier = Modifier
                 .offset { IntOffset(offsetX.value.roundToInt(), 0) }
                 .pointerInput(enableSwipeRight) {
-                     awaitEachGesture {
+                    awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
-                        
+
                         var dragStarted = false
                         var hasVibrated = false
-                        
+
                         do {
                             val event = awaitPointerEvent()
                             val change = event.changes.firstOrNull() ?: break
-                            
+
                             if (!dragStarted) {
                                 val dx = change.position.x - down.position.x
                                 val dy = change.position.y - down.position.y
-                                
+
                                 if (kotlin.math.abs(dx) > viewConfiguration.touchSlop) {
                                     // Slop passed. Horizontal?
-                                    if (kotlin.math.abs(dx) > kotlin.math.abs(dy)*5) {
+                                    if (kotlin.math.abs(dx) > kotlin.math.abs(dy) * 5) {
                                         // Horizontal.
                                         if (dx < 0) {
                                             // Swipe Left -> active!
@@ -136,7 +137,7 @@ fun SwipeToDeleteContainer(
                                                 // The event wasn't consumed, so it should propagate up?
                                                 // Actually, propagation in Compose is: Children get first chance.
                                                 // If child doesn't consume, parent can act (via PointerInputScope).
-                                                
+
                                                 // So if we don't consume and break, we effectively allow parent.
                                                 break
                                             }
@@ -148,7 +149,7 @@ fun SwipeToDeleteContainer(
                                 if (change.pressed && change.positionChange() != Offset.Zero) {
                                     val dragAmount = change.positionChange().x
                                     val proposed = offsetX.value + dragAmount
-                                    
+
                                     // Constraint: Can't swipe right past 0 if disabled
                                     if (!enableSwipeRight && proposed > 0) {
                                         // Clamp to 0
@@ -157,7 +158,7 @@ fun SwipeToDeleteContainer(
                                         // Apply
                                         scope.launch { offsetX.snapTo(proposed) }
                                         change.consume()
-                                        
+
                                         // Haptic Feedback Logic
                                         if ((-proposed) >= dismissThreshold && !hasVibrated) {
                                             // Just crossed threshold
@@ -170,9 +171,9 @@ fun SwipeToDeleteContainer(
                                     }
                                 }
                             }
-                            
+
                         } while (event.changes.any { it.pressed })
-                        
+
                         // On Up
                         if (dragStarted) {
                             val finalOffset = offsetX.value
@@ -187,7 +188,7 @@ fun SwipeToDeleteContainer(
                                         targetValue = -itemWidth,
                                         animationSpec = tween(durationMillis = 50)
                                     )
-                                    
+
                                     // Trigger callback
                                     onDelete()
                                     offsetX.snapTo(0f)
@@ -197,7 +198,7 @@ fun SwipeToDeleteContainer(
                                 scope.launch { offsetX.animateTo(0f) }
                             }
                         }
-                     }
+                    }
                 }
         ) {
             content()

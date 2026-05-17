@@ -3,15 +3,12 @@ package com.nnoidea.fitnez2.ui.screens
 import android.content.Intent
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -47,14 +45,14 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
 
     val exerciseDao = remember(database) { database.exerciseDao() }
     val exercises by exerciseDao.getAllExercisesFlow().collectAsState(initial = emptyList())
-    val exerciseMap = remember(exercises) { exercises.associate { it.id to it.name } }
+    val exerciseMap = remember(exercises) { exercises.associateBy({ it.id }) { it.name } }
 
     // Setup Horizontal Pager with an initial center index for infinite-like swiping
     val initialPage = 10000
     val pagerState = rememberPagerState(initialPage = initialPage) { 20000 }
 
     // State to dynamically control pager scrolling when swiping open the navigation drawer from the left edge
-    var pagerScrollEnabled by remember { mutableStateOf(true) }
+    var pagerScrollEnabled by remember { mutableStateOf(value = true) }
 
     // Derive active month start date from current page position
     val currentMonthStart = remember(pagerState.currentPage) {
@@ -122,16 +120,16 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                             pagerState.animateScrollToPage(initialPage)
                         }
                     },
-                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Today,
                         contentDescription = globalLocalization.labelGoToCurrentMonth,
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
-        }
+        },
     ) {
         Box(
             modifier = Modifier
@@ -179,19 +177,17 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                 awaitPointerEventScope {
                                     while (true) {
                                         val event = awaitPointerEvent()
-                                        val firstChange = event.changes.firstOrNull()
-                                        if (firstChange != null) {
-                                            if (firstChange.pressed) {
-                                                // If gesture starts in leftmost 30dp (the navigation drawer's drag zone),
-                                                // temporarily disable the pager to let the parent drawer handle the swipe!
-                                                val startX = firstChange.position.x
-                                                val edgeThreshold = 30.dp.toPx()
-                                                if (startX < edgeThreshold) {
-                                                    pagerScrollEnabled = false
-                                                }
-                                            } else {
-                                                pagerScrollEnabled = true
+                                        val firstChange = event.changes.firstOrNull() ?: continue
+                                        if (firstChange.pressed) {
+                                            // If gesture starts in leftmost 30dp (the navigation drawer's drag zone),
+                                            // temporarily disable the pager to let the parent drawer handle the swipe!
+                                            val startX = firstChange.position.x
+                                            val edgeThreshold = 30.dp.toPx()
+                                            if (startX < edgeThreshold) {
+                                                pagerScrollEnabled = false
                                             }
+                                        } else {
+                                            pagerScrollEnabled = true
                                         }
                                         // Reset to true once all fingers are lifted
                                         if (event.changes.none { it.pressed }) {
@@ -231,8 +227,8 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                     horizontalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     week.forEachIndexed { colIndex, day ->
-                                        val gridIndex = rowIndex * 7 + colIndex
-                                        val isCurrentMonth = day.month == pageMonthStart.month && day.year == pageMonthStart.year
+                                        val gridIndex = (rowIndex * 7) + colIndex
+                                        val isCurrentMonth = (day.month == pageMonthStart.month) && (day.year == pageMonthStart.year)
                                         val isToday = day.isEqual(LocalDate.now())
                                         val dayRecords = recordsByDay[day] ?: emptyList()
                                         val hasExercises = dayRecords.isNotEmpty()
@@ -327,10 +323,10 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                                          textAlign = TextAlign.Center,
                                                          color = if (isToday) {
                                                              if (isCurrentMonth) MaterialTheme.colorScheme.primaryContainer
-                                                             else androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.primaryContainer, androidx.compose.ui.graphics.Color.Black, 0.4f)
+                                                             else lerp(MaterialTheme.colorScheme.primaryContainer, Color.Black, 0.4f)
                                                          } else {
                                                              if (isCurrentMonth) MaterialTheme.colorScheme.onSecondaryContainer
-                                                             else androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.onSecondaryContainer, androidx.compose.ui.graphics.Color.Black, 0.4f)
+                                                             else lerp(MaterialTheme.colorScheme.onSecondaryContainer, Color.Black, 0.4f)
                                                          }
                                                      )
                                                  }
@@ -339,7 +335,7 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                                     Spacer(modifier = Modifier.height(2.dp)) // Lowered gap
 
                                                     val pillContainerColor = if (isCurrentMonth) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                                                    val pillContentColor = if (isCurrentMonth) MaterialTheme.colorScheme.onPrimary else androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.onPrimary, androidx.compose.ui.graphics.Color.Black, 0.4f)
+                                                    val pillContentColor = if (isCurrentMonth) MaterialTheme.colorScheme.onPrimary else lerp(MaterialTheme.colorScheme.onPrimary, Color.Black, 0.4f)
 
                                                     // Safely display up to 6 items max. If larger, show 5 items + overflow pill ellipsis "..."
                                                     val displayNames = if (dayExerciseNames.size > 6) {

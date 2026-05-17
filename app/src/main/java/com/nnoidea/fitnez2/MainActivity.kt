@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
             Fitnez2Theme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.surfaceContainer
+                    color = MaterialTheme.colorScheme.surfaceContainer,
                 ) {
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                     val scope = rememberCoroutineScope()
@@ -112,7 +112,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             } else {
                                                 // If we clicked the same route we are currently on, check if we are on a jumped Timeline
-                                                if (clickedRoute == AppPage.Timeline.route && !isTaskRoot) {
+                                                if ((clickedRoute == AppPage.Timeline.route) && (!isTaskRoot)) {
                                                     scope.launch {
                                                         drawerState.snapTo(DrawerValue.Closed)
                                                         finish()

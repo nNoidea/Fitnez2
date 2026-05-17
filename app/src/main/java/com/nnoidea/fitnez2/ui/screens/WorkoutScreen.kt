@@ -9,14 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -39,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.runtime.mutableIntStateOf
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.LocalAppDatabase
 import com.nnoidea.fitnez2.data.entities.Workout
@@ -53,7 +51,7 @@ import com.nnoidea.fitnez2.ui.screenComponents.workout.WorkoutBottomSheet
 @Composable
 fun WorkoutScreen(
     workoutId: Int? = null,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val database = LocalAppDatabase.current
@@ -64,14 +62,15 @@ fun WorkoutScreen(
 
     // Track initial state to detect unsaved changes
     var initialWorkoutName by remember { mutableStateOf("") }
-    var initialItemCount by remember { mutableStateOf(0) }
+    var initialItemCount by remember { mutableIntStateOf(0) }
 
     // Dialog state: null = hidden, false = no-name variant, true = unsaved-with-save variant
     var dialogVariant by remember { mutableStateOf<Boolean?>(null) }
 
     val hasName = workoutName.isNotBlank()
     val hasRecords = workoutItems.isNotEmpty()
-    val hasUnsavedChanges = workoutName != initialWorkoutName || workoutItems.size != initialItemCount
+    val hasUnsavedChanges =
+        (workoutName != initialWorkoutName) || (workoutItems.size != initialItemCount)
 
     // Shared back-press handler for both the arrow icon and system back gesture
     fun handleBack() {
@@ -81,9 +80,13 @@ fun WorkoutScreen(
             // Name only, no records → silently discard
             hasName && !hasRecords -> onBack()
             // Records but no name → show "No Name" dialog
-            !hasName && hasRecords -> { dialogVariant = false }
+            !hasName && hasRecords -> {
+                dialogVariant = false
+            }
             // Both present → show "Unsaved Work" dialog
-            hasName && hasRecords -> { dialogVariant = true }
+            hasName && hasRecords -> {
+                dialogVariant = true
+            }
         }
     }
 
@@ -110,7 +113,7 @@ fun WorkoutScreen(
     androidx.compose.runtime.LaunchedEffect(exercises) {
         val currentExercises = exercises
         if (currentExercises != null) {
-            val validIds = currentExercises.map { it.id }.toSet()
+            val validIds = currentExercises.asSequence().map { it.id }.toSet()
             workoutItems.removeAll { !validIds.contains(it.workoutRecord.exerciseId) }
         }
     }
@@ -142,7 +145,7 @@ fun WorkoutScreen(
         },
         dismissButton = {
             androidx.compose.material3.TextButton(
-                onClick = { dialogVariant = null; onBack() }
+                onClick = { dialogVariant = null; onBack() },
             ) {
                 Text(globalLocalization.labelDiscard, color = Color(0xFFEF5350))
             }
@@ -160,10 +163,13 @@ fun WorkoutScreen(
         // Three separate buttons, right-aligned: Discard | Edit | Save
         androidx.compose.foundation.layout.Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End)
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(
+                8.dp,
+                androidx.compose.ui.Alignment.End
+            )
         ) {
             androidx.compose.material3.TextButton(
-                onClick = { dialogVariant = null; onBack() }
+                onClick = { dialogVariant = null; onBack() },
             ) {
                 Text(globalLocalization.labelDiscard, color = Color(0xFFEF5350))
             }
@@ -178,22 +184,30 @@ fun WorkoutScreen(
                 onClick = {
                     scope.launch {
                         val existing = database.workoutDao().getWorkoutByName(workoutName.trim())
-                        val isSelf = existing != null && workoutId != null && existing.id == workoutId
-                        if (existing != null && !isSelf) {
-                            Toast.makeText(context, globalLocalization.errorWorkoutAlreadyExists(workoutName.trim()), Toast.LENGTH_SHORT).show()
+                        val isSelf =
+                            (existing != null) && (workoutId != null) && (existing.id == workoutId)
+                        if ((existing != null) && (!isSelf)) {
+                            Toast.makeText(
+                                context,
+                                globalLocalization.errorWorkoutAlreadyExists(workoutName.trim()),
+                                Toast.LENGTH_SHORT
+                            ).show()
                             return@launch
                         }
 
                         dialogVariant = null
                         val targetWorkoutId = if (workoutId != null) {
-                            database.workoutDao().updateWorkout(Workout(id = workoutId, name = workoutName.trim()))
+                            database.workoutDao()
+                                .updateWorkout(Workout(id = workoutId, name = workoutName.trim()))
                             database.workoutDao().deleteRecordsByWorkoutId(workoutId)
                             workoutId
                         } else {
-                            database.workoutDao().insertWorkout(Workout(name = workoutName.trim())).toInt()
+                            database.workoutDao().insertWorkout(Workout(name = workoutName.trim()))
+                                .toInt()
                         }
                         workoutItems.forEach { item ->
-                            val newRecord = item.workoutRecord.copy(id = 0, workoutId = targetWorkoutId)
+                            val newRecord =
+                                item.workoutRecord.copy(id = 0, workoutId = targetWorkoutId)
                             database.workoutDao().insertWorkoutRecord(newRecord)
                         }
                         onBack()
@@ -201,7 +215,7 @@ fun WorkoutScreen(
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
                 )
             ) {
                 Text(globalLocalization.labelSave)
@@ -227,8 +241,11 @@ fun WorkoutScreen(
                 TextField(
                     value = workoutName,
                     onValueChange = { workoutName = it },
-                    placeholder = { 
-                        Text(globalLocalization.labelWorkoutName, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) 
+                    placeholder = {
+                        Text(
+                            globalLocalization.labelWorkoutName,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
                     },
                     modifier = Modifier.weight(1f),
                     colors = TextFieldDefaults.colors(
@@ -245,28 +262,49 @@ fun WorkoutScreen(
                 Button(
                     onClick = {
                         if (workoutName.isBlank()) {
-                            Toast.makeText(context, globalLocalization.errorWorkoutNameBlank, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                globalLocalization.errorWorkoutNameBlank,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         } else if (workoutItems.isEmpty()) {
-                            Toast.makeText(context, globalLocalization.errorWorkoutNoExercises, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                globalLocalization.errorWorkoutNoExercises,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         } else {
                             scope.launch {
-                                val existing = database.workoutDao().getWorkoutByName(workoutName.trim())
-                                val isSelf = existing != null && workoutId != null && existing.id == workoutId
-                                if (existing != null && !isSelf) {
-                                    Toast.makeText(context, globalLocalization.errorWorkoutAlreadyExists(workoutName.trim()), Toast.LENGTH_SHORT).show()
+                                val existing =
+                                    database.workoutDao().getWorkoutByName(workoutName.trim())
+                                val isSelf =
+                                    (existing != null) && (workoutId != null) && (existing.id == workoutId)
+                                if ((existing != null) && (!isSelf)) {
+                                    Toast.makeText(
+                                        context,
+                                        globalLocalization.errorWorkoutAlreadyExists(workoutName.trim()),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
                                     return@launch
                                 }
 
                                 val targetWorkoutId = if (workoutId != null) {
-                                    database.workoutDao().updateWorkout(Workout(id = workoutId, name = workoutName.trim()))
+                                    database.workoutDao().updateWorkout(
+                                        Workout(
+                                            id = workoutId,
+                                            name = workoutName.trim()
+                                        )
+                                    )
                                     database.workoutDao().deleteRecordsByWorkoutId(workoutId)
                                     workoutId
                                 } else {
-                                    database.workoutDao().insertWorkout(Workout(name = workoutName.trim())).toInt()
+                                    database.workoutDao()
+                                        .insertWorkout(Workout(name = workoutName.trim())).toInt()
                                 }
-                                
+
                                 workoutItems.forEach { item ->
-                                    val newRecord = item.workoutRecord.copy(id = 0, workoutId = targetWorkoutId)
+                                    val newRecord =
+                                        item.workoutRecord.copy(id = 0, workoutId = targetWorkoutId)
                                     database.workoutDao().insertWorkoutRecord(newRecord)
                                 }
                                 onBack()
@@ -293,16 +331,17 @@ fun WorkoutScreen(
                 extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp,
                 onDeleteRequest = { recordToDelete ->
                     workoutItems.removeAll { it.workoutRecord.id == recordToDelete.id }
-                },
-                onUpdateRequest = { updatedRecord ->
-                    val index = workoutItems.indexOfFirst { it.workoutRecord.id == updatedRecord.id }
-                    if (index != -1) {
-                        workoutItems[index] = workoutItems[index].copy(workoutRecord = updatedRecord)
-                    }
                 }
-            )
+            ) { updatedRecord ->
+                val index =
+                    workoutItems.indexOfFirst { it.workoutRecord.id == updatedRecord.id }
+                if (index != -1) {
+                    workoutItems[index] =
+                        workoutItems[index].copy(workoutRecord = updatedRecord)
+                }
+            }
         }
-        
+
         WorkoutBottomSheet(
             state = bottomSheetState,
             modifier = Modifier.fillMaxSize()

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Language
@@ -34,7 +33,7 @@ import com.nnoidea.fitnez2.ui.navigation.AppPage
 fun PredictiveSidePanel(
     currentRoute: String?,
     onItemClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     ModalDrawerSheet(modifier = modifier.width(320.dp)) {
         Column(
@@ -60,21 +59,21 @@ fun PredictiveSidePanel(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            item(
+            Item(
                 label = AppPage.Timeline.label(),
                 icon = AppPage.Timeline.icon,
                 selected = currentRoute == AppPage.Timeline.route,
                 onClick = { onItemClick(AppPage.Timeline.route) }
             )
 
-            item(
+            Item(
                 label = AppPage.Monthly.label(),
                 icon = AppPage.Monthly.icon,
                 selected = currentRoute == AppPage.Monthly.route,
                 onClick = { onItemClick(AppPage.Monthly.route) }
             )
 
-            item(
+            Item(
                 label = AppPage.Graph.label(),
                 icon = AppPage.Graph.icon,
                 selected = currentRoute == AppPage.Graph.route,
@@ -88,13 +87,13 @@ fun PredictiveSidePanel(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
-            item(
+            Item(
                 label = AppPage.Settings.label(),
                 icon = AppPage.Settings.icon,
                 selected = currentRoute == AppPage.Settings.route,
                 onClick = { onItemClick(AppPage.Settings.route) }
             )
-            item(
+            Item(
                 label = globalLocalization.labelVersion,
                 icon = Icons.Default.Info,
                 onClick = {}
@@ -105,12 +104,12 @@ fun PredictiveSidePanel(
 }
 
 @Composable
-private fun item(
+private fun Item(
+    modifier: Modifier = Modifier,
     label: String,
     icon: ImageVector,
     onClick: () -> Unit,
     selected: Boolean = false,
-    modifier: Modifier = Modifier
 ) {
     NavigationDrawerItem(
         label = {
