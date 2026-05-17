@@ -9,6 +9,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -44,7 +45,7 @@ class GlobalUiState(
     private val settingsRepository: SettingsRepository
 ) {
     // State: Day Change Tracker Key (invalidated automatically at midnight)
-    var currentDayKey by mutableStateOf(System.currentTimeMillis())
+    var currentDayKey by mutableLongStateOf(System.currentTimeMillis())
         private set
 
     init {
@@ -75,12 +76,13 @@ class GlobalUiState(
     companion object {
         var instance: GlobalUiState? = null
             private set
-        
+
         fun setInstance(state: GlobalUiState) {
             instance = state
         }
 
-        private val activeInstances = java.util.Collections.synchronizedList(mutableListOf<GlobalUiState>())
+        private val activeInstances =
+            java.util.Collections.synchronizedList(mutableListOf<GlobalUiState>())
 
         fun register(state: GlobalUiState) {
             activeInstances.add(state)
@@ -104,7 +106,7 @@ class GlobalUiState(
     // State: Current Language
     val language: EnStrings
         get() = LocalizationManager.currentLanguage
-    
+
     val selectedLanguage: EnStrings?
         get() = LocalizationManager.selectedLanguage
 
@@ -231,7 +233,7 @@ fun ProvideGlobalUiState(
 
     val context = LocalContext.current
     ValidateAndCorrect.appContext = context.applicationContext
-    
+
     val scope = rememberCoroutineScope()
     val database = remember { AppDatabase.getDatabase(context, scope) }
     val settingsRepository = remember { SettingsRepository(context) }

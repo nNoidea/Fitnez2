@@ -1,6 +1,5 @@
 package com.nnoidea.fitnez2.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
@@ -42,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -82,7 +82,7 @@ fun GraphScreen(onOpenDrawer: () -> Unit) {
     val weightUnit by settingsRepository.weightUnitFlow.collectAsState(initial = "kg")
 
     var selectedExerciseId by remember { mutableStateOf<Int?>(null) }
-    var dropdownExpanded by remember { mutableStateOf(false) }
+    var dropdownExpanded by remember { mutableStateOf(value = false) }
 
     // Auto-select first exercise once loaded
     LaunchedEffect(exercises) {
@@ -245,7 +245,9 @@ fun GraphScreen(onOpenDrawer: () -> Unit) {
                                         records = records,
                                         weightUnit = weightUnit,
                                         primaryColor = MaterialTheme.colorScheme.primary,
-                                        gridColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f),
+                                        gridColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.15f
+                                        ),
                                         textColor = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -264,7 +266,7 @@ fun MetricCard(
     title: String,
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color
+    color: Color,
 ) {
     Card(
         modifier = modifier,
@@ -344,7 +346,7 @@ fun InteractiveBezierChart(
 ) {
     // Interactive drag/hover state
     var selectedPointIndex by remember { mutableStateOf<Int?>(null) }
-    var touchX by remember { mutableStateOf(0f) }
+    var touchX by remember { mutableFloatStateOf(0f) }
 
     val formatter = remember { SimpleDateFormat("dd MMM", Locale.getDefault()) }
 
@@ -394,7 +396,7 @@ fun InteractiveBezierChart(
             for (i in 0..gridSteps) {
                 val fraction = i.toFloat() / gridSteps
                 val y = paddingTop + chartHeight * (1f - fraction)
-                
+
                 // Draw dashed grid lines
                 drawLine(
                     color = gridColor,
@@ -420,7 +422,8 @@ fun InteractiveBezierChart(
             // Map data to coordinates
             val points = records.mapIndexed { index, record ->
                 val xFraction = if (records.size > 1) index.toFloat() / (records.size - 1) else 0.5f
-                val yFraction = if (weightDelta > 0) (record.weight - minWeight) / weightDelta else 0.5
+                val yFraction =
+                    if (weightDelta > 0) (record.weight - minWeight) / weightDelta else 0.5
                 Offset(
                     x = paddingLeft + xFraction * chartWidth,
                     y = paddingTop + chartHeight * (1f - yFraction.toFloat())
@@ -428,7 +431,7 @@ fun InteractiveBezierChart(
             }
 
             // Calculate closest point during user interaction
-            if (touchX >= paddingLeft && touchX <= width - paddingRight) {
+            if ((touchX >= paddingLeft) && (touchX <= width - paddingRight)) {
                 var closestIndex = 0
                 var minDistance = Float.MAX_VALUE
                 points.forEachIndexed { index, offset ->

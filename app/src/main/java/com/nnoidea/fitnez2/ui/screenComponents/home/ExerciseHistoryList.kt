@@ -3,7 +3,6 @@ package com.nnoidea.fitnez2.ui.screenComponents.home
 import com.nnoidea.fitnez2.ui.components.history.HistoryGridRow
 import com.nnoidea.fitnez2.ui.components.history.HeaderLabel
 import com.nnoidea.fitnez2.ui.components.history.HistoryRecordCard
-import com.nnoidea.fitnez2.ui.components.ScrollEngine
 import com.nnoidea.fitnez2.ui.components.history.computeColorParityByName
 import com.nnoidea.fitnez2.ui.components.history.computeColorParity
 import com.nnoidea.fitnez2.ui.components.history.recordCardShape
@@ -109,7 +108,7 @@ fun ExerciseHistoryList(
     modifier: Modifier = Modifier,
     extraBottomPadding: Dp = 0.dp,
     filterExerciseIds: List<Int>? = null,
-    useAlternatingColors: Boolean = true
+    useAlternatingColors: Boolean = true,
 ) {
     val state = rememberExerciseHistoryListState(filterExerciseIds, useAlternatingColors)
     ExerciseHistoryList(state = state, modifier = modifier, extraBottomPadding = extraBottomPadding)
@@ -130,8 +129,8 @@ fun ExerciseHistoryList(
             shape = RoundedCornerShape(28.dp)
         ) {
             if (!state.initialLoadDone) {
-                androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    androidx.compose.material3.CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
                 return@Surface
             }
@@ -142,9 +141,8 @@ fun ExerciseHistoryList(
                 uiItems = state.uiItems,
                 weightUnit = state.weightUnit,
                 extraBottomPadding = extraBottomPadding,
-                onUpdateRequest = { state.onUpdateRequest(it) },
-                onDeleteRequest = { state.onDeleteRequest(it) }
-            )
+                onUpdateRequest = { state.onUpdateRequest(it) }
+            ) { state.onDeleteRequest(it) }
         }
 
         ScrollToTopButton(
@@ -292,8 +290,8 @@ private fun ExerciseHistoryListContent(
                         val prevItem = if (index > 0) uiItems[index - 1] else null
                         val nextItem = if (index < uiItems.lastIndex) uiItems[index + 1] else null
                         
-                        val prevIsSame = prevItem is HistoryUiModel.RecordItem && prevItem.isLight == isLight
-                        val nextIsSame = nextItem is HistoryUiModel.RecordItem && nextItem.isLight == isLight
+                        val prevIsSame = (prevItem is HistoryUiModel.RecordItem) && (prevItem.isLight == isLight)
+                        val nextIsSame = (nextItem is HistoryUiModel.RecordItem) && (nextItem.isLight == isLight)
                         
                         // Also show title if previous is NOT the same exercise (or is null/header/separator)
                         val showTitle = if (prevItem is HistoryUiModel.RecordItem) {

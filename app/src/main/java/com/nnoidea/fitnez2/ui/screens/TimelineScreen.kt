@@ -22,7 +22,7 @@ fun TimelineScreen(onOpenDrawer: () -> Unit) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         ScreenScaffold(
-            headerContent = { HamburgerMenu(onClick = onOpenDrawer) }
+            headerContent = { HamburgerMenu(onClick = onOpenDrawer) },
         ) {
             ExerciseHistoryList(
                 modifier = Modifier.weight(1f),

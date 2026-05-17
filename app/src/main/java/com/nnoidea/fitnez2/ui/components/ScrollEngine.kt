@@ -32,7 +32,7 @@ import com.nnoidea.fitnez2.data.entities.Record
 
 class ScrollEngine(
     private val dao: RecordDao,
-    private val exerciseIds: List<Int>? = null
+    private val exerciseIds: List<Int>? = null,
 ) {
 
     // -------------------------------------------------------------------------
@@ -78,13 +78,13 @@ class ScrollEngine(
     var batchSizes by mutableStateOf<List<Int>>(emptyList())
         private set
 
-    var hasMoreOlderRecords by mutableStateOf(false)
+    var hasMoreOlderRecords by mutableStateOf(value = false)
         private set
 
-    var isLoadingMore by mutableStateOf(false)
+    var isLoadingMore by mutableStateOf(value = false)
         private set
 
-    var initialLoadDone by mutableStateOf(false)
+    var initialLoadDone by mutableStateOf(value = false)
         private set
 
     /** Total records loaded across all older batches (for offset calculation). */
@@ -113,23 +113,12 @@ class ScrollEngine(
     }
 
     // -------------------------------------------------------------------------
-    //  Orphan cleanup (when exercises are deleted via CASCADE)
-    // -------------------------------------------------------------------------
-
-    fun removeOrphanedRecords(validExerciseIds: Set<Int>) {
-        recentRecords = recentRecords.filter { it.exerciseId in validExerciseIds }
-        olderBatches = olderBatches.map { batch ->
-            batch?.filter { it.exerciseId in validExerciseIds }?.ifEmpty { null }
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    //  Insert Record into Buffer (Sorted)
+    //  Load next batch (triggered when near bottom of list)
     // -------------------------------------------------------------------------
 
     suspend fun insertRecordIntoBuffer(recordId: Int) {
         val newRecord = dao.getRecordById(recordId) ?: return
-        if (!exerciseIds.isNullOrEmpty() && newRecord.exerciseId !in exerciseIds) return
+        if ((!exerciseIds.isNullOrEmpty()) && (newRecord.exerciseId !in exerciseIds)) return
         
         // Ensure it's not already somewhere
         if (recentRecords.any { it.id == recordId }) return
@@ -185,7 +174,7 @@ class ScrollEngine(
                 dao.getOlderRecordsByExerciseIds(exerciseIds, offset = offset, limit = OLDER_BATCH_SIZE)
             }
             if (batch.isNotEmpty()) {
-                olderBatches = olderBatches + listOf(batch)
+                olderBatches += listOf(batch)
                 batchSizes = batchSizes + batch.size
             }
             hasMoreOlderRecords = batch.size == OLDER_BATCH_SIZE
@@ -222,7 +211,7 @@ class ScrollEngine(
                 changed = true
             } else if (distance <= BATCH_WINDOW_RADIUS && newBatches[i] == null) {
                 // Reload: re-fetch from DB
-                val offset = RECENT_LIMIT + batchSizes.take(i).sum()
+                val offset = RECENT_LIMIT + batchSizes.asSequence().take(i).sum()
                 val reloaded = if (exerciseIds.isNullOrEmpty()) {
                     dao.getOlderRecords(offset = offset, limit = batchSizes.getOrElse(i) { OLDER_BATCH_SIZE })
                 } else {

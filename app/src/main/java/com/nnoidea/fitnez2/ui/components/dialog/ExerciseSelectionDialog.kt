@@ -40,7 +40,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import android.content.Intent
 import android.view.HapticFeedbackConstants
 import androidx.compose.ui.platform.LocalContext
@@ -97,8 +99,11 @@ fun ExerciseSelectionDialog(
 
             // Custom Scrollbar Logic
             val scrollState = rememberScrollState()
-            val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-            val screenHeight = configuration.screenHeightDp.dp
+            val windowInfo = androidx.compose.ui.platform.LocalWindowInfo.current
+            val density = LocalDensity.current
+            val screenHeight = remember(windowInfo, density) {
+                with(density) { windowInfo.containerSize.height.toDp() }
+            }
             var columnHeightPx by remember { mutableFloatStateOf(0f) }
 
             Box(modifier = Modifier.fillMaxWidth()) {
@@ -340,19 +345,21 @@ fun ExerciseSelectionDialog(
                 val scrollbarVisible = scrollState.maxValue > 0
 
                 if (scrollbarVisible && columnHeightPx > 0f) {
-                    val scrollbarHeight by remember(scrollState.maxValue, columnHeightPx) {
+                    val scrollbarHeight by remember {
                         derivedStateOf {
                             val viewportHeight = columnHeightPx
                             val contentHeight = viewportHeight + scrollState.maxValue
                             // Ratio: Viewport / Content
-                            (viewportHeight * (viewportHeight / contentHeight)).coerceAtLeast(40f) 
+                            if (contentHeight > 0) {
+                                (viewportHeight * (viewportHeight / contentHeight)).coerceAtLeast(40f)
+                            } else 0f
                         }
                     }
 
-                    val scrollbarOffset by remember(scrollState.value, scrollState.maxValue, columnHeightPx, scrollbarHeight) {
+                    val scrollbarOffset by remember {
                         derivedStateOf {
                             val maxScroll = scrollState.maxValue.toFloat()
-                            if (maxScroll == 0f) return@derivedStateOf 0f
+                            if (maxScroll <= 0f) return@derivedStateOf 0f
                             
                             val availableTrack = columnHeightPx - scrollbarHeight
                             val scrollProgress = scrollState.value.toFloat() / maxScroll
@@ -373,7 +380,7 @@ fun ExerciseSelectionDialog(
                             modifier = Modifier
                                 .width(4.dp)
                                 .height(with(LocalDensity.current) { scrollbarHeight.toDp() })
-                                .offset(y = with(LocalDensity.current) { scrollbarOffset.toDp() })
+                                .offset { IntOffset(0, scrollbarOffset.roundToInt()) }
                                 .background(
                                     MaterialTheme.colorScheme.onSurfaceVariant,
                                     RoundedCornerShape(4.dp)
@@ -419,7 +426,7 @@ fun ExerciseSelectionDialog(
                     try {
                         exerciseDao.update(exercise.copy(name = newName))
                         exerciseToEdit = null
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         // Error handling could be added here
                     }
                 }

@@ -36,7 +36,7 @@ object StressTestManager {
         val records = ArrayList<Record>(batchSize)
 
         for (day in 0 until daysToSimulate) {
-            if (day % 100 == 0) {
+            if ((day % 100) == 0) {
                 val p = 0.2f + (0.8f * (day.toFloat() / daysToSimulate.toFloat()))
                 onProgress(p, "Generating and inserting day ${day + 1}...")
             }
@@ -58,7 +58,7 @@ object StressTestManager {
                         date = timestamp,
                         sets = sets,
                         reps = reps,
-                        weight = weight
+                        weight = weight,
                     )
                 )
             }
