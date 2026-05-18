@@ -215,7 +215,8 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = 16.dp), // Pages are inset horizontally, but swipe edge-to-edge!
+                                .padding(horizontal = 16.dp)
+                                .navigationBarsPadding(),
                             verticalArrangement = Arrangement.spacedBy(0.dp)
                         ) {
                             val rows = pageGridDays.chunked(7)
@@ -257,7 +258,7 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                             
 
 
-                                        Box(
+                                        BoxWithConstraints(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .fillMaxHeight()
@@ -281,6 +282,9 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                                 },
                                             contentAlignment = Alignment.TopCenter // Day numbers start at the top
                                         ) {
+                                            val availableHeight = maxHeight - 26.dp
+                                            val maxPills = (availableHeight.value / 13).toInt().coerceAtLeast(1)
+
                                             Column(
                                                 modifier = Modifier
                                                     .fillMaxSize()
@@ -288,7 +292,7 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                                 horizontalAlignment = Alignment.CenterHorizontally,
                                                 verticalArrangement = Arrangement.Top
                                             ) {
-                                                 Box(
+                                                Box(
                                                      modifier = if (isToday) {
                                                           val pillBgColor = if (isCurrentMonth) {
                                                               MaterialTheme.colorScheme.tertiary
@@ -338,8 +342,8 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                                     val pillContentColor = if (isCurrentMonth) MaterialTheme.colorScheme.onPrimary else lerp(MaterialTheme.colorScheme.onPrimary, Color.Black, 0.4f)
 
                                                     // Safely display up to 6 items max. If larger, show 5 items + overflow pill ellipsis "..."
-                                                    val displayNames = if (dayExerciseNames.size > 6) {
-                                                        dayExerciseNames.take(5) + "..."
+                                                    val displayNames = if (dayExerciseNames.size > maxPills) {
+                                                        dayExerciseNames.take(maxPills - 1) + "..."
                                                     } else {
                                                         dayExerciseNames
                                                     }
@@ -374,10 +378,11 @@ private fun ExercisePill(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 0.5.dp) // Tight vertical spacing
+            .height(13.dp)
+            .padding(vertical = 0.5.dp)
             .clip(RoundedCornerShape(4.dp))
             .background(containerColor)
-            .padding(horizontal = 2.dp, vertical = 1.dp), // Minimal inner padding
+            .padding(horizontal = 2.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
