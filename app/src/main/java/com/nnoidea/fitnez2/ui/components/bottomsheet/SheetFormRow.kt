@@ -86,44 +86,50 @@ internal fun SheetFormRow(
 
         // Row: Sets, Reps, Weight (Hide if workout is selected)
         if (showInputs) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                BottomSheetSetsField(
-                    value = state.sets,
-                    onValidChange = { state.onSetsChange(it) },
-                    onRawValueChange = { state.setsRaw = it },
-                    modifier = Modifier.weight(1f).height(buttonHeight),
-                    topStartRadius = 24.dp,
-                    bottomStartRadius = 24.dp,
-                    topEndRadius = 8.dp,
-                    bottomEndRadius = 8.dp
+            ConnectedInputGroup(
+                spacing = 4.dp,
+                outerCornerRadius = 24.dp,
+                innerCornerRadius = 8.dp,
+                items = listOf(
+                    { ts, te, bs, be ->
+                        BottomSheetSetsField(
+                            value = state.sets,
+                            onValidChange = { state.onSetsChange(it) },
+                            onRawValueChange = { state.setsRaw = it },
+                            modifier = Modifier.weight(1f).height(buttonHeight),
+                            topStartRadius = ts,
+                            topEndRadius = te,
+                            bottomStartRadius = bs,
+                            bottomEndRadius = be
+                        )
+                    },
+                    { ts, te, bs, be ->
+                        BottomSheetRepsField(
+                            value = state.reps,
+                            onValidChange = { state.onRepsChange(it) },
+                            onRawValueChange = { state.repsRaw = it },
+                            modifier = Modifier.weight(1f).height(buttonHeight),
+                            topStartRadius = ts,
+                            topEndRadius = te,
+                            bottomStartRadius = bs,
+                            bottomEndRadius = be
+                        )
+                    },
+                    { ts, te, bs, be ->
+                        BottomSheetWeightField(
+                            value = state.weight.toDoubleOrNull() ?: 0.0,
+                            label = state.weightUnit,
+                            onValidChange = { state.onWeightChange(it) },
+                            onRawValueChange = { state.weightRaw = it },
+                            modifier = Modifier.weight(1f).height(buttonHeight),
+                            topStartRadius = ts,
+                            topEndRadius = te,
+                            bottomStartRadius = bs,
+                            bottomEndRadius = be
+                        )
+                    }
                 )
-
-                BottomSheetRepsField(
-                    value = state.reps,
-                    onValidChange = { state.onRepsChange(it) },
-                    onRawValueChange = { state.repsRaw = it },
-                    modifier = Modifier.weight(1f).height(buttonHeight),
-                    topStartRadius = 8.dp,
-                    bottomStartRadius = 8.dp,
-                    topEndRadius = 8.dp,
-                    bottomEndRadius = 8.dp
-                )
-
-                BottomSheetWeightField(
-                    value = state.weight.toDoubleOrNull() ?: 0.0,
-                    label = state.weightUnit,
-                    onValidChange = { state.onWeightChange(it) },
-                    onRawValueChange = { state.weightRaw = it },
-                    modifier = Modifier.weight(1f).height(buttonHeight),
-                    topStartRadius = 8.dp,
-                    bottomStartRadius = 8.dp,
-                    topEndRadius = 24.dp,
-                    bottomEndRadius = 24.dp
-                )
-            }
+            )
         } else {
             Spacer(modifier = Modifier.fillMaxWidth().height(buttonHeight))
         }
