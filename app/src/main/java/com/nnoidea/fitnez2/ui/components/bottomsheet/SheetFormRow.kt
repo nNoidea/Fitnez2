@@ -63,6 +63,7 @@ internal fun SheetFormRow(
                     Text(
                         text = state.selectedExerciseName ?: globalLocalization.labelSelectExercise,
                         style = MaterialTheme.typography.titleMedium,
+                        color = if (state.selectedExerciseName == null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)

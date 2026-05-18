@@ -30,6 +30,8 @@ sealed class EnStrings(
     open val labelCreateExercise: String = "Create an exercise"
     open val labelCreateWorkout: String = "Create a workout"
     open val labelWorkoutName: String = "Workout Name"
+    open val labelWorkout: String = "Workout"
+    open val labelExercise: String = "Exercise"
     open val labelAdd: String = "Add"
     open val labelExerciseName: String = "Exercise Name"
     open val labelSave: String = "Save"
@@ -64,7 +66,7 @@ sealed class EnStrings(
 
     open fun labelEdit(target: String): String = "Edit $target"
 
-    open val labelSelectExercise: String = "Select Exercise or Workout"
+    open val labelSelectExercise: String = "Select Something"
     open val labelWeightUnit: String = "Weight Unit"
     open val labelProgramPlaceholder: String = "Program Page Placeholder"
     open val labelHistoryListPlaceholder: String = "History List Placeholder"
