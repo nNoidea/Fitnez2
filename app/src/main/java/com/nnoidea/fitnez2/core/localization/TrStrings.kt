@@ -21,6 +21,7 @@ object TrStrings : EnStrings(
     override val errorWorkoutNameBlank = "Lütfen bir isim girin"
     override fun errorWorkoutAlreadyExists(name: String) = "'$name' adında bir antrenman zaten mevcut."
     override val errorWorkoutNoExercises = "Lütfen en az bir egzersiz ekleyin"
+    override val errorWorkoutEmpty = "Antrenman boş"
 
     override val labelAddExercise = "Egzersiz Ekle"
     override val labelCreateExercise = "Egzersiz Oluştur"
@@ -35,6 +36,7 @@ object TrStrings : EnStrings(
     override val labelClose = "Kapat"
     override val labelDelete = "Sil"
     override val labelSwitchLanguage = "Dili Değiştir"
+    override val labelAiTranslationsDisclaimer = "Çeviriler Yapay Zeka tarafından yapılmıştır"
 
     override val labelTimeline = "Zaman Tüneli"
     override val labelMonthly = "Aylık"

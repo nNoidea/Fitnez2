@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import com.nnoidea.fitnez2.ui.components.dialog.SelectionDialog
+import com.nnoidea.fitnez2.ui.components.dialog.RadioSelectionDialog
 import com.nnoidea.fitnez2.ui.components.SettingsItem
 
 import androidx.compose.material3.HorizontalDivider
@@ -193,7 +193,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             )
     }
 
-    SelectionDialog(
+    RadioSelectionDialog(
         show = showWeightUnitDialog,
         title = globalLocalization.labelWeightUnit,
         options = listOf(globalLocalization.unitKg, globalLocalization.unitLb),
@@ -206,7 +206,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         labelProvider = { it }
     )
 
-    SelectionDialog(
+    RadioSelectionDialog(
         show = showRotationDialog,
         title = globalLocalization.labelRotation,
         options = RotationMode.ALL,
@@ -228,7 +228,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
 
     // Prepare language options with "System Default" (null) at the top
     val languageOptions = listOf<EnStrings?>(null) + supportedLanguages
-    SelectionDialog(
+    RadioSelectionDialog(
         show = showLanguageDialog,
         title = globalLocalization.labelLanguage,
         options = languageOptions,
@@ -238,7 +238,8 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             showLanguageDialog = false
         },
         onDismissRequest = { showLanguageDialog = false },
-        labelProvider = { it?.languageName ?: globalLocalization.labelSystemLanguage }
+        labelProvider = { it?.languageName ?: globalLocalization.labelSystemLanguage },
+        bodyText = globalLocalization.labelAiTranslationsDisclaimer
     )
     
     // Unified Default Values Dialog

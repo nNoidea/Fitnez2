@@ -80,313 +80,234 @@ fun ExerciseSelectionDialog(
     var showCreateDialog by remember { mutableStateOf(false) }
 
 
-    PredictiveModal(
+    val sortedWorkouts = remember(workouts) {
+        workouts.sortedBy { it.name.lowercase() }
+    }
+
+    val sortedExercises = remember(exercises) {
+        exercises.sortedBy { it.name.lowercase() }
+    }
+
+    SelectionDialog(
         show = show,
         onDismissRequest = onDismissRequest
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            val sortedWorkouts = remember(workouts) {
-                workouts.sortedBy { it.name.lowercase() }
-            }
-
-            // List - Sorted alphabetically (case-insensitive)
-            val sortedExercises = remember(exercises) {
-                exercises.sortedBy { it.name.lowercase() }
-            }
-
-            // Custom Scrollbar Logic
-            val scrollState = rememberScrollState()
-            val windowInfo = androidx.compose.ui.platform.LocalWindowInfo.current
-            val density = LocalDensity.current
-            val screenHeight = remember(windowInfo, density) {
-                with(density) { windowInfo.containerSize.height.toDp() }
-            }
-            var columnHeightPx by remember { mutableFloatStateOf(0f) }
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier
-                        .heightIn(max = screenHeight * 0.6f)
-                        .padding(end = 4.dp) // Space for scrollbar
-                        .onGloballyPositioned { coordinates ->
-                             columnHeightPx = coordinates.size.height.toFloat()
+        // Create Workout Button (hidden on workout screen)
+        if (showCreateWorkout) {
+            val context = LocalContext.current
+        
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { 
+                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                        onDismissRequest()
+                        val intent = Intent(context, MainActivity::class.java).apply {
+                            putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Workout.route)
                         }
-                        .verticalScroll(scrollState)
-                ) {
+                        context.startActivity(intent)
+                    }
+                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Add, 
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(end = 12.dp)
+                )
+                Text(
+                    text = globalLocalization.labelWorkout,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
 
-                    // Create Workout Button (hidden on workout screen)
-                    if (showCreateWorkout) {
-                        val context = LocalContext.current
+        // ADDED: Create Button at the top
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { 
+                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                    showCreateDialog = true 
+                }
+                .padding(vertical = 12.dp, horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.Add, 
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.padding(end = 12.dp)
+            )
+            Text(
+                text = globalLocalization.labelExercise,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.tertiary,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        // Labeled divider: "Workouts" (only if workouts exist)
+        if (sortedWorkouts.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+                Text(
+                    text = globalLocalization.labelWorkouts,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+            }
+        }
+
+        if (sortedWorkouts.isNotEmpty()) {
+            sortedWorkouts.forEach { workout ->
+                val isSelected = workout.id == selectedWorkoutId
+                val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(containerColor, RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                            onWorkoutSelected(workout)
+                        }
+                        .padding(vertical = 12.dp, horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = workout.name,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = contentColor,
+                        modifier = Modifier.weight(1f)
+                    )
                     
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { 
-                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                    onDismissRequest()
-                                    val intent = Intent(context, MainActivity::class.java).apply {
-                                        putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Workout.route)
-                                    }
-                                    context.startActivity(intent)
-                                }
-                                .padding(vertical = 12.dp, horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    if (workoutDao != null) {
+                        IconButton(
+                            onClick = { 
+                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                                onWorkoutEdit(workout)
+                            },
                         ) {
                             Icon(
-                                Icons.Default.Add, 
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(end = 12.dp)
-                            )
-                            Text(
-                                text = globalLocalization.labelWorkout,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
+                                Icons.Default.Edit, 
+                                contentDescription = globalLocalization.labelEdit(workout.name),
+                                tint = if (isSelected) contentColor else MaterialTheme.colorScheme.primary
                             )
                         }
-                    }
-
-                    // ADDED: Create Button at the top
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { 
-                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                showCreateDialog = true 
-                            }
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Add, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        Text(
-                            text = globalLocalization.labelExercise,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.tertiary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    // Labeled divider: "Workouts" (only if workouts exist)
-                    if (sortedWorkouts.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            HorizontalDivider(
-                                modifier = Modifier.weight(1f),
-                                color = MaterialTheme.colorScheme.outlineVariant
-                            )
-                            Text(
-                                text = globalLocalization.labelWorkouts,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 12.dp)
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.weight(1f),
-                                color = MaterialTheme.colorScheme.outlineVariant
-                            )
-                        }
-                    }
-
-                    if (sortedWorkouts.isNotEmpty()) {
-                        sortedWorkouts.forEach { workout ->
-                            val isSelected = workout.id == selectedWorkoutId
-                            val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                            val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                            
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(containerColor, RoundedCornerShape(12.dp))
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable {
-                                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                        onWorkoutSelected(workout)
-                                    }
-                                    .padding(vertical = 12.dp, horizontal = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = workout.name,
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = contentColor,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                
-                                if (workoutDao != null) {
-                                    IconButton(
-                                        onClick = { 
-                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                            onWorkoutEdit(workout)
-                                        },
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Edit, 
-                                            contentDescription = globalLocalization.labelEdit(workout.name),
-                                            tint = if (isSelected) contentColor else MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                    
-                                    IconButton(
-                                        onClick = { 
-                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                            workoutToDelete = workout 
-                                        },
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Delete, 
-                                            contentDescription = globalLocalization.labelDelete,
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                    }
-
-                    // Labeled divider: "Exercises" (only if exercises exist)
-                    if (sortedExercises.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            HorizontalDivider(
-                                modifier = Modifier.weight(1f),
-                                color = MaterialTheme.colorScheme.outlineVariant
-                            )
-                            Text(
-                                text = globalLocalization.labelExercises,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 12.dp)
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.weight(1f),
-                                color = MaterialTheme.colorScheme.outlineVariant
-                            )
-                        }
-                    }
-
-                    sortedExercises.forEach { exercise ->
-                        val isSelected = exercise.id == selectedExerciseId
-                        val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                        val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                         
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(containerColor, RoundedCornerShape(12.dp))
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                    onExerciseSelected(exercise)
-                                }
-                                .padding(vertical = 12.dp, horizontal = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        IconButton(
+                            onClick = { 
+                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                                workoutToDelete = workout 
+                            },
                         ) {
-                            Text(
-                                text = exercise.name,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                ),
-                                color = contentColor,
-                                modifier = Modifier.weight(1f)
+                            Icon(
+                                Icons.Default.Delete, 
+                                contentDescription = globalLocalization.labelDelete,
+                                tint = MaterialTheme.colorScheme.error
                             )
-                            
-                            IconButton(
-                                onClick = { 
-                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                    exerciseToEdit = exercise
-                                },
-                            ) {
-                                Icon(
-                                    Icons.Default.Edit, 
-                                    contentDescription = globalLocalization.labelEdit(exercise.name),
-                                    tint = if (isSelected) contentColor else MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            
-                            IconButton(
-                                onClick = { 
-                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                    exerciseToDelete = exercise 
-                                },
-                            ) {
-                                Icon(
-                                    Icons.Default.Delete, 
-                                    contentDescription = globalLocalization.labelDelete,
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
                         }
                     }
-    
-
                 }
+            }
 
-                // Vertical Scrollbar Overlay
-                // Show ONLY if reached max height (implied by content overflowing -> maxValue > 0)
-                val scrollbarVisible = scrollState.maxValue > 0
+        }
 
-                if (scrollbarVisible && columnHeightPx > 0f) {
-                    val scrollbarHeight by remember {
-                        derivedStateOf {
-                            val viewportHeight = columnHeightPx
-                            val contentHeight = viewportHeight + scrollState.maxValue
-                            // Ratio: Viewport / Content
-                            if (contentHeight > 0) {
-                                (viewportHeight * (viewportHeight / contentHeight)).coerceAtLeast(40f)
-                            } else 0f
-                        }
+        // Labeled divider: "Exercises" (only if exercises exist)
+        if (sortedExercises.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+                Text(
+                    text = globalLocalization.labelExercises,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+            }
+        }
+
+        sortedExercises.forEach { exercise ->
+            val isSelected = exercise.id == selectedExerciseId
+            val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+            val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(containerColor, RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable {
+                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                        onExerciseSelected(exercise)
                     }
-
-                    val scrollbarOffset by remember {
-                        derivedStateOf {
-                            val maxScroll = scrollState.maxValue.toFloat()
-                            if (maxScroll <= 0f) return@derivedStateOf 0f
-                            
-                            val availableTrack = columnHeightPx - scrollbarHeight
-                            val scrollProgress = scrollState.value.toFloat() / maxScroll
-                            
-                            availableTrack * scrollProgress
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .width(4.dp)
-                            // Track height = Viewport height
-                            .height(with(LocalDensity.current) { columnHeightPx.toDp() }) 
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh) // Track color
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .width(4.dp)
-                                .height(with(LocalDensity.current) { scrollbarHeight.toDp() })
-                                .offset { IntOffset(0, scrollbarOffset.roundToInt()) }
-                                .background(
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                    RoundedCornerShape(4.dp)
-                                )
-                        )
-                    }
+                    .padding(vertical = 12.dp, horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = exercise.name,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    ),
+                    color = contentColor,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                IconButton(
+                    onClick = { 
+                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                        exerciseToEdit = exercise
+                    },
+                ) {
+                    Icon(
+                        Icons.Default.Edit, 
+                        contentDescription = globalLocalization.labelEdit(exercise.name),
+                        tint = if (isSelected) contentColor else MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                IconButton(
+                    onClick = { 
+                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                        exerciseToDelete = exercise 
+                    },
+                ) {
+                    Icon(
+                        Icons.Default.Delete, 
+                        contentDescription = globalLocalization.labelDelete,
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }
