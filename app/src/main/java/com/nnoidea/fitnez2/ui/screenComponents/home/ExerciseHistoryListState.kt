@@ -108,17 +108,8 @@ class DatabaseExerciseHistoryListState(
     }
 
     override suspend fun scrollToTop(recordId: Int?) {
-        val wasAtTop = listState.firstVisibleItemIndex <= 1
-
         if (recordId == null) {
-            if (wasAtTop) {
-                listState.scrollToItem(0)
-            } else {
-                if (listState.firstVisibleItemIndex > 10) {
-                    listState.scrollToItem(10)
-                }
-                listState.animateScrollToItem(0)
-            }
+            listState.scrollToItem(0)
             return
         }
 
@@ -132,14 +123,7 @@ class DatabaseExerciseHistoryListState(
                 }
         }
 
-        if (wasAtTop) {
-            listState.scrollToItem(0)
-        } else {
-            if (listState.firstVisibleItemIndex > 10) {
-                listState.scrollToItem(10)
-            }
-            listState.animateScrollToItem(0)
-        }
+        listState.scrollToItem(0)
     }
 
     fun updateUiItems(items: List<HistoryUiModel>) {
