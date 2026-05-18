@@ -60,10 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalFocusManager
+import com.nnoidea.fitnez2.ui.components.bottomsheet.autoHideBottomSheet
 import androidx.compose.ui.platform.LocalView
 import android.view.HapticFeedbackConstants
 import androidx.compose.ui.text.font.FontWeight
@@ -109,9 +106,10 @@ fun ExerciseHistoryList(
     extraBottomPadding: Dp = 0.dp,
     filterExerciseIds: List<Int>? = null,
     useAlternatingColors: Boolean = true,
+    enableAutoHide: Boolean = false,
 ) {
     val state = rememberExerciseHistoryListState(filterExerciseIds, useAlternatingColors)
-    ExerciseHistoryList(state = state, modifier = modifier, extraBottomPadding = extraBottomPadding)
+    ExerciseHistoryList(state = state, modifier = modifier, extraBottomPadding = extraBottomPadding, enableAutoHide = enableAutoHide)
 }
 
 @Composable
@@ -119,6 +117,7 @@ fun ExerciseHistoryList(
     state: ExerciseHistoryListState,
     modifier: Modifier = Modifier,
     extraBottomPadding: Dp = 0.dp,
+    enableAutoHide: Boolean = false,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -141,6 +140,7 @@ fun ExerciseHistoryList(
                 uiItems = state.uiItems,
                 weightUnit = state.weightUnit,
                 extraBottomPadding = extraBottomPadding,
+                enableAutoHide = enableAutoHide,
                 onUpdateRequest = { state.onUpdateRequest(it) }
             ) { state.onDeleteRequest(it) }
         }
@@ -209,20 +209,10 @@ private fun ExerciseHistoryListContent(
     uiItems: List<HistoryUiModel>,
     weightUnit: String,
     extraBottomPadding: Dp,
+    enableAutoHide: Boolean,
     onUpdateRequest: (Record) -> Unit,
     onDeleteRequest: (Record) -> Unit
 ) {
-
-    // Hide keyboard when scrolling
-    val focusManager = LocalFocusManager.current
-    val keyboardScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: NestedScrollSource): androidx.compose.ui.geometry.Offset {
-                focusManager.clearFocus()
-                return androidx.compose.ui.geometry.Offset.Zero
-            }
-        }
-    }
 
     if (uiItems.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -234,7 +224,7 @@ private fun ExerciseHistoryListContent(
         }
     } else {
         LazyColumn(
-            modifier = modifier.nestedScroll(keyboardScrollConnection),
+            modifier = modifier.autoHideBottomSheet(enableAutoHide),
             state = listState,
             contentPadding = PaddingValues(bottom = 80.dp + extraBottomPadding)
         ) {

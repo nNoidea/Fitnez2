@@ -23,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,12 @@ import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import androidx.compose.ui.composed
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.geometry.Offset
 
 const val BUTTONHEIGHT = 45
 const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2 * BUTTONHEIGHT + 70 - 9
@@ -78,10 +85,20 @@ fun PredictiveBottomSheet(
         val expandedHeight = with(density) { constraints.maxHeight.toDp() } - topPadding
 
         // Sync global UI state for snackbar positioning
-        LaunchedEffect(state.isExpanded) {
+        LaunchedEffect(state.isExpanded, globalUiState.isBottomSheetHidden) {
             globalUiState.bottomSheetSnackbarOffset =
-                if (state.isExpanded) 0.dp else PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp
+                if (state.isExpanded || globalUiState.isBottomSheetHidden) 0.dp else PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp
+            
+            if (state.isExpanded && globalUiState.isBottomSheetHidden) {
+                globalUiState.isBottomSheetHidden = false
+            }
         }
+
+        val hideOffsetPx by androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (globalUiState.isBottomSheetHidden && !state.isExpanded) with(density) { PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp.toPx() } else 0f,
+            animationSpec = androidx.compose.animation.core.spring(stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow),
+            label = "hideOffsetAnim"
+        )
 
         // Predictive Back Handler
         PredictiveBackHandler(enabled = state.isExpanded && !isOverlayOpen) { progress ->
@@ -102,7 +119,7 @@ fun PredictiveBottomSheet(
                 .align(Alignment.TopStart)
                 .height(sheetTotalHeight)
                 .fillMaxWidth()
-                .offset { IntOffset(0, (state.offsetY.value + topPaddingPx).roundToInt()) }
+                .offset { IntOffset(0, (state.offsetY.value + topPaddingPx + hideOffsetPx).roundToInt()) }
                 .graphicsLayer {
                     if (state.predictiveProgress > 0f) {
                         val scale = 1f - (state.predictiveProgress * 0.2f)
@@ -121,6 +138,9 @@ fun PredictiveBottomSheet(
                     state = rememberDraggableState { delta ->
                         if (!isOverlayOpen) {
                             scope.launch {
+                                if (globalUiState.isBottomSheetHidden) {
+                                    globalUiState.isBottomSheetHidden = false
+                                }
                                 val newOffset = (state.offsetY.value + delta)
                                     .coerceIn(state.minOffset, state.maxOffset)
                                 state.offsetY.snapTo(newOffset)
@@ -157,4 +177,30 @@ fun PredictiveBottomSheet(
             }
         }
     }
+}
+
+fun Modifier.autoHideBottomSheet(enable: Boolean = true): Modifier = composed {
+    val focusManager = LocalFocusManager.current
+    val globalUiState = LocalGlobalUiState.current
+
+    val connection = remember(enable) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                focusManager.clearFocus()
+
+                if (enable && source == NestedScrollSource.UserInput) {
+                    val delta = available.y
+                    if (delta < -2f && !globalUiState.isBottomSheetHidden) {
+                        globalUiState.isBottomSheetHidden = true
+                    } else if (delta > 2f && globalUiState.isBottomSheetHidden) {
+                        globalUiState.isBottomSheetHidden = false
+                    }
+                }
+
+                return Offset.Zero
+            }
+        }
+    }
+
+    this.nestedScroll(connection)
 }

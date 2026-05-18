@@ -26,7 +26,8 @@ fun TimelineScreen(onOpenDrawer: () -> Unit) {
         ) {
             ExerciseHistoryList(
                 modifier = Modifier.weight(1f),
-                extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp
+                extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp,
+                enableAutoHide = true
             )
         }
 
