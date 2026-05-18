@@ -177,7 +177,11 @@ fun HistorySetsField(
     value: Int,
     contentColor: Color,
     onValidChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    topStartRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    topEndRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    bottomStartRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    bottomEndRadius: androidx.compose.ui.unit.Dp = 12.dp
 ) {
     SetsInput(
         value = value.toString(),
@@ -190,7 +194,11 @@ fun HistorySetsField(
             onValueChange = onValueChange,
             contentColor = contentColor,
             isFocused = isFocused,
-            modifier = modifier
+            modifier = modifier,
+            topStartRadius = topStartRadius,
+            topEndRadius = topEndRadius,
+            bottomStartRadius = bottomStartRadius,
+            bottomEndRadius = bottomEndRadius
         )
     }
 }
@@ -204,7 +212,11 @@ fun HistoryRepsField(
     value: Int,
     contentColor: Color,
     onValidChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    topStartRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    topEndRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    bottomStartRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    bottomEndRadius: androidx.compose.ui.unit.Dp = 12.dp
 ) {
     RepsInput(
         value = value.toString(),
@@ -217,7 +229,11 @@ fun HistoryRepsField(
             onValueChange = onValueChange,
             contentColor = contentColor,
             isFocused = isFocused,
-            modifier = modifier
+            modifier = modifier,
+            topStartRadius = topStartRadius,
+            topEndRadius = topEndRadius,
+            bottomStartRadius = bottomStartRadius,
+            bottomEndRadius = bottomEndRadius
         )
     }
 }
@@ -231,7 +247,11 @@ fun HistoryWeightField(
     value: Double,
     contentColor: Color,
     onValidChange: (Double) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    topStartRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    topEndRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    bottomStartRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    bottomEndRadius: androidx.compose.ui.unit.Dp = 12.dp
 ) {
     WeightInput(
         value = value,
@@ -245,7 +265,11 @@ fun HistoryWeightField(
             contentColor = contentColor,
             isFocused = isFocused,
             isDecimal = true,
-            modifier = modifier
+            modifier = modifier,
+            topStartRadius = topStartRadius,
+            topEndRadius = topEndRadius,
+            bottomStartRadius = bottomStartRadius,
+            bottomEndRadius = bottomEndRadius
         )
     }
 }
@@ -429,23 +453,63 @@ private fun HistoryInputSkin(
     contentColor: Color,
     isFocused: Boolean,
     modifier: Modifier = Modifier,
-    isDecimal: Boolean = false
+    isDecimal: Boolean = false,
+    topStartRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    topEndRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    bottomStartRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    bottomEndRadius: androidx.compose.ui.unit.Dp = 12.dp
 ) {
     val focusRequester = remember { FocusRequester() }
+    
+    val animatedTopStart by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isFocused) 24.dp else topStartRadius,
+        label = "topStartRadius"
+    )
+    val animatedTopEnd by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isFocused) 24.dp else topEndRadius,
+        label = "topEndRadius"
+    )
+    val animatedBottomStart by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isFocused) 24.dp else bottomStartRadius,
+        label = "bottomStartRadius"
+    )
+    val animatedBottomEnd by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isFocused) 24.dp else bottomEndRadius,
+        label = "bottomEndRadius"
+    )
+
+    val currentShape = RoundedCornerShape(
+        topStart = animatedTopStart,
+        topEnd = animatedTopEnd,
+        bottomEnd = animatedBottomEnd,
+        bottomStart = animatedBottomStart
+    )
+
+    val unfocusedBgColor = contentColor.copy(alpha = HistoryInputBackgroundAlpha)
+    val focusedBgColor = MaterialTheme.colorScheme.tertiary
+    val unfocusedTextColor = contentColor
+    val focusedTextColor = MaterialTheme.colorScheme.onTertiary
+
+    val currentBgColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isFocused) focusedBgColor else unfocusedBgColor,
+        label = "containerColor"
+    )
+    val currentTextColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isFocused) focusedTextColor else unfocusedTextColor,
+        label = "textColor"
+    )
+
     val textStyle = MaterialTheme.typography.bodyLarge.copy(
         textAlign = TextAlign.Center,
         fontWeight = FontWeight.Bold,
-        color = contentColor
+        color = currentTextColor
     )
 
     Box(
         modifier = modifier
             .height(44.dp)
-            .background(
-                contentColor.copy(alpha = HistoryInputBackgroundAlpha),
-                RoundedCornerShape(12.dp)
-            )
-            .clip(RoundedCornerShape(12.dp)),
+            .background(currentBgColor, currentShape)
+            .clip(currentShape),
         contentAlignment = Alignment.Center
     ) {
         BasicTextField(
@@ -468,7 +532,7 @@ private fun HistoryInputSkin(
                         Text(
                             text = placeholder,
                             style = textStyle.copy(
-                                color = contentColor.copy(alpha = 0.5f)
+                                color = currentTextColor.copy(alpha = 0.5f)
                             )
                         )
                     }
@@ -483,7 +547,7 @@ private fun HistoryInputSkin(
             Text(
                 text = if (facadeText.length > 6) facadeText.take(6) + "\u2026" else facadeText,
                 style = textStyle.copy(
-                    color = if (displayValue.isEmpty()) contentColor.copy(alpha = 0.5f) else contentColor
+                    color = if (displayValue.isEmpty()) currentTextColor.copy(alpha = 0.5f) else currentTextColor
                 ),
                 maxLines = 1,
                 modifier = Modifier

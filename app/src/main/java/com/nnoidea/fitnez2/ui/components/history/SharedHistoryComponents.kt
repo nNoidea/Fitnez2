@@ -36,6 +36,7 @@ import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.components.HistoryRepsField
 import com.nnoidea.fitnez2.ui.components.HistorySetsField
 import com.nnoidea.fitnez2.ui.components.HistoryWeightField
+import com.nnoidea.fitnez2.ui.components.bottomsheet.ConnectedInputGroup
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -147,10 +148,12 @@ fun HistoryRecordCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.animateContentSize()) {
-            HistoryGridRow(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp).fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                col1 = {
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(modifier = Modifier.weight(1.5f)) {
                     if (showTitle) {
                         Text(
                             text = exerciseName,
@@ -163,32 +166,53 @@ fun HistoryRecordCard(
                     } else {
                         Spacer(modifier = Modifier.height(0.dp))
                     }
-                },
-                col2 = {
-                    HistorySetsField(
-                        value = sets,
-                        contentColor = contentColor,
-                        onValidChange = { onUpdate(it, reps, weight) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                col3 = {
-                    HistoryRepsField(
-                        value = reps,
-                        contentColor = contentColor,
-                        onValidChange = { onUpdate(sets, it, weight) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                col4 = {
-                    HistoryWeightField(
-                        value = weight,
-                        contentColor = contentColor,
-                        onValidChange = { onUpdate(sets, reps, it) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
-            )
+                
+                ConnectedInputGroup(
+                    modifier = Modifier.width(206.dp),
+                    spacing = 2.dp,
+                    outerCornerRadius = 24.dp,
+                    innerCornerRadius = 8.dp,
+                    items = listOf(
+                        { ts, te, bs, be ->
+                            HistorySetsField(
+                                value = sets,
+                                contentColor = contentColor,
+                                onValidChange = { onUpdate(it, reps, weight) },
+                                modifier = Modifier.weight(1f),
+                                topStartRadius = ts,
+                                topEndRadius = te,
+                                bottomStartRadius = bs,
+                                bottomEndRadius = be
+                            )
+                        },
+                        { ts, te, bs, be ->
+                            HistoryRepsField(
+                                value = reps,
+                                contentColor = contentColor,
+                                onValidChange = { onUpdate(sets, it, weight) },
+                                modifier = Modifier.weight(1f),
+                                topStartRadius = ts,
+                                topEndRadius = te,
+                                bottomStartRadius = bs,
+                                bottomEndRadius = be
+                            )
+                        },
+                        { ts, te, bs, be ->
+                            HistoryWeightField(
+                                value = weight,
+                                contentColor = contentColor,
+                                onValidChange = { onUpdate(sets, reps, it) },
+                                modifier = Modifier.weight(1f),
+                                topStartRadius = ts,
+                                topEndRadius = te,
+                                bottomStartRadius = bs,
+                                bottomEndRadius = be
+                            )
+                        }
+                    )
+                )
+            }
             
             if (isExpanded && timestamp != null) {
                 Text(
