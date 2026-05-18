@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,7 +45,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.geometry.Offset
 
 const val BUTTONHEIGHT = 45
-const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2 * BUTTONHEIGHT + 70 - 9
+const val PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP = 2 * BUTTONHEIGHT + 70 - 15
 
 /**
  * Generic, reusable Predictive Bottom Sheet animation shell.
@@ -84,18 +85,28 @@ fun PredictiveBottomSheet(
         val topPaddingPx = with(density) { topPadding.toPx() }
         val expandedHeight = with(density) { constraints.maxHeight.toDp() } - topPadding
 
+        val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
         // Sync global UI state for snackbar positioning
-        LaunchedEffect(state.isExpanded, globalUiState.isBottomSheetHidden) {
-            globalUiState.bottomSheetSnackbarOffset =
-                if (state.isExpanded || globalUiState.isBottomSheetHidden) 0.dp else PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp
+        LaunchedEffect(state.isExpanded, globalUiState.isBottomSheetHidden, globalUiState.isScrollToTopButtonVisible, navBarPadding) {
+            val buttonOffset = if (globalUiState.isScrollToTopButtonVisible) 80.dp else 0.dp
+            
+            globalUiState.bottomSheetSnackbarOffset = if (globalUiState.isBottomSheetHidden) {
+                navBarPadding + 80.dp // 24.dp padding + 56.dp button height
+            } else if (state.isExpanded) {
+                navBarPadding + buttonOffset
+            } else {
+                PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp + navBarPadding + buttonOffset
+            }
             
             if (state.isExpanded && globalUiState.isBottomSheetHidden) {
                 globalUiState.isBottomSheetHidden = false
             }
         }
-
         val hideOffsetPx by androidx.compose.animation.core.animateFloatAsState(
-            targetValue = if (globalUiState.isBottomSheetHidden && !state.isExpanded) with(density) { PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp.toPx() } else 0f,
+            targetValue = if (globalUiState.isBottomSheetHidden && !state.isExpanded) {
+                with(density) { (PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp + navBarPadding).toPx() }
+            } else 0f,
             animationSpec = androidx.compose.animation.core.spring(stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow),
             label = "hideOffsetAnim"
         )

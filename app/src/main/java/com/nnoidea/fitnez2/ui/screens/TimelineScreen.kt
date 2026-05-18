@@ -3,6 +3,9 @@ package com.nnoidea.fitnez2.ui.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,9 +27,10 @@ fun TimelineScreen(onOpenDrawer: () -> Unit) {
         ScreenScaffold(
             headerContent = { HamburgerMenu(onClick = onOpenDrawer) },
         ) {
+            val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
             ExerciseHistoryList(
                 modifier = Modifier.weight(1f),
-                extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp,
+                extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp + navBarPadding,
                 enableAutoHide = true
             )
         }

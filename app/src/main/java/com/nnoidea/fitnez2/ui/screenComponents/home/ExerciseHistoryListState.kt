@@ -39,6 +39,7 @@ interface ExerciseHistoryListState {
     val uiItems: List<HistoryUiModel>
     val weightUnit: String
     val initialLoadDone: Boolean
+    val isScrollingToTop: Boolean
 
     fun onUpdateRequest(updatedRecord: Record)
     fun onDeleteRequest(record: Record)
@@ -71,6 +72,9 @@ class DatabaseExerciseHistoryListState(
         private set
 
     override var initialLoadDone by mutableStateOf(false)
+        private set
+
+    override var isScrollingToTop by mutableStateOf(false)
         private set
 
     suspend fun loadInitial() {
@@ -108,31 +112,42 @@ class DatabaseExerciseHistoryListState(
     }
 
     override suspend fun scrollToTop(recordId: Int?) {
-        val wasAtTop = listState.firstVisibleItemIndex <= 1
+        isScrollingToTop = true
+        try {
+            val wasAtTop = listState.firstVisibleItemIndex <= 1
 
-        if (recordId == null) {
+            if (recordId == null) {
+                if (wasAtTop) {
+                    listState.scrollToItem(0)
+                } else {
+                    if (listState.firstVisibleItemIndex > 10) {
+                        listState.scrollToItem(10)
+                    }
+                    listState.animateScrollToItem(0)
+                }
+                return
+            }
+
+            // Wait for the record to appear in the UI (inserted by RecordInserted signal)
+            kotlinx.coroutines.withTimeoutOrNull(5000) {
+                androidx.compose.runtime.snapshotFlow { uiItems }
+                    .first { items ->
+                        items.any { item ->
+                            item is HistoryUiModel.RecordItem && item.record.record.id == recordId
+                        }
+                    }
+            }
+
             if (wasAtTop) {
                 listState.scrollToItem(0)
             } else {
+                if (listState.firstVisibleItemIndex > 10) {
+                    listState.scrollToItem(10)
+                }
                 listState.animateScrollToItem(0)
             }
-            return
-        }
-
-        // Wait for the record to appear in the UI (inserted by RecordInserted signal)
-        kotlinx.coroutines.withTimeoutOrNull(5000) {
-            androidx.compose.runtime.snapshotFlow { uiItems }
-                .first { items ->
-                    items.any { item ->
-                        item is HistoryUiModel.RecordItem && item.record.record.id == recordId
-                    }
-                }
-        }
-
-        if (wasAtTop) {
-            listState.scrollToItem(0)
-        } else {
-            listState.animateScrollToItem(0)
+        } finally {
+            isScrollingToTop = false
         }
     }
 
@@ -322,7 +337,9 @@ fun rememberExerciseHistoryListState(
                         else -> {}
                     }
                 }
-                state.engine.evictAndReload(visibleBatches.maxOrNull() ?: 0)
+                if (!state.isScrollingToTop) {
+                    state.engine.evictAndReload(visibleBatches.maxOrNull() ?: 0)
+                }
             }
         }
     }

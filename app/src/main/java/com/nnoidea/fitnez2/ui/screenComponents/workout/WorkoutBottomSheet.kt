@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PredictiveBottomSheet
@@ -35,7 +36,11 @@ fun WorkoutBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(top = 24.dp)
+                .padding(top = 12.dp)
+                .graphicsLayer {
+                    val progress = (state.offsetY.value - state.minOffset) / (state.maxOffset - state.minOffset)
+                    alpha = (1f - progress).coerceIn(0f, 1f)
+                }
         ) {
             if (state.hasBeenOpened) {
                 val filterIds = if (state.selectedExerciseId != null) {

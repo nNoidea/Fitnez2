@@ -28,6 +28,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -148,7 +151,11 @@ fun ExerciseHistoryList(
 
         ScrollToTopButton(
             listState = state.listState,
-            onClick = { scope.launch { state.listState.animateScrollToItem(0) } },
+            onClick = {
+                scope.launch {
+                    state.scrollToTop(null)
+                }
+            },
             extraBottomPadding = extraBottomPadding,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -174,8 +181,13 @@ private fun ScrollToTopButton(
         derivedStateOf { listState.firstVisibleItemIndex > 3 }
     }
 
+    LaunchedEffect(showButton) {
+        globalUiState.isScrollToTopButtonVisible = showButton
+    }
+
+    val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val animatedBottomPadding by androidx.compose.animation.core.animateDpAsState(
-        targetValue = if (globalUiState.isBottomSheetHidden) 0.dp else extraBottomPadding,
+        targetValue = if (globalUiState.isBottomSheetHidden) navBarPadding else extraBottomPadding,
         animationSpec = androidx.compose.animation.core.spring(stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow),
         label = "fabBottomPadding"
     )
