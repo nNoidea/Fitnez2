@@ -142,7 +142,7 @@ fun ExerciseSelectionDialog(
                                 modifier = Modifier.padding(end = 12.dp)
                             )
                             Text(
-                                text = globalLocalization.labelCreateWorkout,
+                                text = globalLocalization.labelWorkout,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
@@ -164,13 +164,13 @@ fun ExerciseSelectionDialog(
                         Icon(
                             Icons.Default.Add, 
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.padding(end = 12.dp)
                         )
                         Text(
-                            text = globalLocalization.labelCreateExercise,
+                            text = globalLocalization.labelExercise,
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.tertiary,
                             fontWeight = FontWeight.Bold
                         )
                     }
