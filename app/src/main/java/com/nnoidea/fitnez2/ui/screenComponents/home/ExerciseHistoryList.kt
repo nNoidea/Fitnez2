@@ -43,6 +43,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -148,9 +149,10 @@ fun ExerciseHistoryList(
         ScrollToTopButton(
             listState = state.listState,
             onClick = { scope.launch { state.listState.animateScrollToItem(0) } },
+            extraBottomPadding = extraBottomPadding,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 24.dp, bottom = 24.dp + extraBottomPadding)
+                .padding(end = 24.dp, bottom = 24.dp)
         )
     }
 }
@@ -163,26 +165,34 @@ fun ExerciseHistoryList(
 private fun ScrollToTopButton(
     listState: LazyListState,
     onClick: () -> Unit,
+    extraBottomPadding: Dp,
     modifier: Modifier = Modifier
 ) {
+    val globalUiState = com.nnoidea.fitnez2.ui.common.LocalGlobalUiState.current
     val view = LocalView.current
     val showButton by remember {
         derivedStateOf { listState.firstVisibleItemIndex > 3 }
     }
 
+    val animatedBottomPadding by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (globalUiState.isBottomSheetHidden) 0.dp else extraBottomPadding,
+        animationSpec = androidx.compose.animation.core.spring(stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow),
+        label = "fabBottomPadding"
+    )
+
     AnimatedVisibility(
         visible = showButton,
         enter = fadeIn() + scaleIn(),
         exit = fadeOut() + scaleOut(),
-        modifier = modifier
+        modifier = modifier.padding(bottom = animatedBottomPadding)
     ) {
-        SmallFloatingActionButton(
+        FloatingActionButton(
             onClick = {
                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                 onClick()
             },
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.onTertiary,
             elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp)
         ) {
             Icon(
