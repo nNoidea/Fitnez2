@@ -120,6 +120,9 @@ class GlobalUiState(
     // State: BottomSheet Offset for Snackbars
     var bottomSheetSnackbarOffset by mutableStateOf(0.dp)
 
+    // State: BottomSheet Hide (for auto-hide on scroll)
+    var isBottomSheetHidden by mutableStateOf(false)
+
     // State: Rotation Mode
     var rotationMode by mutableStateOf(RotationMode.SYSTEM)
 

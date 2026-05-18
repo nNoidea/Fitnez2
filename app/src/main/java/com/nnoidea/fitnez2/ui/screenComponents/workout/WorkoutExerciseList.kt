@@ -26,6 +26,7 @@ import com.nnoidea.fitnez2.ui.components.history.HeaderLabel
 import com.nnoidea.fitnez2.ui.components.history.HistoryRecordCard
 import com.nnoidea.fitnez2.ui.components.history.computeColorParityByName
 import com.nnoidea.fitnez2.ui.components.history.recordCardShape
+import com.nnoidea.fitnez2.ui.components.bottomsheet.autoHideBottomSheet
 
 @Composable
 fun WorkoutExerciseList(
@@ -34,6 +35,7 @@ fun WorkoutExerciseList(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     extraBottomPadding: Dp = 0.dp,
+    enableAutoHide: Boolean = false,
     onDeleteRequest: (WorkoutRecord) -> Unit,
     onUpdateRequest: (WorkoutRecord) -> Unit
 ) {
@@ -44,7 +46,7 @@ fun WorkoutExerciseList(
     ) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().autoHideBottomSheet(enableAutoHide),
             contentPadding = PaddingValues(bottom = 80.dp + extraBottomPadding)
         ) {
             item(key = "top_spacer_anchor") {
