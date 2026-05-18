@@ -13,7 +13,7 @@ import com.nnoidea.fitnez2.ui.components.bottomsheet.PredictiveBottomSheetState
 
 import com.nnoidea.fitnez2.ui.components.dialog.ExerciseSelectionDialog
 import com.nnoidea.fitnez2.ui.screenComponents.home.ExerciseHistoryList
-import com.nnoidea.fitnez2.ui.screenComponents.home.SheetFormRow
+import com.nnoidea.fitnez2.ui.components.bottomsheet.SheetFormRow
 
 /**
  * Workout screen bottom sheet — pre-wired with:
@@ -28,7 +28,7 @@ fun WorkoutBottomSheet(
     modifier: Modifier = Modifier
 ) {
     PredictiveBottomSheet(state = state, modifier = modifier) {
-        SheetFormRow(state = state)
+        SheetFormRow(state = state, showInputs = true)
 
         // Expanded: exercise history for selected exercise
         Box(

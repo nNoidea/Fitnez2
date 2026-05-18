@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,9 +51,13 @@ fun BottomSheetSetsField(
     value: String,
     onValidChange: (String) -> Unit,
     onRawValueChange: ((String) -> Unit)? = null,
-    containerColor: Color = MaterialTheme.colorScheme.tertiary,
-    contentColor: Color = MaterialTheme.colorScheme.onTertiary,
-    modifier: Modifier = Modifier
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    modifier: Modifier = Modifier,
+    topStartRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    topEndRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    bottomStartRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    bottomEndRadius: androidx.compose.ui.unit.Dp = 24.dp
 ) {
     SetsInput(
         value = value,
@@ -65,10 +70,14 @@ fun BottomSheetSetsField(
             placeholder = placeholder,
             interactionSource = interactionSource,
             onValueChange = onValueChange,
-            containerColor = containerColor,
-            contentColor = contentColor,
             isFocused = isFocused,
-            modifier = modifier
+            modifier = modifier,
+            topStartRadius = topStartRadius,
+            topEndRadius = topEndRadius,
+            bottomStartRadius = bottomStartRadius,
+            bottomEndRadius = bottomEndRadius,
+            unfocusedContainerColor = containerColor,
+            unfocusedContentColor = contentColor
         )
     }
 }
@@ -82,9 +91,13 @@ fun BottomSheetRepsField(
     value: String,
     onValidChange: (String) -> Unit,
     onRawValueChange: ((String) -> Unit)? = null,
-    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
-    modifier: Modifier = Modifier
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    modifier: Modifier = Modifier,
+    topStartRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    topEndRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    bottomStartRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    bottomEndRadius: androidx.compose.ui.unit.Dp = 24.dp
 ) {
     RepsInput(
         value = value,
@@ -97,10 +110,14 @@ fun BottomSheetRepsField(
             placeholder = placeholder,
             interactionSource = interactionSource,
             onValueChange = onValueChange,
-            containerColor = containerColor,
-            contentColor = contentColor,
             isFocused = isFocused,
-            modifier = modifier
+            modifier = modifier,
+            topStartRadius = topStartRadius,
+            topEndRadius = topEndRadius,
+            bottomStartRadius = bottomStartRadius,
+            bottomEndRadius = bottomEndRadius,
+            unfocusedContainerColor = containerColor,
+            unfocusedContentColor = contentColor
         )
     }
 }
@@ -117,7 +134,11 @@ fun BottomSheetWeightField(
     onRawValueChange: ((String) -> Unit)? = null,
     containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    topStartRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    topEndRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    bottomStartRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    bottomEndRadius: androidx.compose.ui.unit.Dp = 24.dp
 ) {
     WeightInput(
         value = value,
@@ -130,11 +151,15 @@ fun BottomSheetWeightField(
             placeholder = placeholder,
             interactionSource = interactionSource,
             onValueChange = onValueChange,
-            containerColor = containerColor,
-            contentColor = contentColor,
             isFocused = isFocused,
+            unfocusedContainerColor = containerColor,
+            unfocusedContentColor = contentColor,
             isDecimal = true,
-            modifier = modifier
+            modifier = modifier,
+            topStartRadius = topStartRadius,
+            topEndRadius = topEndRadius,
+            bottomStartRadius = bottomStartRadius,
+            bottomEndRadius = bottomEndRadius
         )
     }
 }
@@ -245,19 +270,58 @@ private fun BottomSheetInputSkin(
     placeholder: String,
     interactionSource: MutableInteractionSource,
     onValueChange: (String) -> Unit,
-    containerColor: Color,
-    contentColor: Color,
     isFocused: Boolean,
     modifier: Modifier = Modifier,
-    isDecimal: Boolean = false
+    isDecimal: Boolean = false,
+    topStartRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    topEndRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    bottomStartRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    bottomEndRadius: androidx.compose.ui.unit.Dp = 24.dp,
+    unfocusedContainerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    unfocusedContentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    focusedContainerColor: Color = MaterialTheme.colorScheme.tertiary,
+    focusedContentColor: Color = MaterialTheme.colorScheme.onTertiary
 ) {
     val keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Number
     val focusRequester = remember { FocusRequester() }
 
+    val animatedTopStart by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isFocused) 24.dp else topStartRadius,
+        label = "topStartRadius"
+    )
+    val animatedTopEnd by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isFocused) 24.dp else topEndRadius,
+        label = "topEndRadius"
+    )
+    val animatedBottomStart by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isFocused) 24.dp else bottomStartRadius,
+        label = "bottomStartRadius"
+    )
+    val animatedBottomEnd by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isFocused) 24.dp else bottomEndRadius,
+        label = "bottomEndRadius"
+    )
+
+    val currentShape = RoundedCornerShape(
+        topStart = animatedTopStart,
+        topEnd = animatedTopEnd,
+        bottomEnd = animatedBottomEnd,
+        bottomStart = animatedBottomStart
+    )
+
+    val currentContainerColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isFocused) focusedContainerColor else unfocusedContainerColor,
+        label = "containerColor"
+    )
+    val currentContentColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isFocused) focusedContentColor else unfocusedContentColor,
+        label = "contentColor"
+    )
+
     Box(
         modifier = modifier
-            .background(containerColor, RoundedCornerShape(24.dp))
-            .clip(RoundedCornerShape(24.dp)),
+            .background(currentContainerColor, currentShape)
+            .clip(currentShape),
         contentAlignment = Alignment.Center
     ) {
         // BasicTextField always exists so interactionSource can track focus.
@@ -271,11 +335,11 @@ private fun BottomSheetInputSkin(
                 .focusRequester(focusRequester),
             interactionSource = interactionSource,
             textStyle = MaterialTheme.typography.titleLarge.copy(
-                color = contentColor,
+                color = currentContentColor,
                 textAlign = TextAlign.Start
             ),
             singleLine = true,
-            cursorBrush = SolidColor(contentColor),
+            cursorBrush = SolidColor(currentContentColor),
             decorationBox = { innerTextField ->
                 Row(
                     modifier = Modifier
@@ -287,19 +351,19 @@ private fun BottomSheetInputSkin(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.titleMedium,
-                        color = contentColor
+                        color = currentContentColor
                     )
                     Text(
                         text = " | ",
                         style = MaterialTheme.typography.titleMedium,
-                        color = contentColor
+                        color = currentContentColor
                     )
                     Box(contentAlignment = Alignment.CenterStart) {
                         if (displayValue.isEmpty()) {
                             Text(
                                 text = placeholder.ifEmpty { " " },
                                 style = MaterialTheme.typography.titleLarge.copy(
-                                    color = contentColor.copy(alpha = 0.5f)
+                                    color = currentContentColor.copy(alpha = 0.5f)
                                 )
                             )
                         }
@@ -328,18 +392,18 @@ private fun BottomSheetInputSkin(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.titleMedium,
-                    color = contentColor
+                    color = currentContentColor
                 )
                 Text(
                     text = " | ",
                     style = MaterialTheme.typography.titleMedium,
-                    color = contentColor
+                    color = currentContentColor
                 )
                 val facadeText = displayValue.ifEmpty { placeholder.ifEmpty { " " } }
                 Text(
                     text = if (facadeText.length > 6) facadeText.take(6) + "\u2026" else facadeText,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        color = if (displayValue.isEmpty()) contentColor.copy(alpha = 0.5f) else contentColor
+                        color = if (displayValue.isEmpty()) currentContentColor.copy(alpha = 0.5f) else currentContentColor
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Clip

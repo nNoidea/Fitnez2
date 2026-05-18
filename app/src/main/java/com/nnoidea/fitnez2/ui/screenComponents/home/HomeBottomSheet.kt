@@ -32,6 +32,7 @@ import com.nnoidea.fitnez2.ui.components.BottomSheetWeightField
 import com.nnoidea.fitnez2.ui.components.bottomsheet.BUTTONHEIGHT
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PredictiveBottomSheet
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PredictiveBottomSheetState
+import com.nnoidea.fitnez2.ui.components.bottomsheet.SheetFormRow
 
 import com.nnoidea.fitnez2.ui.components.dialog.ExerciseSelectionDialog
 import com.nnoidea.fitnez2.ui.screenComponents.home.ExerciseHistoryList
@@ -49,7 +50,10 @@ fun HomeBottomSheet(modifier: Modifier = Modifier) {
     val state = rememberHomeBottomSheetState()
 
     PredictiveBottomSheet(state = state, modifier = modifier) {
-        SheetFormRow(state = state)
+        SheetFormRow(
+            state = state,
+            showInputs = state.selectedWorkout == null
+        )
 
         // Expanded: exercise history for selected exercise or workout
         Box(
@@ -102,94 +106,4 @@ fun HomeBottomSheet(modifier: Modifier = Modifier) {
     )
 }
 
-/**
- * Shared form row: exercise selector button + add button + sets/reps/weight fields.
- * Used by both Home and Workout bottom sheets.
- */
-@Composable
-internal fun SheetFormRow(state: PredictiveBottomSheetState) {
-    val buttonHeight = BUTTONHEIGHT.dp
-    val view = LocalView.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Row: Exercise Selector + Add Button
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            FilledTonalButton(
-                onClick = {
-                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                    state.toggleExerciseSelection(true)
-                },
-                modifier = Modifier
-                    .weight(2f)
-                    .height(buttonHeight),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = state.selectedExerciseName ?: globalLocalization.labelSelectExercise,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                }
-            }
-
-            Button(
-                onClick = { state.onAddClick() },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(buttonHeight),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(globalLocalization.labelAdd, maxLines = 1)
-            }
-        }
-
-        // Row: Sets, Reps, Weight (Hide if workout is selected)
-        if (state !is HomeBottomSheetState || state.selectedWorkout == null) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                BottomSheetSetsField(
-                    value = state.sets,
-                    onValidChange = { state.onSetsChange(it) },
-                    onRawValueChange = { state.setsRaw = it },
-                    modifier = Modifier.weight(1f).height(buttonHeight)
-                )
-
-                BottomSheetRepsField(
-                    value = state.reps,
-                    onValidChange = { state.onRepsChange(it) },
-                    onRawValueChange = { state.repsRaw = it },
-                    modifier = Modifier.weight(1f).height(buttonHeight)
-                )
-
-                BottomSheetWeightField(
-                    value = state.weight.toDoubleOrNull() ?: 0.0,
-                    label = state.weightUnit,
-                    onValidChange = { state.onWeightChange(it) },
-                    onRawValueChange = { state.weightRaw = it },
-                    modifier = Modifier.weight(1f).height(buttonHeight)
-                )
-            }
-        } else {
-            Spacer(modifier = Modifier.fillMaxWidth().height(buttonHeight))
-        }
-    }
-}
