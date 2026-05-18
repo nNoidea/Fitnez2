@@ -427,7 +427,8 @@ private fun BottomSheetInputSkin(
                 Text(
                     text = if (facadeText.length > 6) facadeText.take(6) + "\u2026" else facadeText,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        color = if (displayValue.isEmpty()) currentContentColor.copy(alpha = 0.5f) else currentContentColor
+                        color = if (displayValue.isEmpty()) currentContentColor.copy(alpha = 0.5f)
+                               else MaterialTheme.colorScheme.primary
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Clip
