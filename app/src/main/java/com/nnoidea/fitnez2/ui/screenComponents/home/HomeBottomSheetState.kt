@@ -2,6 +2,7 @@ package com.nnoidea.fitnez2.ui.screenComponents.home
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
@@ -205,7 +206,8 @@ fun rememberHomeBottomSheetState(): HomeBottomSheetState {
     val density = LocalDensity.current
     val view = androidx.compose.ui.platform.LocalView.current
 
-    val peekHeight = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp
+    val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val peekHeight = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp + navBarPadding
     val peekHeightPx = with(density) { peekHeight.toPx() }
 
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current

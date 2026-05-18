@@ -48,6 +48,8 @@ class GlobalUiState(
     var currentDayKey by mutableLongStateOf(System.currentTimeMillis())
         private set
 
+    var isScrollToTopButtonVisible by mutableStateOf(false)
+
     init {
         startDayChangeTracker()
     }

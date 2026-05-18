@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -60,7 +61,11 @@ fun HomeBottomSheet(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(top = 24.dp)
+                .padding(top = 12.dp)
+                .graphicsLayer {
+                    val progress = (state.offsetY.value - state.minOffset) / (state.maxOffset - state.minOffset)
+                    alpha = (1f - progress).coerceIn(0f, 1f)
+                }
         ) {
             if (state.hasBeenOpened) {
                 val filterIds = if (state.selectedWorkout != null) {
