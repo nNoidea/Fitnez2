@@ -291,9 +291,9 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                                  Box(
                                                      modifier = if (isToday) {
                                                           val pillBgColor = if (isCurrentMonth) {
-                                                              MaterialTheme.colorScheme.onPrimaryContainer
+                                                              MaterialTheme.colorScheme.tertiary
                                                           } else {
-                                                              MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.35f)
+                                                              MaterialTheme.colorScheme.tertiary.copy(alpha = 0.35f)
                                                           }
                                                           Modifier
                                                               .width(28.dp)
@@ -322,8 +322,8 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                                          ),
                                                          textAlign = TextAlign.Center,
                                                          color = if (isToday) {
-                                                             if (isCurrentMonth) MaterialTheme.colorScheme.primaryContainer
-                                                             else lerp(MaterialTheme.colorScheme.primaryContainer, Color.Black, 0.4f)
+                                                             if (isCurrentMonth) MaterialTheme.colorScheme.onTertiary
+                                                             else lerp(MaterialTheme.colorScheme.onTertiary, Color.Black, 0.4f)
                                                          } else {
                                                              if (isCurrentMonth) MaterialTheme.colorScheme.onSecondaryContainer
                                                              else lerp(MaterialTheme.colorScheme.onSecondaryContainer, Color.Black, 0.4f)
