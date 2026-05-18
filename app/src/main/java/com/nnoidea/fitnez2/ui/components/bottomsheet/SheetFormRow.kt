@@ -80,7 +80,7 @@ internal fun SheetFormRow(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(globalLocalization.labelAdd, maxLines = 1)
+                Text(globalLocalization.labelAdd, maxLines = 1, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
             }
         }
 
