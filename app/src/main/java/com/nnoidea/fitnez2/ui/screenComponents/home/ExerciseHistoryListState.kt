@@ -25,6 +25,7 @@ import com.nnoidea.fitnez2.ui.components.history.buildUiItems
 import com.nnoidea.fitnez2.ui.components.history.HistoryUiModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import android.view.HapticFeedbackConstants
 import kotlinx.coroutines.flow.first
 import kotlin.collections.buildList
 
@@ -54,6 +55,7 @@ class DatabaseExerciseHistoryListState(
     private val exerciseDao: com.nnoidea.fitnez2.data.dao.ExerciseDao,
     private val settingsRepository: SettingsRepository,
     private val globalUiState: GlobalUiState,
+    private val onHapticFeedback: (Int) -> Unit,
     val filterExerciseIds: List<Int>? = null,
     private val useAlternatingColors: Boolean = true
 ) : ExerciseHistoryListState {
@@ -95,6 +97,7 @@ class DatabaseExerciseHistoryListState(
                 message = globalLocalization.labelRecordDeleted,
                 actionLabel = globalLocalization.labelUndo,
                 onActionPerformed = {
+                    onHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                     scope.launch {
                         val newId = dao.create(freshRecord.copy(id = 0))
                         GlobalUiState.emitToAll(UiSignal.RecordInserted(newId.toInt()))
@@ -157,6 +160,7 @@ fun rememberExerciseHistoryListState(
     val exerciseDao = database.exerciseDao()
     val settingsRepository = LocalSettingsRepository.current
     val globalUiState = LocalGlobalUiState.current
+    val view = androidx.compose.ui.platform.LocalView.current
 
     val state = remember(filterExerciseIds, useAlternatingColors) {
         DatabaseExerciseHistoryListState(
@@ -165,6 +169,7 @@ fun rememberExerciseHistoryListState(
             exerciseDao = exerciseDao,
             settingsRepository = settingsRepository,
             globalUiState = globalUiState,
+            onHapticFeedback = { view.performHapticFeedback(it) },
             filterExerciseIds = filterExerciseIds,
             useAlternatingColors = useAlternatingColors
         )
