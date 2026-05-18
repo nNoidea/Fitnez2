@@ -137,7 +137,7 @@ class HomeBottomSheetState(
                 val workout = selectedWorkout
                 if (workout != null) {
                     if (selectedWorkoutRecords.isEmpty()) {
-                        Toast.makeText(context, "Workout is empty", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, globalLocalization.errorWorkoutEmpty, Toast.LENGTH_SHORT).show()
                         return@launch
                     }
                     dismissInput()

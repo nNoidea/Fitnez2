@@ -25,6 +25,7 @@ sealed class EnStrings(
     open val errorWorkoutNameBlank: String = "Please fill in a name"
     open fun errorWorkoutAlreadyExists(name: String): String = "Workout with name '$name' already exists."
     open val errorWorkoutNoExercises: String = "Please add at least one exercise"
+    open val errorWorkoutEmpty: String = "Workout is empty"
 
     open val labelAddExercise: String = "Add Exercise"
     open val labelCreateExercise: String = "Create an exercise"
@@ -39,6 +40,7 @@ sealed class EnStrings(
     open val labelClose: String = "Close"
     open val labelDelete: String = "Delete"
     open val labelSwitchLanguage: String = "Switch Language"
+    open val labelAiTranslationsDisclaimer: String = "Translations are done by Artificial Intelligence"
 
     open val labelTimeline: String = "Timeline"
     open val labelMonthly: String = "Monthly"
