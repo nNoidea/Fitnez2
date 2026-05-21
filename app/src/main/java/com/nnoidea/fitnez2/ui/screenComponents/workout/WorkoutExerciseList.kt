@@ -57,33 +57,6 @@ fun WorkoutExerciseList(
                 Spacer(modifier = Modifier.height(1.dp))
             }
 
-            item {
-                Row(
-                    modifier = Modifier
-                        .padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    
-                    Row(
-                        modifier = Modifier.weight(3f),
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            HeaderLabel(globalLocalization.labelSets)
-                        }
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            HeaderLabel(globalLocalization.labelReps)
-                        }
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            HeaderLabel(weightUnit)
-                        }
-                    }
-                }
-            }
-
             // Precompute color parity once per list change — O(n) instead of O(n²)
             val colorParity = computeColorParityByName(items)
 
@@ -99,6 +72,7 @@ fun WorkoutExerciseList(
 
                 val showTitle = !prevIsSame
                 val shape = recordCardShape(prevIsSame, nextIsSame)
+                val showLabels = (index == 0)
 
                 SwipeToDeleteContainer(
                     onDelete = { onDeleteRequest(item.workoutRecord) },
@@ -116,6 +90,7 @@ fun WorkoutExerciseList(
                         shape = shape,
                         prevIsSame = prevIsSame,
                         nextIsSame = nextIsSame,
+                        showLabels = showLabels,
                         onUpdate = { sets, reps, weight ->
                             onUpdateRequest(item.workoutRecord.copy(sets = sets, reps = reps, weight = weight))
                         }

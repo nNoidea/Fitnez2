@@ -279,7 +279,6 @@ private fun ExerciseHistoryListContent(
                     is HistoryUiModel.Header -> {
                         HistoryDateHeader(
                             date = item.date,
-                            weightUnit = weightUnit,
                             modifier = Modifier.animateItem()
                         )
                     }
@@ -313,6 +312,8 @@ private fun ExerciseHistoryListContent(
                         }
 
                         val shape = recordCardShape(prevIsSame, nextIsSame)
+                        
+                        val showLabels = (prevItem is HistoryUiModel.Header) || (prevItem == null)
 
                         SwipeToDeleteContainer(
                             onDelete = { onDeleteRequest(item.record.record) },
@@ -334,6 +335,7 @@ private fun ExerciseHistoryListContent(
                                 shape = shape,
                                 prevIsSame = prevIsSame,
                                 nextIsSame = nextIsSame,
+                                showLabels = showLabels,
                                 onUpdate = { sets, reps, weight ->
                                     onUpdateRequest(item.record.record.copy(sets = sets, reps = reps, weight = weight))
                                 }
@@ -380,7 +382,7 @@ private fun LoadingMoreIndicator(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 24.dp),
+            .padding(vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
@@ -396,7 +398,6 @@ private fun LoadingMoreIndicator(modifier: Modifier = Modifier) {
 @Composable
 private fun HistoryDateHeader(
     date: Long,
-    weightUnit: String,
     modifier: Modifier = Modifier
 ) {
     val globalUiState = LocalGlobalUiState.current
@@ -416,58 +417,33 @@ private fun HistoryDateHeader(
         else globalLocalization.formatDayName(date)
     }
 
-    Column(
-        modifier = modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Line 1: Day Name (full width)
         Text(
             text = dayName,
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             ),
-            modifier = Modifier.fillMaxWidth(),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = dateString,
+            style = MaterialTheme.typography.titleSmall.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            textAlign = TextAlign.End,
             maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
-
-        // Line 2: Date string (1/4 weight) + Sets, Reps, Weight column headers (3/4 weight split into 1/4 columns)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Text(
-                    text = dateString,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
-            }
-            
-            Row(
-                modifier = Modifier.weight(3f),
-                horizontalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    HeaderLabel(globalLocalization.labelSets)
-                }
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    HeaderLabel(globalLocalization.labelReps)
-                }
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    HeaderLabel(weightUnit)
-                }
-            }
-        }
     }
 }
 
