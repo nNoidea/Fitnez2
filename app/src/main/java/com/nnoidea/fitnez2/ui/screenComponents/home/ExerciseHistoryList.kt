@@ -416,45 +416,58 @@ private fun HistoryDateHeader(
         else globalLocalization.formatDayName(date)
     }
 
-    // Aligned with the content inside the cards
-    // Card Padding (16) + Card Internal Padding (16) = 32dp start offset
     Column(
         modifier = modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Full width Day Name at the top to prevent wrapping of long strings!
+        // Line 1: Day Name (full width)
         Text(
             text = dayName,
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
 
-        // Grid alignment row underneath for the date string and column headers
-        HistoryGridRow(
-            verticalAlignment = Alignment.Bottom,
-            col1 = {
+        // Line 2: Date string (1/4 weight) + Sets, Reps, Weight column headers (3/4 weight split into 1/4 columns)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.CenterStart
+            ) {
                 Text(
                     text = dateString,
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
-            },
-            col2 = {
-                HeaderLabel(globalLocalization.labelSets)
-            },
-            col3 = {
-                HeaderLabel(globalLocalization.labelReps)
-            },
-            col4 = {
-                HeaderLabel(weightUnit)
             }
-        )
+            
+            Row(
+                modifier = Modifier.weight(3f),
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    HeaderLabel(globalLocalization.labelSets)
+                }
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    HeaderLabel(globalLocalization.labelReps)
+                }
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    HeaderLabel(weightUnit)
+                }
+            }
+        }
     }
 }
 

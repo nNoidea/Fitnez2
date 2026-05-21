@@ -1,6 +1,10 @@
 package com.nnoidea.fitnez2.ui.screenComponents.workout
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,13 +58,30 @@ fun WorkoutExerciseList(
             }
 
             item {
-                HistoryGridRow(
-                    modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp),
-                    col1 = { Spacer(modifier = Modifier) }, // Empty col 1 in place of Name/Date
-                    col2 = { HeaderLabel(globalLocalization.labelSets) },
-                    col3 = { HeaderLabel(globalLocalization.labelReps) },
-                    col4 = { HeaderLabel(weightUnit) }
-                )
+                Row(
+                    modifier = Modifier
+                        .padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    
+                    Row(
+                        modifier = Modifier.weight(3f),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            HeaderLabel(globalLocalization.labelSets)
+                        }
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            HeaderLabel(globalLocalization.labelReps)
+                        }
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            HeaderLabel(weightUnit)
+                        }
+                    }
+                }
             }
 
             // Precompute color parity once per list change — O(n) instead of O(n²)
