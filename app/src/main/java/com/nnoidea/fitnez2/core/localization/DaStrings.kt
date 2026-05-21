@@ -59,6 +59,7 @@ object DaStrings : EnStrings(
     override val labelEditExercise = "Rediger øvelse"
 
     override val labelRecordDeleted = "Optegnelse slettet"
+    override val labelRecordsDeleted = "Optegnelser slettet"
     override val labelUndo = "Fortryd"
 
     override val labelToday = "I dag"

@@ -59,6 +59,7 @@ object SvStrings : EnStrings(
     override val labelEditExercise = "Redigera övning"
 
     override val labelRecordDeleted = "Post borttagen"
+    override val labelRecordsDeleted = "Poster borttagna"
     override val labelUndo = "Ångra"
 
     override val labelToday = "Idag"

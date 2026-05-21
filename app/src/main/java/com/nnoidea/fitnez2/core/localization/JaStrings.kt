@@ -59,6 +59,7 @@ object JaStrings : EnStrings(
     override val labelEditExercise = "種目を編集"
 
     override val labelRecordDeleted = "レコードが削除されました"
+    override val labelRecordsDeleted = "レコードが削除されました"
     override val labelUndo = "元に戻す"
 
     override val labelToday = "今日"

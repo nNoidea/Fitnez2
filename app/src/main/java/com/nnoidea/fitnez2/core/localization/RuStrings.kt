@@ -59,6 +59,7 @@ object RuStrings : EnStrings(
     override val labelEditExercise = "Редактировать упражнение"
 
     override val labelRecordDeleted = "Запись удалена"
+    override val labelRecordsDeleted = "Записи удалены"
     override val labelUndo = "Отменить"
 
     override val labelToday = "Сегодня"

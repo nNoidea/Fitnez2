@@ -59,6 +59,7 @@ object EsStrings : EnStrings(
     override val labelEditExercise = "Editar ejercicio"
 
     override val labelRecordDeleted = "Registro eliminado"
+    override val labelRecordsDeleted = "Registros eliminados"
     override val labelUndo = "Deshacer"
 
     override val labelToday = "Hoy"

@@ -59,6 +59,7 @@ object HiStrings : EnStrings(
     override val labelEditExercise = "व्यायाम संपादित करें"
 
     override val labelRecordDeleted = "रिकॉर्ड हटाया गया"
+    override val labelRecordsDeleted = "रिकॉर्ड हटाए गए"
     override val labelUndo = "पूर्ववत करें"
 
     override val labelToday = "आज"

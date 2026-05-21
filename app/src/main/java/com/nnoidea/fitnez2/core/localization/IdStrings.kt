@@ -59,6 +59,7 @@ object IdStrings : EnStrings(
     override val labelEditExercise = "Edit Latihan"
 
     override val labelRecordDeleted = "Rekor dihapus"
+    override val labelRecordsDeleted = "Rekor dihapus"
     override val labelUndo = "Urungkan"
 
     override val labelToday = "Hari Ini"

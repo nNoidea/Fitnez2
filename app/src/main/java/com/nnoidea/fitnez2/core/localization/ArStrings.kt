@@ -59,6 +59,7 @@ object ArStrings : EnStrings(
     override val labelEditExercise = "تعديل التمرين"
 
     override val labelRecordDeleted = "تم حذف السجل"
+    override val labelRecordsDeleted = "تم حذف السجلات"
     override val labelUndo = "تراجع"
 
     override val labelToday = "اليوم"

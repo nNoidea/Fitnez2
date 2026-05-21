@@ -59,6 +59,7 @@ object NlStrings : EnStrings(
     override val labelEditExercise = "Oefening bewerken"
 
     override val labelRecordDeleted = "Record verwijderd"
+    override val labelRecordsDeleted = "Records verwijderd"
     override val labelUndo = "Ongedaan maken"
 
     override val labelToday = "Vandaag"

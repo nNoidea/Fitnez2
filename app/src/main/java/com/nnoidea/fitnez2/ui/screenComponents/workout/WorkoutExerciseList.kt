@@ -84,6 +84,7 @@ fun WorkoutExerciseList(
                         reps = item.workoutRecord.reps,
                         weight = item.workoutRecord.weight,
                         timestamp = null,
+                        showTimestamp = false,
                         isLight = colorParity.getOrElse(index) { true },
                         showTitle = showTitle,
                         weightUnit = weightUnit,

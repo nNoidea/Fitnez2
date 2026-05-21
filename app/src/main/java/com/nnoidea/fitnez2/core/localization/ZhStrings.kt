@@ -59,6 +59,7 @@ object ZhStrings : EnStrings(
     override val labelEditExercise = "编辑动作"
 
     override val labelRecordDeleted = "记录已删除"
+    override val labelRecordsDeleted = "记录已删除"
     override val labelUndo = "撤销"
 
     override val labelToday = "今天"

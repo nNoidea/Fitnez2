@@ -59,6 +59,7 @@ object PtStrings : EnStrings(
     override val labelEditExercise = "Editar Exercício"
 
     override val labelRecordDeleted = "Registro excluído"
+    override val labelRecordsDeleted = "Registros excluídos"
     override val labelUndo = "Desfazer"
 
     override val labelToday = "Hoje"

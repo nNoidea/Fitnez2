@@ -3,6 +3,7 @@ package com.nnoidea.fitnez2.ui.screenComponents.home
 import com.nnoidea.fitnez2.ui.components.history.HistoryGridRow
 import com.nnoidea.fitnez2.ui.components.history.HeaderLabel
 import com.nnoidea.fitnez2.ui.components.history.HistoryRecordCard
+import com.nnoidea.fitnez2.ui.components.history.HistoryCollapsedRecordCard
 import com.nnoidea.fitnez2.ui.components.history.computeColorParityByName
 import com.nnoidea.fitnez2.ui.components.history.computeColorParity
 import com.nnoidea.fitnez2.ui.components.history.recordCardShape
@@ -60,6 +61,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -91,6 +95,7 @@ import com.nnoidea.fitnez2.ui.components.HistorySetsField
 import com.nnoidea.fitnez2.ui.components.HistoryRepsField
 import com.nnoidea.fitnez2.ui.components.HistoryWeightField
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 
 // HistoryUiModel moved to SharedHistoryComponents.kt
 
@@ -145,8 +150,10 @@ fun ExerciseHistoryList(
                 weightUnit = state.weightUnit,
                 extraBottomPadding = extraBottomPadding,
                 enableAutoHide = enableAutoHide,
-                onUpdateRequest = { state.onUpdateRequest(it) }
-            ) { state.onDeleteRequest(it) }
+                onUpdateRequest = { state.onUpdateRequest(it) },
+                onDeleteRequest = { state.onDeleteRequest(it) },
+                onDeleteGroupRequest = { state.onDeleteGroupRequest(it) }
+            )
         }
 
         ScrollToTopButton(
@@ -233,8 +240,25 @@ private fun ExerciseHistoryListContent(
     extraBottomPadding: Dp,
     enableAutoHide: Boolean,
     onUpdateRequest: (Record) -> Unit,
-    onDeleteRequest: (Record) -> Unit
+    onDeleteRequest: (Record) -> Unit,
+    onDeleteGroupRequest: (List<Record>) -> Unit
 ) {
+
+    val renderItems = remember(uiItems) { buildRenderItems(uiItems) }
+    val expandedRecordIds = remember { mutableStateMapOf<Int, Boolean>() }
+    val timestampTokens = remember { mutableStateMapOf<Int, Long>() }
+    val scope = rememberCoroutineScope()
+
+    fun showTimestampFor(recordId: Int) {
+        val token = System.currentTimeMillis()
+        timestampTokens[recordId] = token
+        scope.launch {
+            delay(5000)
+            if (timestampTokens[recordId] == token) {
+                timestampTokens.remove(recordId)
+            }
+        }
+    }
 
     if (uiItems.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -245,6 +269,10 @@ private fun ExerciseHistoryListContent(
             )
         }
     } else {
+        val firstGroupIndex = remember(renderItems) {
+            renderItems.indexOfFirst { it is HistoryRenderItem.RecordGroup }
+        }
+
         LazyColumn(
             modifier = modifier.autoHideBottomSheet(enableAutoHide),
             state = listState,
@@ -255,97 +283,250 @@ private fun ExerciseHistoryListContent(
             }
 
             itemsIndexed(
-                items = uiItems,
+                items = renderItems,
                 key = { _, model ->
                      when(model) {
-                         is HistoryUiModel.Header -> "header_${model.section}_${model.date}"
-                         is HistoryUiModel.RecordItem -> "record_${model.record.record.id}"
-                         is HistoryUiModel.BatchSeparator -> "separator_${model.index}"
-                         is HistoryUiModel.EvictedBatch -> "evicted_${model.index}"
-                         is HistoryUiModel.LoadingMore -> "loading_more"
+                         is HistoryRenderItem.Header -> "header_${model.item.section}_${model.item.date}"
+                         is HistoryRenderItem.RecordGroup -> "record_group_${model.records.first().record.record.id}"
+                         is HistoryRenderItem.BatchSeparator -> "separator_${model.item.index}"
+                         is HistoryRenderItem.EvictedBatch -> "evicted_${model.item.index}"
+                         is HistoryRenderItem.LoadingMore -> "loading_more"
                      }
                 },
                 contentType = { _, model ->
                     when(model) {
-                        is HistoryUiModel.Header -> "header"
-                        is HistoryUiModel.RecordItem -> "record"
-                        is HistoryUiModel.BatchSeparator -> "separator"
-                        is HistoryUiModel.EvictedBatch -> "evicted"
-                        is HistoryUiModel.LoadingMore -> "loading"
+                        is HistoryRenderItem.Header -> "header"
+                        is HistoryRenderItem.RecordGroup -> "record_group"
+                        is HistoryRenderItem.BatchSeparator -> "separator"
+                        is HistoryRenderItem.EvictedBatch -> "evicted"
+                        is HistoryRenderItem.LoadingMore -> "loading"
                     }
                 }
             ) { index, item ->
                 when (item) {
-                    is HistoryUiModel.Header -> {
+                    is HistoryRenderItem.Header -> {
                         HistoryDateHeader(
-                            date = item.date,
+                            date = item.item.date,
                             modifier = Modifier.animateItem()
                         )
                     }
-                    is HistoryUiModel.BatchSeparator -> {
+                    is HistoryRenderItem.BatchSeparator -> {
                         OlderRecordsSeparator(modifier = Modifier.animateItem())
                     }
-                    is HistoryUiModel.EvictedBatch -> {
+                    is HistoryRenderItem.EvictedBatch -> {
                         Spacer(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(item.heightDp.dp)
+                                .height(item.item.heightDp.dp)
                         )
                     }
-                    is HistoryUiModel.LoadingMore -> {
+                    is HistoryRenderItem.LoadingMore -> {
                         LoadingMoreIndicator(modifier = Modifier.animateItem())
                     }
-                    is HistoryUiModel.RecordItem -> {
-                        val isLight = item.isLight
-                        
-                        val prevItem = if (index > 0) uiItems[index - 1] else null
-                        val nextItem = if (index < uiItems.lastIndex) uiItems[index + 1] else null
-                        
-                        val prevIsSame = (prevItem is HistoryUiModel.RecordItem) && (prevItem.isLight == isLight)
-                        val nextIsSame = (nextItem is HistoryUiModel.RecordItem) && (nextItem.isLight == isLight)
-                        
-                        // Also show title if previous is NOT the same exercise (or is null/header/separator)
-                        val showTitle = if (prevItem is HistoryUiModel.RecordItem) {
-                             prevItem.record.exerciseName != item.record.exerciseName
-                        } else {
-                             true
+                    is HistoryRenderItem.RecordGroup -> {
+                        val groupRecords = item.records
+                        val isTopGroup = index == firstGroupIndex
+                        val isGroupCollapsible = groupRecords.size > 1 && !isTopGroup
+                        val isGroupExpanded = !isGroupCollapsible || groupRecords.any {
+                            expandedRecordIds[it.record.record.id] == true
+                        }
+                        val topRecordId = groupRecords.first().record.record.id
+                        val showTopTimestamp = timestampTokens.containsKey(topRecordId)
+                        val prevRenderItem = if (index > 0) renderItems[index - 1] else null
+                        val showLabelsForTop = (prevRenderItem is HistoryRenderItem.Header) || (prevRenderItem == null)
+
+                        val onGroupTapped = {
+                            if (isGroupCollapsible) {
+                                if (isGroupExpanded) {
+                                    groupRecords.forEach { expandedRecordIds.remove(it.record.record.id) }
+                                } else {
+                                    groupRecords.forEach { expandedRecordIds[it.record.record.id] = true }
+                                }
+                            }
                         }
 
-                        val shape = recordCardShape(prevIsSame, nextIsSame)
-                        
-                        val showLabels = (prevItem is HistoryUiModel.Header) || (prevItem == null)
+                        if (isGroupCollapsible && !isGroupExpanded) {
+                            SwipeToDeleteContainer(
+                                onDelete = { onDeleteGroupRequest(groupRecords.map { it.record.record }) },
+                                modifier = Modifier.animateItem()
+                            ) {
+                                Column {
+                                    groupRecords.forEachIndexed { groupIndex, recordItem ->
+                                        val prevIsSame = groupIndex > 0
+                                        val nextIsSame = groupIndex < groupRecords.lastIndex
+                                        val shape = when {
+                                            groupIndex == 0 -> recordCardShape(prevIsSame, nextIsSame)
+                                            groupIndex == groupRecords.lastIndex -> RoundedCornerShape(
+                                                topStart = 4.dp,
+                                                topEnd = 4.dp,
+                                                bottomStart = 56.dp,
+                                                bottomEnd = 56.dp
+                                            )
+                                            else -> RoundedCornerShape(2.dp)
+                                        }
+                                        val recordId = recordItem.record.record.id
+                                        val timestamp = remember(recordItem.record.record.date) {
+                                            java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                                                .format(java.util.Date(recordItem.record.record.date))
+                                        }
 
-                        SwipeToDeleteContainer(
-                            onDelete = { onDeleteRequest(item.record.record) },
-                            modifier = Modifier.animateItem()
-                        ) {
-                            val timestamp = remember(item.record.record.date) {
-                                java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(item.record.record.date))
-                            }
-
-                            HistoryRecordCard(
-                                exerciseName = item.record.exerciseName,
-                                sets = item.record.record.sets,
-                                reps = item.record.record.reps,
-                                weight = item.record.record.weight,
-                                timestamp = timestamp,
-                                isLight = isLight,
-                                showTitle = showTitle,
-                                weightUnit = weightUnit,
-                                shape = shape,
-                                prevIsSame = prevIsSame,
-                                nextIsSame = nextIsSame,
-                                showLabels = showLabels,
-                                onUpdate = { sets, reps, weight ->
-                                    onUpdateRequest(item.record.record.copy(sets = sets, reps = reps, weight = weight))
+                                        key(recordId) {
+                                            val lastIndex = groupRecords.lastIndex
+                                            val showCollapsed = groupIndex >= kotlin.math.max(1, lastIndex - 1)
+                                            if (groupIndex == 0) {
+                                                HistoryRecordCard(
+                                                    exerciseName = recordItem.record.exerciseName,
+                                                    sets = recordItem.record.record.sets,
+                                                    reps = recordItem.record.record.reps,
+                                                    weight = recordItem.record.record.weight,
+                                                    timestamp = timestamp,
+                                                    showTimestamp = showTopTimestamp,
+                                                    isLight = recordItem.isLight,
+                                                    showTitle = true,
+                                                    weightUnit = weightUnit,
+                                                    shape = shape,
+                                                    prevIsSame = prevIsSame,
+                                                    nextIsSame = nextIsSame,
+                                                    showLabels = showLabelsForTop,
+                                                    onCardClick = {
+                                                        onGroupTapped()
+                                                        showTimestampFor(recordId)
+                                                    },
+                                                    onUpdate = { sets, reps, weight ->
+                                                        onUpdateRequest(
+                                                            recordItem.record.record.copy(
+                                                                sets = sets,
+                                                                reps = reps,
+                                                                weight = weight
+                                                            )
+                                                        )
+                                                    }
+                                                )
+                                            } else if (showCollapsed) {
+                                                HistoryCollapsedRecordCard(
+                                                    isLight = recordItem.isLight,
+                                                    shape = shape,
+                                                    prevIsSame = prevIsSame,
+                                                    nextIsSame = nextIsSame,
+                                                    onClick = {
+                                                        onGroupTapped()
+                                                        showTimestampFor(recordId)
+                                                    }
+                                                )
+                                            } else Unit
+                                        }
+                                    }
                                 }
-                            )
+                            }
+                        } else {
+                            Column(modifier = Modifier.animateItem()) {
+                                groupRecords.forEachIndexed { groupIndex, recordItem ->
+                                    val recordId = recordItem.record.record.id
+                                    val prevIsSame = groupIndex > 0
+                                    val nextIsSame = groupIndex < groupRecords.lastIndex
+                                    val shape = recordCardShape(prevIsSame, nextIsSame)
+                                    val timestamp = remember(recordItem.record.record.date) {
+                                        java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                                            .format(java.util.Date(recordItem.record.record.date))
+                                    }
+
+                                    key(recordId) {
+                                        SwipeToDeleteContainer(
+                                            onDelete = { onDeleteRequest(recordItem.record.record) },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            HistoryRecordCard(
+                                                exerciseName = recordItem.record.exerciseName,
+                                                sets = recordItem.record.record.sets,
+                                                reps = recordItem.record.record.reps,
+                                                weight = recordItem.record.record.weight,
+                                                timestamp = timestamp,
+                                                showTimestamp = timestampTokens.containsKey(recordId),
+                                                isLight = recordItem.isLight,
+                                                showTitle = groupIndex == 0,
+                                                weightUnit = weightUnit,
+                                                shape = shape,
+                                                prevIsSame = prevIsSame,
+                                                nextIsSame = nextIsSame,
+                                                showLabels = showLabelsForTop && groupIndex == 0,
+                                                onCardClick = {
+                                                    if (groupIndex == 0) {
+                                                        onGroupTapped()
+                                                    }
+                                                    showTimestampFor(recordId)
+                                                },
+                                                onUpdate = { sets, reps, weight ->
+                                                    onUpdateRequest(
+                                                        recordItem.record.record.copy(
+                                                            sets = sets,
+                                                            reps = reps,
+                                                            weight = weight
+                                                        )
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
+
+private sealed class HistoryRenderItem {
+    data class Header(val item: HistoryUiModel.Header) : HistoryRenderItem()
+    data class BatchSeparator(val item: HistoryUiModel.BatchSeparator) : HistoryRenderItem()
+    data class EvictedBatch(val item: HistoryUiModel.EvictedBatch) : HistoryRenderItem()
+    data object LoadingMore : HistoryRenderItem()
+    data class RecordGroup(val records: List<HistoryUiModel.RecordItem>) : HistoryRenderItem()
+}
+
+private fun buildRenderItems(uiItems: List<HistoryUiModel>): List<HistoryRenderItem> {
+    if (uiItems.isEmpty()) return emptyList()
+
+    val result = mutableListOf<HistoryRenderItem>()
+    var index = 0
+    while (index < uiItems.size) {
+        when (val item = uiItems[index]) {
+            is HistoryUiModel.Header -> {
+                result.add(HistoryRenderItem.Header(item))
+                index += 1
+            }
+            is HistoryUiModel.BatchSeparator -> {
+                result.add(HistoryRenderItem.BatchSeparator(item))
+                index += 1
+            }
+            is HistoryUiModel.EvictedBatch -> {
+                result.add(HistoryRenderItem.EvictedBatch(item))
+                index += 1
+            }
+            is HistoryUiModel.LoadingMore -> {
+                result.add(HistoryRenderItem.LoadingMore)
+                index += 1
+            }
+            is HistoryUiModel.RecordItem -> {
+                val group = mutableListOf(item)
+                var nextIndex = index + 1
+                while (nextIndex < uiItems.size) {
+                    val next = uiItems[nextIndex]
+                    if (next is HistoryUiModel.RecordItem && next.record.exerciseName == item.record.exerciseName) {
+                        group.add(next)
+                        nextIndex += 1
+                    } else {
+                        break
+                    }
+                }
+                result.add(HistoryRenderItem.RecordGroup(group))
+                index = nextIndex
+            }
+        }
+    }
+
+    return result
 }
 
 // -----------------------------------------------------------------------------
