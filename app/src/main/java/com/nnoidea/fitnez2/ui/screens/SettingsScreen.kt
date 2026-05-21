@@ -15,6 +15,17 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import com.nnoidea.fitnez2.ui.components.dialog.RadioSelectionDialog
 import com.nnoidea.fitnez2.ui.components.SettingsItem
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.Build
 
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -112,12 +123,18 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         title = globalLocalization.labelSettings,
         onOpenDrawer = onOpenDrawer
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
             HorizontalDivider()
 
             // Language Setting
             SettingsItem(
                 label = globalLocalization.labelLanguage,
                 value = globalState.selectedLanguage?.languageName ?: globalLocalization.labelSystemLanguage,
+                icon = Icons.Default.Language,
                 onClick = { showLanguageDialog = true }
             )
 
@@ -134,6 +151,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             SettingsItem(
                 label = globalLocalization.labelRotation,
                 value = rotationLabel,
+                icon = Icons.Default.ScreenRotation,
                 onClick = { showRotationDialog = true }
             )
 
@@ -143,6 +161,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             SettingsItem(
                 label = globalLocalization.labelWeightUnit,
                 value = globalState.weightUnit,
+                icon = Icons.Default.FitnessCenter,
                 onClick = { showWeightUnitDialog = true }
             )
 
@@ -158,6 +177,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             SettingsItem(
                 label = globalLocalization.labelInAppFont,
                 value = fontLabel,
+                icon = Icons.Default.Edit,
                 onClick = { showFontDialog = true }
             )
 
@@ -166,6 +186,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             SettingsItem(
                 label = globalLocalization.labelDefaultExerciseValues,
                 value = "$defaultSets x $defaultReps @ $defaultWeight", 
+                icon = Icons.Default.Star,
                 onClick = { showDefaultsDialog = true }
             )
 
@@ -175,6 +196,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             SettingsItem(
                 label = globalLocalization.labelExportData,
                 value = "",
+                icon = Icons.Default.Share,
                 onClick = {
                     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                     val fileName = "Fitnez2-$timeStamp.json"
@@ -188,6 +210,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             SettingsItem(
                 label = globalLocalization.labelImportData,
                 value = "",
+                icon = Icons.Default.ArrowDownward,
                 onClick = {
                     importLauncher.launch(arrayOf("application/json"))
                 }
@@ -196,10 +219,10 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
             HorizontalDivider()
 
             // Developer Settings
-            // Developer Settings
             SettingsItem(
                 label = globalLocalization.labelDeveloperOptions,
                 value = "",
+                icon = Icons.Default.Build,
                 onClick = {
                    val intent = android.content.Intent(context, com.nnoidea.fitnez2.MainActivity::class.java).apply {
                        putExtra(com.nnoidea.fitnez2.MainActivity.EXTRA_PAGE_ROUTE, "developer")
@@ -207,6 +230,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                    context.startActivity(intent)
                 }
             )
+        }
     }
 
     RadioSelectionDialog(

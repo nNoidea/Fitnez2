@@ -9,6 +9,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,6 +53,7 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
                 SettingsItem(
                     label = globalLocalization.devColorPalette,
                     value = globalLocalization.devViewColors,
+                    icon = Icons.Default.Palette,
                     onClick = { showColorPalette = true }
                 )
 
@@ -71,6 +74,7 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
                 SettingsItem(
                     label = globalLocalization.devRunStressTest,
                     value = globalLocalization.devStressTestDescription,
+                    icon = Icons.Default.Storage,
                     onClick = { showStressTestDialog = true }
                 )
             }

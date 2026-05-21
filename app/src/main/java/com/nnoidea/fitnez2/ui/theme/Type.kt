@@ -43,6 +43,21 @@ val GoogleSansFlexRounded = FontFamily(
     )
 )
 
+// Special styled Google Sans Flex font for the App Title
+val AppTitleFontFamily = FontFamily(
+    Font(
+        resId = R.font.google_sans_flex,
+        weight = FontWeight.Normal,
+        variationSettings = FontVariation.Settings(
+            FontVariation.Setting("slnt", -10f),
+            FontVariation.Setting("wdth", 142.4f),
+            FontVariation.Setting("wght", 1000f),
+            FontVariation.Setting("GRAD", 100f),
+            FontVariation.Setting("ROND", 100f)
+        )
+    )
+)
+
 private val defaultTypography = Typography()
 
 // Default uncustomized System Typography
