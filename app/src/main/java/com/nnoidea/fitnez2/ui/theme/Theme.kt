@@ -38,7 +38,7 @@ fun Fitnez2Theme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
-    fontMode: String = "system",
+    fontMode: String = "rounded",
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
