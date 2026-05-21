@@ -41,6 +41,7 @@ import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.nnoidea.fitnez2.core.localization.globalLocalization
 
 internal val ColorHistoryNeutralContainer @Composable get() = MaterialTheme.colorScheme.primary
 internal val ColorHistoryNeutralContent @Composable get() = MaterialTheme.colorScheme.onPrimary
@@ -80,7 +81,7 @@ fun HistoryGridRow(
         Box(modifier = Modifier.width(60.dp), contentAlignment = Alignment.Center) {
             col3()
         }
-        Box(modifier = Modifier.width(70.dp), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.width(65.dp), contentAlignment = Alignment.Center) {
             col4()
         }
     }
@@ -112,6 +113,7 @@ fun HistoryRecordCard(
     shape: androidx.compose.ui.graphics.Shape,
     prevIsSame: Boolean = false,
     nextIsSame: Boolean = false,
+    showLabels: Boolean = false,
     onUpdate: (sets: Int, reps: Int, weight: Double) -> Unit
 ) {
     val containerColor = if (isLight) ColorHistoryNeutralContainer else ColorHistoryColoredContainer
@@ -159,6 +161,56 @@ fun HistoryRecordCard(
                         .fillMaxWidth()
                         .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 2.dp)
                 )
+            }
+
+            if (showLabels) {
+                Row(
+                    modifier = Modifier
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = if (showTitle) 2.dp else 6.dp,
+                            bottom = 0.dp
+                        )
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    
+                    Row(
+                        modifier = Modifier.weight(3f),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = globalLocalization.labelSets,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = contentColor.copy(alpha = 0.85f)
+                            )
+                        }
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = globalLocalization.labelReps,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = contentColor.copy(alpha = 0.85f)
+                            )
+                        }
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = weightUnit,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = contentColor.copy(alpha = 0.85f)
+                            )
+                        }
+                    }
+                }
             }
 
             Row(
