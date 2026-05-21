@@ -149,4 +149,9 @@ object KoStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "프로그램"
     override val labelExercises = "운동"
+
+    // In-App Font Settings
+    override val labelInAppFont = "앱 글꼴"
+    override val labelFontSystemDefault = "시스템 기본값"
+    override val labelFontGoogleSansFlexRounded = "구글 산스 플렉스 라운드"
 }

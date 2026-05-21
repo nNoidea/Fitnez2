@@ -149,4 +149,9 @@ object NlStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "Workouts"
     override val labelExercises = "Oefeningen"
+
+    // In-App Font Settings
+    override val labelInAppFont = "Lettertype in-app"
+    override val labelFontSystemDefault = "Systeemstandaard"
+    override val labelFontGoogleSansFlexRounded = "Google Sans Flex Afgerond"
 }

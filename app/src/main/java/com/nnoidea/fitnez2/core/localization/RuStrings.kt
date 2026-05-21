@@ -155,4 +155,9 @@ object RuStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "Тренировки"
     override val labelExercises = "Упражнения"
+
+    // In-App Font Settings
+    override val labelInAppFont = "Шрифт приложения"
+    override val labelFontSystemDefault = "Системный по умолчанию"
+    override val labelFontGoogleSansFlexRounded = "Google Sans Flex Округлый"
 }

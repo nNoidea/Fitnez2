@@ -171,6 +171,11 @@ sealed class EnStrings(
     // Exercise Selection Dialog Separators
     open val labelWorkouts: String = "Workouts"
     open val labelExercises: String = "Exercises"
+
+    // In-App Font Settings
+    open val labelInAppFont: String = "In-App Font"
+    open val labelFontSystemDefault: String = "System Default"
+    open val labelFontGoogleSansFlexRounded: String = "Google Sans Flex Rounded"
 }
 
 /**

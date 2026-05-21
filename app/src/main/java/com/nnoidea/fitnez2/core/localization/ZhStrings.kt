@@ -149,4 +149,9 @@ object ZhStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "训练"
     override val labelExercises = "动作"
+
+    // In-App Font Settings
+    override val labelInAppFont = "应用字体"
+    override val labelFontSystemDefault = "系统默认"
+    override val labelFontGoogleSansFlexRounded = "Google Sans Flex 圆体"
 }

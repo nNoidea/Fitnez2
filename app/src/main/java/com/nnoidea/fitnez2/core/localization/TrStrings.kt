@@ -151,4 +151,9 @@ object TrStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "Antrenmanlar"
     override val labelExercises = "Egzersizler"
+
+    // In-App Font Settings
+    override val labelInAppFont = "Uygulama İçi Yazı Tipi"
+    override val labelFontSystemDefault = "Sistem Varsayılanı"
+    override val labelFontGoogleSansFlexRounded = "Google Sans Flex Oval"
 }

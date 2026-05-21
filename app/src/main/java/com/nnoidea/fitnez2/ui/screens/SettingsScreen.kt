@@ -78,6 +78,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showWeightUnitDialog by remember { mutableStateOf(false) }
     var showRotationDialog by remember { mutableStateOf(false) }
+    var showFontDialog by remember { mutableStateOf(false) }
     
     var showDefaultsDialog by remember { mutableStateOf(false) }
     var showImportConfirmation by remember { mutableStateOf(false) }
@@ -143,6 +144,21 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 label = globalLocalization.labelWeightUnit,
                 value = globalState.weightUnit,
                 onClick = { showWeightUnitDialog = true }
+            )
+
+            HorizontalDivider()
+
+            // In-App Font Setting
+            val fontLabel = when (globalState.fontMode) {
+                "system" -> globalLocalization.labelFontSystemDefault
+                "rounded" -> globalLocalization.labelFontGoogleSansFlexRounded
+                else -> globalLocalization.labelFontSystemDefault
+            }
+
+            SettingsItem(
+                label = globalLocalization.labelInAppFont,
+                value = fontLabel,
+                onClick = { showFontDialog = true }
             )
 
             HorizontalDivider()
@@ -240,6 +256,25 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         onDismissRequest = { showLanguageDialog = false },
         labelProvider = { it?.languageName ?: globalLocalization.labelSystemLanguage },
         bodyText = globalLocalization.labelAiTranslationsDisclaimer
+    )
+
+    RadioSelectionDialog(
+        show = showFontDialog,
+        title = globalLocalization.labelInAppFont,
+        options = listOf("system", "rounded"),
+        selectedValue = globalState.fontMode,
+        onValueSelected = {
+            globalState.switchFontMode(it)
+            showFontDialog = false
+        },
+        onDismissRequest = { showFontDialog = false },
+        labelProvider = {
+            when (it) {
+                "system" -> globalLocalization.labelFontSystemDefault
+                "rounded" -> globalLocalization.labelFontGoogleSansFlexRounded
+                else -> ""
+            }
+        }
     )
     
     // Unified Default Values Dialog

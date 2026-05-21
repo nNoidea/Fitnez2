@@ -128,6 +128,9 @@ class GlobalUiState(
     // State: Rotation Mode
     var rotationMode by mutableStateOf(RotationMode.SYSTEM)
 
+    // State: Font Mode
+    var fontMode by mutableStateOf("system")
+
     fun switchLanguage(newLanguage: EnStrings?) {
         LocalizationManager.setLanguage(newLanguage)
         scope.launch {
@@ -146,6 +149,13 @@ class GlobalUiState(
         rotationMode = mode
         scope.launch {
             settingsRepository.setRotationMode(mode)
+        }
+    }
+
+    fun switchFontMode(mode: String) {
+        fontMode = mode
+        scope.launch {
+            settingsRepository.setFontMode(mode)
         }
     }
 
@@ -215,6 +225,11 @@ fun rememberGlobalUiState(): GlobalUiState {
         launch {
             settingsRepository.rotationModeFlow.collect { mode ->
                 state.rotationMode = mode
+            }
+        }
+        launch {
+            settingsRepository.fontModeFlow.collect { mode ->
+                state.fontMode = mode
             }
         }
     }
