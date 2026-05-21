@@ -129,7 +129,7 @@ class GlobalUiState(
     var rotationMode by mutableStateOf(RotationMode.SYSTEM)
 
     // State: Font Mode
-    var fontMode by mutableStateOf("system")
+    var fontMode by mutableStateOf("rounded")
 
     fun switchLanguage(newLanguage: EnStrings?) {
         LocalizationManager.setLanguage(newLanguage)
