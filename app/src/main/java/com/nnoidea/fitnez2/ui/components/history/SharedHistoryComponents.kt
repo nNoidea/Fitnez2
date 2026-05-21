@@ -148,28 +148,33 @@ fun HistoryRecordCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.animateContentSize()) {
+            if (showTitle) {
+                Text(
+                    text = exerciseName,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Unspecified
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 2.dp)
+                )
+            }
+
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp).fillMaxWidth(),
+                modifier = Modifier
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = if (showTitle) 4.dp else 6.dp
+                    )
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Box(modifier = Modifier.weight(1.5f)) {
-                    if (showTitle) {
-                        Text(
-                            text = exerciseName,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.Unspecified
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        Spacer(modifier = Modifier.height(0.dp))
-                    }
-                }
+                Spacer(modifier = Modifier.weight(1f))
                 
                 ConnectedInputGroup(
-                    modifier = Modifier.width(206.dp),
+                    modifier = Modifier.weight(3f),
                     spacing = 2.dp,
                     outerCornerRadius = 24.dp,
                     innerCornerRadius = 8.dp,
