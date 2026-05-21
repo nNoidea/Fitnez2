@@ -61,6 +61,7 @@ object TrStrings : EnStrings(
     override fun labelWeightWithUnit(unit: String): String = "$labelWeight ($unit)"
 
     override val labelRecordDeleted: String = "Kayıt silindi"
+    override val labelRecordsDeleted: String = "Kayıtlar silindi"
     override val labelUndo: String = "Geri Al"
 
     override val labelToday: String = "Bugün"

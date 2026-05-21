@@ -59,6 +59,7 @@ object DeStrings : EnStrings(
     override val labelEditExercise = "Übung Bearbeiten"
 
     override val labelRecordDeleted = "Datensatz gelöscht"
+    override val labelRecordsDeleted = "Datensätze gelöscht"
     override val labelUndo = "Rückgängig machen"
 
     override val labelToday = "Heute"

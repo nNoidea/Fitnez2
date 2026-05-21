@@ -59,6 +59,7 @@ object KoStrings : EnStrings(
     override val labelEditExercise = "운동 수정"
 
     override val labelRecordDeleted = "기록이 삭제되었습니다"
+    override val labelRecordsDeleted = "기록이 삭제되었습니다"
     override val labelUndo = "실행 취소"
 
     override val labelToday = "오늘"

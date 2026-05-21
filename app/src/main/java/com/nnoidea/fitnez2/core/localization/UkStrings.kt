@@ -59,6 +59,7 @@ object UkStrings : EnStrings(
     override val labelEditExercise = "Редагувати вправу"
 
     override val labelRecordDeleted = "Запис видалено"
+    override val labelRecordsDeleted = "Записи видалено"
     override val labelUndo = "Скасувати"
 
     override val labelToday = "Сьогодні"

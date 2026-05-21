@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.entities.Workout
@@ -83,18 +84,22 @@ class BackupRepository(
                 }
             }
 
-            var backupData = gson.fromJson(rawJsonString, BackupData::class.java)
+            var backupData: BackupData? = gson.fromJson(rawJsonString, BackupData::class.java)
 
             // FALLBACK: If the file was exported while R8 was obfuscating (keys "a", "b", etc.)
             // we try to parse it into a Map and convert it.
-            if (backupData == null || backupData.data == null) {
+            if (backupData == null || backupData.data.isEmpty()) {
                 Log.d("BackupRepository", "Attempting legacy/minified import fallback...")
                 try {
-                    val rawMap = gson.fromJson(rawJsonString, Map::class.java) as? Map<String, Any>
-                    val minifiedData = rawMap?.get("a") as? List<Map<String, Any>>
-                    if (minifiedData != null) {
+                    val mapType = object : TypeToken<Map<String, Any>>() {}.type
+                    val rawMap: Map<String, Any>? = gson.fromJson(rawJsonString, mapType)
+                    val minifiedData = (rawMap?.get("a") as? List<*>)
+                        ?.mapNotNull { it as? Map<*, *> }
+                    if (!minifiedData.isNullOrEmpty()) {
                         val convertedExercises = minifiedData.map { exMap ->
-                            val records = (exMap["b"] as? List<Map<String, Any>>)?.map { rMap ->
+                            val records = (exMap["b"] as? List<*>)
+                                ?.mapNotNull { it as? Map<*, *> }
+                                ?.map { rMap ->
                                 ExportedRecord(
                                     sets = (rMap["a"] as? Double)?.toInt() ?: 0,
                                     reps = (rMap["b"] as? Double)?.toInt() ?: 0,
@@ -111,7 +116,7 @@ class BackupRepository(
                 }
             }
 
-            if (backupData == null || backupData.data == null) {
+            if (backupData == null || backupData.data.isEmpty()) {
                 throw Exception("Invalid backup file: data is missing")
             }
 

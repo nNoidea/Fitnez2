@@ -59,6 +59,7 @@ object NoStrings : EnStrings(
     override val labelEditExercise = "Rediger øvelse"
 
     override val labelRecordDeleted = "Oppføring slettet"
+    override val labelRecordsDeleted = "Oppføringer slettet"
     override val labelUndo = "Angre"
 
     override val labelToday = "I dag"

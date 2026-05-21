@@ -59,6 +59,7 @@ object FrStrings : EnStrings(
     override val labelEditExercise = "Modifier l'exercice"
 
     override val labelRecordDeleted = "Enregistrement supprimé"
+    override val labelRecordsDeleted = "Enregistrements supprimés"
     override val labelUndo = "Annuler"
 
     override val labelToday = "Aujourd'hui"

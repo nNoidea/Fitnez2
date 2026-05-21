@@ -42,6 +42,7 @@ interface ExerciseHistoryListState {
 
     fun onUpdateRequest(updatedRecord: Record)
     fun onDeleteRequest(record: Record)
+    fun onDeleteGroupRequest(records: List<Record>)
     suspend fun scrollToTop(recordId: Int? = null)
 }
 
@@ -101,6 +102,35 @@ class DatabaseExerciseHistoryListState(
                     scope.launch {
                         val newId = dao.create(freshRecord.copy(id = 0))
                         GlobalUiState.emitToAll(UiSignal.RecordInserted(newId.toInt()))
+                    }
+                }
+            )
+        }
+    }
+
+    override fun onDeleteGroupRequest(records: List<Record>) {
+        if (records.isEmpty()) return
+
+        scope.launch {
+            val freshRecords = records.map { record ->
+                dao.getRecordById(record.id) ?: record
+            }
+
+            freshRecords.forEach { record ->
+                dao.delete(record.id)
+                GlobalUiState.emitToAll(UiSignal.RecordDeleted(record.id))
+            }
+
+            globalUiState.showSnackbar(
+                message = globalLocalization.labelRecordsDeleted,
+                actionLabel = globalLocalization.labelUndo,
+                onActionPerformed = {
+                    onHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                    scope.launch {
+                        freshRecords.forEach { record ->
+                            val newId = dao.create(record.copy(id = 0))
+                            GlobalUiState.emitToAll(UiSignal.RecordInserted(newId.toInt()))
+                        }
                     }
                 }
             )

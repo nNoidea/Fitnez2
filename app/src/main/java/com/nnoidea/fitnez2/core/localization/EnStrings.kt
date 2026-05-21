@@ -81,6 +81,7 @@ sealed class EnStrings(
     open fun labelWeightWithUnit(unit: String): String = "$labelWeight ($unit)"
 
     open val labelRecordDeleted: String = "Record deleted"
+    open val labelRecordsDeleted: String = "Records deleted"
     open val labelUndo: String = "Undo"
 
     open val labelToday: String = "Today"

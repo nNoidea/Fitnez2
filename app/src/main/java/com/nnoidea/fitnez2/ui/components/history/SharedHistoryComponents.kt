@@ -1,7 +1,6 @@
 package com.nnoidea.fitnez2.ui.components.history
 
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,11 +20,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,10 +34,6 @@ import com.nnoidea.fitnez2.ui.components.HistoryRepsField
 import com.nnoidea.fitnez2.ui.components.HistorySetsField
 import com.nnoidea.fitnez2.ui.components.HistoryWeightField
 import com.nnoidea.fitnez2.ui.components.bottomsheet.ConnectedInputGroup
-import kotlinx.coroutines.delay
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 
 internal val ColorHistoryNeutralContainer @Composable get() = MaterialTheme.colorScheme.primary
@@ -110,6 +100,7 @@ fun HistoryRecordCard(
     reps: Int,
     weight: Double,
     timestamp: String?,
+    showTimestamp: Boolean = false,
     isLight: Boolean,
     showTitle: Boolean,
     weightUnit: String,
@@ -117,19 +108,11 @@ fun HistoryRecordCard(
     prevIsSame: Boolean = false,
     nextIsSame: Boolean = false,
     showLabels: Boolean = false,
+    onCardClick: (() -> Unit)? = null,
     onUpdate: (sets: Int, reps: Int, weight: Double) -> Unit
 ) {
     val containerColor = if (isLight) ColorHistoryNeutralContainer else ColorHistoryColoredContainer
     val contentColor = if (isLight) ColorHistoryNeutralContent else ColorHistoryColoredContent
-
-    var isExpanded by remember { mutableStateOf(false) }
-
-    if (isExpanded) {
-        LaunchedEffect(Unit) {
-            delay(5000)
-            isExpanded = false
-        }
-    }
 
     val view = LocalView.current
 
@@ -141,9 +124,9 @@ fun HistoryRecordCard(
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = topPadding, bottom = bottomPadding)
             .clip(shape)
-            .clickable(enabled = timestamp != null) { 
+            .clickable(enabled = onCardClick != null) { 
                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                isExpanded = !isExpanded 
+                onCardClick?.invoke()
             },
         shape = shape,
         colors = CardDefaults.cardColors(
@@ -231,7 +214,7 @@ fun HistoryRecordCard(
                     contentAlignment = Alignment.CenterStart
                 ) {
                     androidx.compose.animation.AnimatedVisibility(
-                        visible = isExpanded && timestamp != null,
+                        visible = showTimestamp && timestamp != null,
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
@@ -293,4 +276,38 @@ fun HistoryRecordCard(
             
         }
     }
+}
+
+@Composable
+fun HistoryCollapsedRecordCard(
+    isLight: Boolean,
+    shape: androidx.compose.ui.graphics.Shape,
+    prevIsSame: Boolean = false,
+    nextIsSame: Boolean = false,
+    onClick: (() -> Unit)? = null
+) {
+    val containerColor = if (isLight) ColorHistoryNeutralContainer else ColorHistoryColoredContainer
+    val contentColor = if (isLight) ColorHistoryNeutralContent else ColorHistoryColoredContent
+    val view = LocalView.current
+
+    val topPadding = if (prevIsSame) 1.5.dp else 2.dp
+    val bottomPadding = if (nextIsSame) 1.5.dp else 2.dp
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = topPadding, bottom = bottomPadding)
+            .clip(shape)
+            .height(10.dp)
+            .clickable(enabled = onClick != null) {
+                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                onClick?.invoke()
+            },
+        shape = shape,
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) { }
 }

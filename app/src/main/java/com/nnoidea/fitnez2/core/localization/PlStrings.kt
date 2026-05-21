@@ -59,6 +59,7 @@ object PlStrings : EnStrings(
     override val labelEditExercise = "Edytuj ćwiczenie"
 
     override val labelRecordDeleted = "Rekord usunięty"
+    override val labelRecordsDeleted = "Rekordy usunięte"
     override val labelUndo = "Cofnij"
 
     override val labelToday = "Dzisiaj"
