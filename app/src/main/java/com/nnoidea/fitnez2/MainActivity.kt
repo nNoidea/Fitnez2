@@ -36,14 +36,14 @@ class MainActivity : ComponentActivity() {
         val currentPage = AppPage.entries.find { it.route == route } ?: AppPage.Timeline
 
         setContent {
-            Fitnez2Theme {
+            val globalUiState = rememberGlobalUiState()
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.surfaceContainer,
                 ) {
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                     val scope = rememberCoroutineScope()
-                    val globalUiState = rememberGlobalUiState()
 
                     // Sync Drawer State to Global UI State
                     LaunchedEffect(drawerState.isOpen) {

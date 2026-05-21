@@ -155,4 +155,9 @@ object UkStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "Тренування"
     override val labelExercises = "Вправи"
+
+    // In-App Font Settings
+    override val labelInAppFont = "Шрифт програми"
+    override val labelFontSystemDefault = "Системний за замовчуванням"
+    override val labelFontGoogleSansFlexRounded = "Google Sans Flex Закруглений"
 }

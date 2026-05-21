@@ -38,6 +38,7 @@ fun Fitnez2Theme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
+    fontMode: String = "system",
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -50,9 +51,11 @@ fun Fitnez2Theme(
         else -> LightColorScheme
     }
 
+    val typography = if (fontMode == "rounded") RoundedTypography else SystemTypography
+
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content
     )
 }

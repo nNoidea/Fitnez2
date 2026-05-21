@@ -149,4 +149,9 @@ object IdStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "Program"
     override val labelExercises = "Latihan"
+
+    // In-App Font Settings
+    override val labelInAppFont = "Font Aplikasi"
+    override val labelFontSystemDefault = "Default Sistem"
+    override val labelFontGoogleSansFlexRounded = "Google Sans Flex Bulat"
 }

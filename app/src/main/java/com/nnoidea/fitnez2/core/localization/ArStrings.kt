@@ -155,4 +155,9 @@ object ArStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "التدريبات"
     override val labelExercises = "التمارين"
+
+    // In-App Font Settings
+    override val labelInAppFont = "خط التطبيق"
+    override val labelFontSystemDefault = "افتراضي النظام"
+    override val labelFontGoogleSansFlexRounded = "جوجل سانس فليكس المستدير"
 }

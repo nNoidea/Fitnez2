@@ -75,4 +75,13 @@ class SettingsRepository(private val context: Context) {
     suspend fun setRotationMode(mode: String) {
         context.dataStore.edit { it[ROTATION_MODE_KEY] = mode }
     }
+
+    private val FONT_MODE_KEY = stringPreferencesKey("in_app_font")
+
+    val fontModeFlow: Flow<String> = context.dataStore.data
+        .map { preferences -> preferences[FONT_MODE_KEY] ?: "system" }
+
+    suspend fun setFontMode(mode: String) {
+        context.dataStore.edit { it[FONT_MODE_KEY] = mode }
+    }
 }

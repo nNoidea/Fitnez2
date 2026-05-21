@@ -149,4 +149,9 @@ object JaStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "ワークアウト"
     override val labelExercises = "種目"
+
+    // In-App Font Settings
+    override val labelInAppFont = "アプリのフォント"
+    override val labelFontSystemDefault = "システムデフォルト"
+    override val labelFontGoogleSansFlexRounded = "Google Sans Flex 丸ゴシック"
 }

@@ -149,4 +149,9 @@ object FrStrings : EnStrings(
     // Exercise Selection Dialog Separators
     override val labelWorkouts = "Entraînements"
     override val labelExercises = "Exercices"
+
+    // In-App Font Settings
+    override val labelInAppFont = "Police de l'application"
+    override val labelFontSystemDefault = "Par défaut du système"
+    override val labelFontGoogleSansFlexRounded = "Google Sans Flex Arrondi"
 }
