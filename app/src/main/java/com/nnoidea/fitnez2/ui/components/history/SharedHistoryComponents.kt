@@ -1,7 +1,10 @@
 package com.nnoidea.fitnez2.ui.components.history
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -223,7 +226,24 @@ fun HistoryRecordCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Spacer(modifier = Modifier.weight(1f))
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = isExpanded && timestamp != null,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Text(
+                            text = timestamp ?: "",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = contentColor.copy(alpha = 0.7f)
+                        )
+                    }
+                }
                 
                 ConnectedInputGroup(
                     modifier = Modifier.weight(3f),
@@ -271,14 +291,6 @@ fun HistoryRecordCard(
                 )
             }
             
-            if (isExpanded && timestamp != null) {
-                Text(
-                    text = timestamp,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = contentColor.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
-                )
-            }
         }
     }
 }
