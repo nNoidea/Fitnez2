@@ -22,9 +22,9 @@ import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.EnStrings
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.data.AppDatabase
-import com.nnoidea.fitnez2.data.LocalAppDatabase
-import com.nnoidea.fitnez2.data.LocalSettingsRepository
-import com.nnoidea.fitnez2.data.SettingsRepository
+import com.nnoidea.fitnez2.service.LocalSettingsService
+import com.nnoidea.fitnez2.service.ProvideAppServices
+import com.nnoidea.fitnez2.service.SettingsService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -33,16 +33,16 @@ import kotlinx.coroutines.launch
 
 // Simple global UI signals
 sealed interface UiSignal {
-    data class ScrollToTop(val recordId: Int? = null) : UiSignal
-    data class RecordInserted(val recordId: Int) : UiSignal
+    data class ScrollToTop(val recordId: String? = null) : UiSignal
+    data class RecordInserted(val recordId: String) : UiSignal
     data class RecordUpdated(val record: com.nnoidea.fitnez2.data.entities.Record) : UiSignal
-    data class RecordDeleted(val recordId: Int) : UiSignal
+    data class RecordDeleted(val recordId: String) : UiSignal
     data object DatabaseSeeded : UiSignal
 }
 
 class GlobalUiState(
     val scope: CoroutineScope,
-    private val settingsRepository: SettingsRepository
+    private val settingsService: SettingsService
 ) {
     // State: Day Change Tracker Key (invalidated automatically at midnight)
     var currentDayKey by mutableLongStateOf(System.currentTimeMillis())
@@ -134,28 +134,28 @@ class GlobalUiState(
     fun switchLanguage(newLanguage: EnStrings?) {
         LocalizationManager.setLanguage(newLanguage)
         scope.launch {
-            settingsRepository.setLanguageCode(newLanguage?.appLocale?.language)
+            settingsService.setLanguageCode(newLanguage?.appLocale?.language)
         }
     }
 
     fun switchWeightUnit(unit: String) {
         weightUnit = unit
         scope.launch {
-            settingsRepository.setWeightUnit(unit)
+            settingsService.setWeightUnit(unit)
         }
     }
 
     fun switchRotationMode(mode: String) {
         rotationMode = mode
         scope.launch {
-            settingsRepository.setRotationMode(mode)
+            settingsService.setRotationMode(mode)
         }
     }
 
     fun switchFontMode(mode: String) {
         fontMode = mode
         scope.launch {
-            settingsRepository.setFontMode(mode)
+            settingsService.setFontMode(mode)
         }
     }
 
@@ -198,19 +198,17 @@ val LocalGlobalUiState = staticCompositionLocalOf<GlobalUiState> {
 }
 
 @Composable
-fun rememberGlobalUiState(): GlobalUiState {
-    val context = LocalContext.current
-    val settingsRepository = remember { SettingsRepository(context) }
+fun rememberGlobalUiState(settingsService: SettingsService): GlobalUiState {
     val scope = rememberCoroutineScope()
 
-    val state = remember(settingsRepository, scope) {
-        GlobalUiState(scope, settingsRepository)
+    val state = remember(settingsService, scope) {
+        GlobalUiState(scope, settingsService)
     }
 
     // Sync persistence -> State / LocalizationManager
     LaunchedEffect(state) {
         launch {
-            settingsRepository.languageCodeFlow.collect { code ->
+            settingsService.languageCodeFlow.collect { code ->
                 val lang = if (code != null) LocalizationManager.getLanguageByCode(code) else null
                 if (LocalizationManager.selectedLanguage != lang) {
                     LocalizationManager.setLanguage(lang)
@@ -218,17 +216,17 @@ fun rememberGlobalUiState(): GlobalUiState {
             }
         }
         launch {
-            settingsRepository.weightUnitFlow.collect { unit ->
+            settingsService.weightUnitFlow.collect { unit ->
                 state.weightUnit = unit
             }
         }
         launch {
-            settingsRepository.rotationModeFlow.collect { mode ->
+            settingsService.rotationModeFlow.collect { mode ->
                 state.rotationMode = mode
             }
         }
         launch {
-            settingsRepository.fontModeFlow.collect { mode ->
+            settingsService.fontModeFlow.collect { mode ->
                 state.fontMode = mode
             }
         }
@@ -239,7 +237,9 @@ fun rememberGlobalUiState(): GlobalUiState {
 
 @Composable
 fun ProvideGlobalUiState(
-    state: GlobalUiState = rememberGlobalUiState(),
+    database: AppDatabase,
+    settingsService: SettingsService,
+    state: GlobalUiState = rememberGlobalUiState(settingsService),
     content: @Composable () -> Unit
 ) {
     GlobalUiState.setInstance(state)
@@ -254,15 +254,15 @@ fun ProvideGlobalUiState(
     val context = LocalContext.current
     ValidateAndCorrect.appContext = context.applicationContext
 
-    val scope = rememberCoroutineScope()
-    val database = remember { AppDatabase.getDatabase(context, scope) }
-    val settingsRepository = remember { SettingsRepository(context) }
-
-    CompositionLocalProvider(
-        LocalGlobalUiState provides state,
-        LocalAppDatabase provides database,
-        LocalSettingsRepository provides settingsRepository,
+    ProvideAppServices(
+        context = context,
+        database = database
     ) {
-        content()
+        CompositionLocalProvider(
+            LocalGlobalUiState provides state,
+            LocalSettingsService provides settingsService,
+        ) {
+            content()
+        }
     }
 }

@@ -16,7 +16,7 @@ object ArStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "التمرين بالاسم '$name' موجود بالفعل"
     override fun errorExerciseRenameConflict(name: String) = "اسم التمرين '$name' قيد الاستخدام بالفعل"
-    override fun errorExerciseNotFoundById(id: Int) = "التمرين ذو المعرف $id غير موجود"
+    override fun errorExerciseNotFoundById(id: String) = "التمرين ذو المعرف $id غير موجود"
 
     override val errorWorkoutNameBlank = "يرجى إدخال اسم"
     override fun errorWorkoutAlreadyExists(name: String) = "التمرين بالاسم '$name' موجود بالفعل"

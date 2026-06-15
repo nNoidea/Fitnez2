@@ -20,7 +20,8 @@ sealed class EnStrings(
 
     open fun errorExerciseAlreadyExists(name: String): String = "Exercise with name '$name' already exists."
     open fun errorExerciseRenameConflict(name: String): String = "Exercise name '$name' is already used by another exercise."
-    open fun errorExerciseNotFoundById(id: Int): String = "Exercise with ID $id does not exist."
+    open fun errorExerciseNotFoundById(id: String): String = "Exercise with ID $id does not exist."
+    open fun errorRecordNotFoundById(id: String): String = "Record with ID $id not found."
 
     open val errorWorkoutNameBlank: String = "Please fill in a name"
     open fun errorWorkoutAlreadyExists(name: String): String = "Workout with name '$name' already exists."

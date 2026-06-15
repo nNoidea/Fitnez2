@@ -44,11 +44,11 @@ class DatabaseTest {
     @Test
     fun exerciseCannotHaveDuplicateName() = runTest {
         val baseName = "Bench Press"
-        exerciseDao.create(Exercise(name = baseName))
+        exerciseDao.insertExercise(Exercise(name = baseName))
 
         // 1. Exact same name
         try {
-            exerciseDao.create(Exercise(name = baseName))
+            exerciseDao.insertExercise(Exercise(name = baseName))
             fail("Should have thrown exception for exact duplicate name")
         } catch (e: IllegalArgumentException) {
             assertEquals(LocalizationManager.strings.errorExerciseAlreadyExists(baseName), e.message)
@@ -58,7 +58,7 @@ class DatabaseTest {
         val casingVariants = listOf("bench press", "BENCH PRESS", "BeNcH PrEsS")
         for (variant in casingVariants) {
             try {
-                exerciseDao.create(Exercise(name = variant))
+                exerciseDao.insertExercise(Exercise(name = variant))
                 fail("Should have thrown exception for casing duplicate: '$variant'")
             } catch (e: IllegalArgumentException) {
                 assertTrue("Expected duplicate error for '$variant'", e.message!!.contains("already exists"))
@@ -69,7 +69,7 @@ class DatabaseTest {
         val whitespaceVariants = listOf(" $baseName", "$baseName ", "  $baseName  ")
         for (variant in whitespaceVariants) {
             try {
-                exerciseDao.create(Exercise(name = variant))
+                exerciseDao.insertExercise(Exercise(name = variant))
                 fail("Should have thrown exception for whitespace duplicate: '$variant'")
             } catch (e: IllegalArgumentException) {
                 assertTrue("Expected duplicate error for '$variant'", e.message!!.contains("already exists"))
@@ -80,7 +80,7 @@ class DatabaseTest {
     @Test
     fun exerciseNameIsTrimmedWhenSaved() = runTest {
         // Input has whitespace
-        exerciseDao.create(Exercise(name = "  Pull Up  "))
+        exerciseDao.insertExercise(Exercise(name = "  Pull Up  "))
 
         // Verify it was saved without whitespace
         val saved = exerciseDao.getAllExercises().first()
@@ -89,19 +89,19 @@ class DatabaseTest {
 
     @Test
     fun exerciseUpdateAllowsCaseChangeOnSameIdButPreventsDuplicateOnOtherId() = runTest {
-        exerciseDao.create(Exercise(name = "Push Up"))
+        exerciseDao.insertExercise(Exercise(name = "Push Up"))
         val pushUp = exerciseDao.getAllExercises()[0]
         
         // 1. Changing case of itself should work
-        exerciseDao.update(pushUp.copy(name = "PUSH UP"))
+        exerciseDao.updateExercise(pushUp.copy(name = "PUSH UP"))
         assertEquals("PUSH UP", exerciseDao.getExerciseById(pushUp.id)!!.name)
         
         // 2. Renaming another exercise to an existing name (case-insensitive) should fail
-        exerciseDao.create(Exercise(name = "Pull Up"))
+        exerciseDao.insertExercise(Exercise(name = "Pull Up"))
         val pullUp = exerciseDao.getAllExercises().find { it.name == "Pull Up" }!!
         
         try {
-            exerciseDao.update(pullUp.copy(name = "push up"))
+            exerciseDao.updateExercise(pullUp.copy(name = "push up"))
             fail("Should have prevented renaming to an existing exercise name (case-insensitive)")
         } catch (e: IllegalArgumentException) {
             assertEquals(LocalizationManager.strings.errorExerciseRenameConflict("push up"), e.message)
@@ -113,7 +113,7 @@ class DatabaseTest {
         val blanks = listOf("", " ", "   ")
         for (blank in blanks) {
             try {
-                exerciseDao.create(Exercise(name = blank))
+                exerciseDao.insertExercise(Exercise(name = blank))
                 fail("Should have thrown exception for blank name: '$blank'")
             } catch (e: IllegalArgumentException) {
                 assertEquals(LocalizationManager.strings.errorExerciseNameBlank, e.message)
@@ -128,27 +128,27 @@ class DatabaseTest {
     @Test
     fun recordSortingAndCascadeDeletion() = runTest {
         // 1. Setup Exercise
-        exerciseDao.create(Exercise(name = "Squat"))
+        exerciseDao.insertExercise(Exercise(name = "Squat"))
         val exerciseId = exerciseDao.getAllExercises()[0].id
 
         // 2. Create Records with intentional sorting triggers
         val now = 10000L
 
         // Older
-        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 10.0, date = now - 1000L))
+        recordDao.insertRecord(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 10.0, date = now - 1000L, orderNumber = 0))
         // Newer (Base)
-        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 20.0, date = now))
+        recordDao.insertRecord(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 20.0, date = now, orderNumber = 0))
         // Same Time as Base, but created later (Higher ID) -> Should be first in DESC list
-        recordDao.create(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 30.0, date = now))
+        recordDao.insertRecord(Record(exerciseId = exerciseId, sets = 1, reps = 5, weight = 30.0, date = now, orderNumber = 0))
 
-        val allRecords = recordDao.getAllRecords()
+        val allRecords = recordDao.getAllRecordsOrdered()
         assertEquals(3, allRecords.size)
 
         // 3. Verify Hard Delete Cascading
-        exerciseDao.delete(exerciseId)
+        exerciseDao.deleteExercise(exerciseDao.getExerciseById(exerciseId)!!)
 
         assertEquals(0, exerciseDao.getAllExercises().size)
-        assertEquals(0, recordDao.getAllRecords().size)
+        assertEquals(0, recordDao.getAllRecordsOrdered().size)
     }
 
     // ============================================================================================
@@ -158,23 +158,25 @@ class DatabaseTest {
     /**
      * Helper: creates an exercise and returns its ID.
      */
-    private suspend fun createExercise(name: String): Int {
-        exerciseDao.create(Exercise(name = name))
+    private suspend fun createExercise(name: String): String {
+        exerciseDao.insertExercise(Exercise(name = name))
         return exerciseDao.getAllExercises().first { it.name == name }.id
     }
 
     /**
      * Helper: creates a record for a given exercise.
      */
-    private suspend fun addRecord(exerciseId: Int, date: Long): Record {
-        val id = recordDao.create(Record(
+    private suspend fun addRecord(exerciseId: String, date: Long): Record {
+        val record = Record(
             exerciseId = exerciseId,
             sets = 3,
             reps = 10,
             weight = 50.0,
-            date = date
-        ))
-        return recordDao.getRecordById(id.toInt())!!
+            date = date,
+            orderNumber = 0
+        )
+        recordDao.insertRecord(record)
+        return recordDao.getRecordById(record.id)!!
     }
 
     /**
@@ -217,7 +219,7 @@ class DatabaseTest {
         addRecord(ex1, t++)
         addRecord(ex2, t++)
 
-        recordDao.delete(r1.id)
+        recordDao.deleteRecord(r1)
 
         val after = allRecordsChronological()
         assertEquals(2, after.size)
@@ -236,7 +238,7 @@ class DatabaseTest {
         val mid = addRecord(ex2, t++)
         addRecord(ex3, t++)
 
-        recordDao.delete(mid.id)
+        recordDao.deleteRecord(mid)
 
         val after = allRecordsChronological()
         assertEquals(2, after.size)
@@ -257,7 +259,7 @@ class DatabaseTest {
         addRecord(ex2, t++); addRecord(ex2, t++)
         addRecord(ex3, t++); addRecord(ex3, t++)
 
-        exerciseDao.delete(ex2)
+        exerciseDao.deleteExercise(exerciseDao.getExerciseById(ex2)!!)
 
         val after = allRecordsChronological()
         assertEquals(4, after.size)
@@ -280,11 +282,11 @@ class DatabaseTest {
         addRecord(ex3, t++)
 
         val savedForUndo = recordDao.getRecordById(mid.id)!!
-        recordDao.delete(mid.id)
+        recordDao.deleteRecord(mid)
 
         assertEquals(2, allRecordsChronological().size)
 
-        recordDao.create(savedForUndo)
+        recordDao.insertRecord(savedForUndo)
 
         val afterUndo = allRecordsChronological()
         assertEquals(3, afterUndo.size)
@@ -303,11 +305,11 @@ class DatabaseTest {
         val last = addRecord(ex2, t++)
 
         val savedForUndo = recordDao.getRecordById(last.id)!!
-        recordDao.delete(last.id)
+        recordDao.deleteRecord(last)
 
         assertEquals(1, allRecordsChronological().size)
 
-        recordDao.create(savedForUndo)
+        recordDao.insertRecord(savedForUndo)
 
         val afterUndo = allRecordsChronological()
         assertEquals(2, afterUndo.size)
@@ -325,11 +327,11 @@ class DatabaseTest {
         addRecord(ex2, t++)
 
         val savedForUndo = recordDao.getRecordById(first.id)!!
-        recordDao.delete(first.id)
+        recordDao.deleteRecord(first)
 
         assertEquals(1, allRecordsChronological().size)
 
-        recordDao.create(savedForUndo)
+        recordDao.insertRecord(savedForUndo)
 
         val afterUndo = allRecordsChronological()
         assertEquals(2, afterUndo.size)
@@ -343,11 +345,11 @@ class DatabaseTest {
         val only = addRecord(ex1, 1000L)
 
         val savedForUndo = recordDao.getRecordById(only.id)!!
-        recordDao.delete(only.id)
+        recordDao.deleteRecord(only)
 
         assertEquals(0, allRecordsChronological().size)
 
-        recordDao.create(savedForUndo)
+        recordDao.insertRecord(savedForUndo)
 
         val afterUndo = allRecordsChronological()
         assertEquals(1, afterUndo.size)
@@ -365,14 +367,14 @@ class DatabaseTest {
         val r2 = addRecord(ex2, t++)
         val r3 = addRecord(ex3, t++)
 
-        recordDao.delete(r2.id)
+        recordDao.deleteRecord(r2)
 
         val savedForUndo = recordDao.getRecordById(r3.id)!!
-        recordDao.delete(r3.id)
+        recordDao.deleteRecord(r3)
 
         assertEquals(1, allRecordsChronological().size)
 
-        recordDao.create(savedForUndo)
+        recordDao.insertRecord(savedForUndo)
 
         val afterUndo = allRecordsChronological()
         assertEquals(2, afterUndo.size)

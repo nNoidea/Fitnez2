@@ -16,7 +16,7 @@ object DeStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "Übung mit dem Namen '$name' existiert bereits"
     override fun errorExerciseRenameConflict(name: String) = "Übungsname '$name' wird bereits verwendet"
-    override fun errorExerciseNotFoundById(id: Int) = "Übung mit der ID $id existiert nicht"
+    override fun errorExerciseNotFoundById(id: String) = "Übung mit der ID $id existiert nicht"
 
     override val errorWorkoutNameBlank = "Bitte geben Sie einen Namen ein"
     override fun errorWorkoutAlreadyExists(name: String) = "Workout mit dem Namen '$name' existiert bereits"

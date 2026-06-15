@@ -17,7 +17,7 @@ interface WorkoutDao {
     // --- Workout Queries ---
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertWorkout(workout: Workout): Long
+    suspend fun insertWorkout(workout: Workout)
 
     @Update
     suspend fun updateWorkout(workout: Workout)
@@ -26,7 +26,7 @@ interface WorkoutDao {
     suspend fun deleteWorkout(workout: Workout)
 
     @Query("SELECT * FROM workout WHERE id = :workoutId LIMIT 1")
-    suspend fun getWorkoutById(workoutId: Int): Workout?
+    suspend fun getWorkoutById(workoutId: String): Workout?
 
     @Query("SELECT * FROM workout ORDER BY id ASC")
     fun getAllWorkoutsFlow(): Flow<List<Workout>>
@@ -34,7 +34,10 @@ interface WorkoutDao {
     // --- WorkoutRecord Queries ---
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertWorkoutRecord(record: WorkoutRecord): Long
+    suspend fun insertWorkoutRecord(record: WorkoutRecord)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllWorkoutRecords(records: List<WorkoutRecord>)
 
     @Update
     suspend fun updateWorkoutRecord(record: WorkoutRecord)
@@ -43,7 +46,7 @@ interface WorkoutDao {
     suspend fun deleteWorkoutRecord(record: WorkoutRecord)
 
     @Query("DELETE FROM workout_record WHERE workoutId = :workoutId")
-    suspend fun deleteRecordsByWorkoutId(workoutId: Int)
+    suspend fun deleteRecordsByWorkoutId(workoutId: String)
 
     @Query("""
         SELECT wr.*, e.name as exerciseName 
@@ -51,8 +54,9 @@ interface WorkoutDao {
         INNER JOIN exercise e ON wr.exerciseId = e.id 
         WHERE wr.workoutId = :workoutId 
         ORDER BY wr.id ASC
+        LIMIT 500
     """)
-    fun getRecordsForWorkoutFlow(workoutId: Int): Flow<List<WorkoutRecordWithExercise>>
+    fun getRecordsForWorkoutFlow(workoutId: String): Flow<List<WorkoutRecordWithExercise>>
 
     @Query("""
         SELECT wr.*, e.name as exerciseName 
@@ -60,8 +64,9 @@ interface WorkoutDao {
         INNER JOIN exercise e ON wr.exerciseId = e.id 
         WHERE wr.workoutId = :workoutId 
         ORDER BY wr.id ASC
+        LIMIT 500
     """)
-    suspend fun getRecordsForWorkout(workoutId: Int): List<WorkoutRecordWithExercise>
+    suspend fun getRecordsForWorkout(workoutId: String): List<WorkoutRecordWithExercise>
 
     @Query("SELECT * FROM workout ORDER BY id ASC")
     suspend fun getAllWorkouts(): List<Workout>

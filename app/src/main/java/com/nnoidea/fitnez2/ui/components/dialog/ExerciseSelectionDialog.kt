@@ -47,10 +47,10 @@ import android.content.Intent
 import android.view.HapticFeedbackConstants
 import androidx.compose.ui.platform.LocalContext
 import com.nnoidea.fitnez2.core.localization.globalLocalization
-import com.nnoidea.fitnez2.data.dao.ExerciseDao
-import com.nnoidea.fitnez2.data.dao.WorkoutDao
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Workout
+import com.nnoidea.fitnez2.service.ExerciseService
+import com.nnoidea.fitnez2.service.WorkoutService
 import com.nnoidea.fitnez2.MainActivity
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import kotlinx.coroutines.launch
@@ -60,10 +60,10 @@ fun ExerciseSelectionDialog(
     show: Boolean,
     exercises: List<Exercise>,
     workouts: List<Workout> = emptyList(),
-    selectedExerciseId: Int?,
-    selectedWorkoutId: Int? = null,
-    exerciseDao: ExerciseDao,
-    workoutDao: WorkoutDao? = null,
+    selectedExerciseId: String?,
+    selectedWorkoutId: String? = null,
+    exerciseService: ExerciseService,
+    workoutService: WorkoutService? = null,
     onDismissRequest: () -> Unit,
     onExerciseSelected: (Exercise) -> Unit,
     onWorkoutSelected: (Workout) -> Unit = {},
@@ -201,7 +201,7 @@ fun ExerciseSelectionDialog(
                         modifier = Modifier.weight(1f)
                     )
                     
-                    if (workoutDao != null) {
+                    if (workoutService != null) {
                         IconButton(
                             onClick = { 
                                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
@@ -325,7 +325,7 @@ fun ExerciseSelectionDialog(
         onConfirm = {
             exerciseToDelete?.let { exercise ->
                 scope.launch {
-                    exerciseDao.delete(exercise.id)
+                    exerciseService.deleteExercise(exercise.id)
                     exerciseToDelete = null
                 }
             }
@@ -345,7 +345,7 @@ fun ExerciseSelectionDialog(
             exerciseToEdit?.let { exercise ->
                 scope.launch {
                     try {
-                        exerciseDao.update(exercise.copy(name = newName))
+                        exerciseService.updateExercise(exercise.id, newName)
                         exerciseToEdit = null
                     } catch (_: Exception) {
                         // Error handling could be added here
@@ -367,7 +367,7 @@ fun ExerciseSelectionDialog(
         onConfirm = {
             workoutToDelete?.let { workout ->
                 scope.launch {
-                    workoutDao?.deleteWorkout(workout)
+                    workoutService?.deleteWorkout(workout)
                     workoutToDelete = null
                 }
             }
@@ -388,9 +388,8 @@ fun ExerciseSelectionDialog(
         onConfirm = { newName ->
             scope.launch {
                 try {
-                    val newExercise = Exercise(name = newName)
-                    val newId = exerciseDao.create(newExercise)
-                    onExerciseCreated(newExercise.copy(id = newId.toInt()))
+                    val newExercise = exerciseService.createExercise(newName)
+                    onExerciseCreated(newExercise)
                     showCreateDialog = false
                 } catch (e: Exception) {
                     android.widget.Toast.makeText(createDialogContext, e.message, android.widget.Toast.LENGTH_SHORT).show()

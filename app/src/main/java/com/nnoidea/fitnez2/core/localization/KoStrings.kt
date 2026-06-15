@@ -16,7 +16,7 @@ object KoStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "'$name' 이라는 이름의 운동이 이미 존재합니다"
     override fun errorExerciseRenameConflict(name: String) = "운동 이름 '$name'은(는) 이미 사용 중입니다"
-    override fun errorExerciseNotFoundById(id: Int) = "ID가 ${id}인 운동이 존재하지 않습니다"
+    override fun errorExerciseNotFoundById(id: String) = "ID가 ${id}인 운동이 존재하지 않습니다"
 
     override val errorWorkoutNameBlank = "이름을 입력해주세요"
     override fun errorWorkoutAlreadyExists(name: String) = "'$name' 이라는 이름의 운동 프로그램이 이미 존재합니다"

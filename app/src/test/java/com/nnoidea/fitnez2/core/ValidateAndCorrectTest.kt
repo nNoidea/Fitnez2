@@ -44,4 +44,74 @@ class ValidateAndCorrectTest {
         // Invalid cases
         assertNull(ValidateAndCorrect.weight("abc"))
     }
+
+    @Test
+    fun sets_emptyString_returnsNull() {
+        assertNull(ValidateAndCorrect.sets(""))
+    }
+
+    @Test
+    fun sets_blankString_returnsNull() {
+        assertNull(ValidateAndCorrect.sets("   "))
+    }
+
+    @Test
+    fun reps_emptyString_returnsNull() {
+        assertNull(ValidateAndCorrect.reps(""))
+    }
+
+    @Test
+    fun weight_emptyString_returnsNull() {
+        assertNull(ValidateAndCorrect.weight(""))
+    }
+
+    @Test
+    fun weight_NaN_returnsNull() {
+        assertNull(ValidateAndCorrect.weight("NaN"))
+    }
+
+    @Test
+    fun weight_Infinity_returnsNull() {
+        assertNull(ValidateAndCorrect.weight("Infinity"))
+    }
+
+    @Test
+    fun validateSets_1_returnsTrue() {
+        assertTrue(ValidateAndCorrect.validateSets(1))
+    }
+
+    @Test
+    fun validateSets_0_returnsFalse() {
+        assertFalse(ValidateAndCorrect.validateSets(0))
+    }
+
+    @Test
+    fun validateSets_negative1_returnsFalse() {
+        assertFalse(ValidateAndCorrect.validateSets(-1))
+    }
+
+    @Test
+    fun validateReps_1_returnsTrue() {
+        assertTrue(ValidateAndCorrect.validateReps(1))
+    }
+
+    @Test
+    fun validateReps_0_returnsFalse() {
+        assertFalse(ValidateAndCorrect.validateReps(0))
+    }
+
+    @Test
+    fun validateWeight_20_returnsTrue() {
+        assertTrue(ValidateAndCorrect.validateWeight(20.0))
+    }
+
+    @Test
+    fun validateWeight_NaN_returnsFalse() {
+        assertFalse(ValidateAndCorrect.validateWeight(Double.NaN))
+    }
+
+    @Test
+    fun validateWeight_POSITIVE_INFINITY_returnsFalse() {
+        assertFalse(ValidateAndCorrect.validateWeight(Double.POSITIVE_INFINITY))
+    }
 }

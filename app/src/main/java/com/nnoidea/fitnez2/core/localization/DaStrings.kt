@@ -16,7 +16,7 @@ object DaStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "Øvelse med namnet '$name' findes allerede"
     override fun errorExerciseRenameConflict(name: String) = "Øvelsesnavnet '$name' er allerede i brug"
-    override fun errorExerciseNotFoundById(id: Int) = "Øvelse med ID $id findes ikke"
+    override fun errorExerciseNotFoundById(id: String) = "Øvelse med ID $id findes ikke"
 
     override val errorWorkoutNameBlank = "Udfyld venligst et navn"
     override fun errorWorkoutAlreadyExists(name: String) = "Træningspas med namnet '$name' findes allerede"

@@ -16,7 +16,7 @@ object NoStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "Øvelse med navn '$name' finnes allerede"
     override fun errorExerciseRenameConflict(name: String) = "Navn på øvelse '$name' er allerede i bruk"
-    override fun errorExerciseNotFoundById(id: Int) = "Øvelse med ID $id finnes ikke"
+    override fun errorExerciseNotFoundById(id: String) = "Øvelse med ID $id finnes ikke"
 
     override val errorWorkoutNameBlank = "Vennligst fyll ut et navn"
     override fun errorWorkoutAlreadyExists(name: String) = "Treningsøkt med navn '$name' finnes allerede"

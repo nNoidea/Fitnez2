@@ -13,6 +13,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import com.nnoidea.fitnez2.data.AppDatabase
+import com.nnoidea.fitnez2.service.SettingsService
 import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
 import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import androidx.compose.ui.Modifier
@@ -36,7 +39,10 @@ class MainActivity : ComponentActivity() {
         val currentPage = AppPage.entries.find { it.route == route } ?: AppPage.Timeline
 
         setContent {
-            val globalUiState = rememberGlobalUiState()
+            val scope = rememberCoroutineScope()
+            val database = remember { AppDatabase.getDatabase(this@MainActivity, scope) }
+            val settingsService = remember { SettingsService(this@MainActivity) }
+            val globalUiState = rememberGlobalUiState(settingsService)
             Fitnez2Theme(fontMode = globalUiState.fontMode) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -60,7 +66,11 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    ProvideGlobalUiState(globalUiState) {
+                    ProvideGlobalUiState(
+                        database = database,
+                        settingsService = settingsService,
+                        state = globalUiState
+                    ) {
                         ModalNavigationDrawer(
                             drawerState = drawerState,
 

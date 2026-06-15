@@ -16,7 +16,7 @@ object IdStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "Latihan dengan nama '$name' sudah ada"
     override fun errorExerciseRenameConflict(name: String) = "Nama latihan '$name' sudah digunakan"
-    override fun errorExerciseNotFoundById(id: Int) = "Latihan dengan ID $id tidak ada"
+    override fun errorExerciseNotFoundById(id: String) = "Latihan dengan ID $id tidak ada"
 
     override val errorWorkoutNameBlank = "Silakan isi nama"
     override fun errorWorkoutAlreadyExists(name: String) = "Latihan dengan nama '$name' sudah ada"

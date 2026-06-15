@@ -16,7 +16,7 @@ object ZhStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "名称为 '$name' 的动作已存在"
     override fun errorExerciseRenameConflict(name: String) = "动作名称 '$name' 已被使用"
-    override fun errorExerciseNotFoundById(id: Int) = "ID 为 $id 的动作不存在"
+    override fun errorExerciseNotFoundById(id: String) = "ID 为 $id 的动作不存在"
 
     override val errorWorkoutNameBlank = "请输入名称"
     override fun errorWorkoutAlreadyExists(name: String) = "名称为 '$name' 的训练已存在"

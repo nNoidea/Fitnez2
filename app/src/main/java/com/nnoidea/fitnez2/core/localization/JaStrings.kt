@@ -16,7 +16,7 @@ object JaStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "'$name' という名前の種目は既に存在します"
     override fun errorExerciseRenameConflict(name: String) = "種目名 '$name' は既に使用されています"
-    override fun errorExerciseNotFoundById(id: Int) = "ID $id の種目は存在しません"
+    override fun errorExerciseNotFoundById(id: String) = "ID $id の種目は存在しません"
 
     override val errorWorkoutNameBlank = "名前を入力してください"
     override fun errorWorkoutAlreadyExists(name: String) = "'$name' という名前のワークアウトは既に存在します"

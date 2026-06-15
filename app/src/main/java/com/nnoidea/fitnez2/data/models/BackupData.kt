@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class ExportedExercise(
     @SerializedName("id")
-    val id: Int = 0,
+    val id: String = "",
     @SerializedName("name")
     val name: String,
     @SerializedName("records")
@@ -13,7 +13,7 @@ data class ExportedExercise(
 
 data class ExportedRecord(
     @SerializedName("id")
-    val id: Int = 0,
+    val id: String = "",
     @SerializedName("sets")
     val sets: Int,
     @SerializedName("reps")
@@ -26,20 +26,22 @@ data class ExportedRecord(
 
 data class ExportedWorkoutRecord(
     @SerializedName("id")
-    val id: Int = 0,
+    val id: String = "",
     @SerializedName("exerciseId")
-    val exerciseId: Int,
+    val exerciseId: String,
     @SerializedName("sets")
     val sets: Int,
     @SerializedName("reps")
     val reps: Int,
     @SerializedName("weight")
-    val weight: Double
+    val weight: Double,
+    @SerializedName("date")
+    val date: Long = 0L
 )
 
 data class ExportedWorkout(
     @SerializedName("id")
-    val id: Int = 0,
+    val id: String = "",
     @SerializedName("name")
     val name: String,
     @SerializedName("records")
@@ -48,10 +50,9 @@ data class ExportedWorkout(
 
 data class BackupData(
     @SerializedName("version")
-    val version: Int = 2,
+    val version: Int = 3,
     @SerializedName("data")
     val data: List<ExportedExercise>,
     @SerializedName("workouts")
     val workouts: List<ExportedWorkout>? = null
 )
-

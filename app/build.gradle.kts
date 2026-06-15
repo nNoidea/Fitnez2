@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlin.reflect)
     implementation(libs.gson)
+
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

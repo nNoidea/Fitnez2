@@ -1,5 +1,6 @@
 package com.nnoidea.fitnez2.data.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -16,18 +17,17 @@ import androidx.room.PrimaryKey
         )
     ],
     indices = [
-        Index(value = ["exerciseId", "date", "id"]), // Composite index for filtered sorting
-        Index(value = ["date", "id"]) // Keep for "All History" query
+        Index(value = ["exerciseId", "date", "orderNumber", "id"]),
+        Index(value = ["date", "orderNumber", "id"])
     ]
 )
 data class Record(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val exerciseId: Int,
+    @PrimaryKey
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val exerciseId: String,
     val sets: Int,
     val reps: Int,
     val weight: Double,
-    val date: Long
-) {
-
-}
+    val date: Long,
+    val orderNumber: Int = 0
+)

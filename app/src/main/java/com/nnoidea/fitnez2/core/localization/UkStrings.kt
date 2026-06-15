@@ -16,7 +16,7 @@ object UkStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "Вправа з назвою '$name' вже існує"
     override fun errorExerciseRenameConflict(name: String) = "Назва вправи '$name' вже використовується"
-    override fun errorExerciseNotFoundById(id: Int) = "Вправа з ID $id не існує"
+    override fun errorExerciseNotFoundById(id: String) = "Вправа з ID $id не існує"
 
     override val errorWorkoutNameBlank = "Будь ласка, введіть назву"
     override fun errorWorkoutAlreadyExists(name: String) = "Тренування з назвою '$name' вже існує"

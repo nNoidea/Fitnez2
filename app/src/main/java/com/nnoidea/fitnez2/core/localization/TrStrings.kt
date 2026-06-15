@@ -16,7 +16,7 @@ object TrStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "'$name' adında bir egzersiz zaten mevcut."
     override fun errorExerciseRenameConflict(name: String) = "'$name' ismi başka bir egzersiz tarafından kullanılıyor."
-    override fun errorExerciseNotFoundById(id: Int) = "$id ID'li egzersiz bulunamadı."
+    override fun errorExerciseNotFoundById(id: String) = "$id ID'li egzersiz bulunamadı."
 
     override val errorWorkoutNameBlank = "Lütfen bir isim girin"
     override fun errorWorkoutAlreadyExists(name: String) = "'$name' adında bir antrenman zaten mevcut."

@@ -16,8 +16,9 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.unit.Velocity
-import com.nnoidea.fitnez2.data.SettingsRepository
 import com.nnoidea.fitnez2.data.entities.Exercise
+import com.nnoidea.fitnez2.service.ExerciseService
+import com.nnoidea.fitnez2.service.SettingsService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -34,8 +35,8 @@ import kotlinx.coroutines.launch
 @Stable
 abstract class PredictiveBottomSheetState(
     protected val scope: CoroutineScope,
-    protected val exerciseDao: com.nnoidea.fitnez2.data.dao.ExerciseDao,
-    protected val settingsRepository: SettingsRepository,
+    protected val exerciseService: ExerciseService,
+    protected val settingsService: SettingsService,
     protected val keyboardController: SoftwareKeyboardController?,
     protected val focusManager: FocusManager,
     protected val context: android.content.Context,
@@ -46,7 +47,7 @@ abstract class PredictiveBottomSheetState(
 
     // ── Form Fields ──────────────────────────────────────────────────────
 
-    var selectedExerciseId by mutableStateOf<Int?>(null)
+    var selectedExerciseId by mutableStateOf<String?>(null)
     var selectedExerciseNameSnapshot by mutableStateOf<String?>(null)
     open var selectedExerciseName: String?
         get() = exercises.find { it.id == selectedExerciseId }?.name ?: selectedExerciseNameSnapshot
@@ -97,19 +98,19 @@ abstract class PredictiveBottomSheetState(
 
     init {
         scope.launch {
-            exerciseDao.getAllExercisesFlow().collect { exercises = it }
+            exerciseService.getAllExercisesFlow().collect { exercises = it }
         }
         scope.launch {
-            settingsRepository.weightUnitFlow.collect { weightUnit = it }
+            settingsService.weightUnitFlow.collect { weightUnit = it }
         }
         scope.launch {
-            settingsRepository.defaultSetsFlow.collect { defaultSets = it }
+            settingsService.defaultSetsFlow.collect { defaultSets = it }
         }
         scope.launch {
-            settingsRepository.defaultRepsFlow.collect { defaultReps = it }
+            settingsService.defaultRepsFlow.collect { defaultReps = it }
         }
         scope.launch {
-            settingsRepository.defaultWeightFlow.collect { defaultWeight = it }
+            settingsService.defaultWeightFlow.collect { defaultWeight = it }
         }
 
         // Track hasBeenOpened

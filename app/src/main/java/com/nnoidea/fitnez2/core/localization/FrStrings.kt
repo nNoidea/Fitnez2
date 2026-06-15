@@ -16,7 +16,7 @@ object FrStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "L'exercice avec le nom '$name' existe déjà"
     override fun errorExerciseRenameConflict(name: String) = "Le nom de l'exercice '$name' est déjà utilisé"
-    override fun errorExerciseNotFoundById(id: Int) = "L'exercice avec l'ID $id n'existe pas"
+    override fun errorExerciseNotFoundById(id: String) = "L'exercice avec l'ID $id n'existe pas"
 
     override val errorWorkoutNameBlank = "Veuillez entrer un nom"
     override fun errorWorkoutAlreadyExists(name: String) = "L'entraînement avec le nom '$name' existe déjà"

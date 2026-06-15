@@ -16,7 +16,7 @@ object SvStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "Övning med namnet '$name' finns redan"
     override fun errorExerciseRenameConflict(name: String) = "Övningsnamnet '$name' används redan"
-    override fun errorExerciseNotFoundById(id: Int) = "Övning med ID $id finns inte"
+    override fun errorExerciseNotFoundById(id: String) = "Övning med ID $id finns inte"
 
     override val errorWorkoutNameBlank = "Vänligen fyll i ett namn"
     override fun errorWorkoutAlreadyExists(name: String) = "Träningspass med namnet '$name' finns redan"

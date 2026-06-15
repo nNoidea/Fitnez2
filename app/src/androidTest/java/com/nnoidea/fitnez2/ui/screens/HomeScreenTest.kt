@@ -1,14 +1,19 @@
 package com.nnoidea.fitnez2.ui.screens
 
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.remember
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.printToLog
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.nnoidea.fitnez2.core.localization.EnglishStrings
+import com.nnoidea.fitnez2.data.AppDatabase
+import com.nnoidea.fitnez2.service.SettingsService
 import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
+import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
+import com.nnoidea.fitnez2.ui.screens.timeline.TimelineScreen
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
 import org.junit.Rule
 import org.junit.Test
@@ -21,22 +26,23 @@ class HomeScreenTest {
     val rule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun homeScreen_displaysHelperText() {
-        // Start the app with the HomeScreen
+    fun timelineScreen_displaysHelperText() {
         rule.setContent {
-            // We need to provide the GlobalUiState so the screen can access
-            // things like settings, language, etc.
-            ProvideGlobalUiState {
-                Fitnez2Theme {
-                    HomeScreen(onOpenDrawer = {})
+            val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+            val database: AppDatabase = remember { Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build() }
+            val settingsService: SettingsService = remember { SettingsService(context) }
+            val globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    TimelineScreen(onOpenDrawer = {})
                 }
             }
         }
-
-        // Use the testing robot to look for the hamburger menu by its content description
-        // This confirms the screen is actually rendered and the top bar area is visible.
-        // Debugging: Print the semantics tree to see what's actually there
-        rule.onRoot().printToLog("HomeScreenTest")
 
         rule.onNodeWithContentDescription(EnglishStrings.labelOpenDrawer)
             .assertIsDisplayed()

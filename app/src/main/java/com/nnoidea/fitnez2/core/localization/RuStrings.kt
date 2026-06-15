@@ -16,7 +16,7 @@ object RuStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "Упражнение с именем '$name' уже существует"
     override fun errorExerciseRenameConflict(name: String) = "Название упражнения '$name' уже используется"
-    override fun errorExerciseNotFoundById(id: Int) = "Упражнение с ID $id не существует"
+    override fun errorExerciseNotFoundById(id: String) = "Упражнение с ID $id не существует"
 
     override val errorWorkoutNameBlank = "Пожалуйста, введите название"
     override fun errorWorkoutAlreadyExists(name: String) = "Тренировка с именем '$name' уже существует"

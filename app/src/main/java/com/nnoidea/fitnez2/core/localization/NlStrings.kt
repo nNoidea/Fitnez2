@@ -16,7 +16,7 @@ object NlStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "Oefening met naam '$name' bestaat al"
     override fun errorExerciseRenameConflict(name: String) = "Oefeningsnaam '$name' is al in gebruik"
-    override fun errorExerciseNotFoundById(id: Int) = "Oefening met ID $id bestaat niet"
+    override fun errorExerciseNotFoundById(id: String) = "Oefening met ID $id bestaat niet"
 
     override val errorWorkoutNameBlank = "Vul a.u.b. een naam in"
     override fun errorWorkoutAlreadyExists(name: String) = "Workout met naam '$name' bestaat al"

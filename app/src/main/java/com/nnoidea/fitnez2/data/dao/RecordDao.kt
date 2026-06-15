@@ -1,138 +1,106 @@
 package com.nnoidea.fitnez2.data.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
-import com.nnoidea.fitnez2.core.localization.LocalizationManager
-import com.nnoidea.fitnez2.core.ValidateAndCorrect
+import kotlinx.coroutines.flow.Flow
 
 @Dao
-abstract class RecordDao {
-
-    // ============================================================================================
-    // INTERNAL & HELPER METHODS
-    // ============================================================================================
+interface RecordDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertInternal(record: Record): Long
+    suspend fun insertRecord(record: Record)
 
     @Update
-    protected abstract suspend fun updateInternal(record: Record)
+    suspend fun updateRecord(record: Record)
 
-    @Query("DELETE FROM record WHERE id = :id")
-    protected abstract suspend fun deleteInternal(id: Int)
-
-    // ============================================================================================
-    // PUBLIC CRUD OPERATIONS
-    // ============================================================================================
-
-    // --- CREATE ---
-
-    @Transaction
-    open suspend fun create(record: Record): Long {
-        validateRecord(record)
-        return insertInternal(record)
-    }
-
-    // --- READ ---
+    @Delete
+    suspend fun deleteRecord(record: Record)
 
     @Query("SELECT * FROM record WHERE id = :recordId")
-    abstract suspend fun getRecordById(recordId: Int): Record?
+    suspend fun getRecordById(recordId: String): Record?
 
-    @Query("SELECT * FROM record ORDER BY date DESC, id DESC LIMIT :limit")
-    abstract suspend fun getLatestRecords(limit: Int = 100): List<Record>
+    @Query("SELECT * FROM record ORDER BY date DESC, orderNumber DESC, id DESC LIMIT :limit")
+    suspend fun getLatestRecords(limit: Int = 100): List<Record>
 
-    @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date DESC, id DESC LIMIT :limit")
-    abstract suspend fun getRecordsByExerciseId(exerciseId: Int, limit: Int = 100): List<Record>
+    @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date DESC, orderNumber DESC, id DESC LIMIT :limit")
+    suspend fun getRecordsByExerciseId(exerciseId: String, limit: Int = 100): List<Record>
 
-    @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date ASC")
-    abstract fun getRecordsByExerciseIdFlow(exerciseId: Int): kotlinx.coroutines.flow.Flow<List<Record>>
+    @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date ASC LIMIT 2000")
+    fun getRecordsByExerciseIdFlow(exerciseId: String): Flow<List<Record>>
 
-    @Query("SELECT * FROM record WHERE exerciseId IN (:exerciseIds) ORDER BY date DESC, id DESC LIMIT :limit")
-    abstract suspend fun getRecordsByExerciseIds(exerciseIds: List<Int>, limit: Int = 100): List<Record>
+    @Query("SELECT * FROM record WHERE exerciseId IN (:exerciseIds) ORDER BY date DESC, orderNumber DESC, id DESC LIMIT :limit")
+    suspend fun getRecordsByExerciseIds(exerciseIds: List<String>, limit: Int = 100): List<Record>
 
     @Query("""
         SELECT record.*, exercise.name as exerciseName 
         FROM record 
         JOIN exercise ON record.exerciseId = exercise.id 
-        ORDER BY record.date DESC, record.id DESC
+        ORDER BY record.date DESC, record.orderNumber DESC, record.id DESC
         LIMIT 1
     """)
-    abstract suspend fun getLatestRecord(): RecordWithExercise?
+    suspend fun getLatestRecord(): RecordWithExercise?
 
     @Query("""
         SELECT record.*, exercise.name as exerciseName 
         FROM record 
         JOIN exercise ON record.exerciseId = exercise.id 
         WHERE record.exerciseId = :exerciseId 
-        ORDER BY record.date DESC, record.id DESC
+        ORDER BY record.date DESC, record.orderNumber DESC, record.id DESC
         LIMIT 1
     """)
-    abstract suspend fun getLatestRecordByExerciseId(exerciseId: Int): RecordWithExercise?
+    suspend fun getLatestRecordByExerciseId(exerciseId: String): RecordWithExercise?
 
-    // --- UPDATE ---
+    @Query("SELECT * FROM record ORDER BY date DESC, orderNumber DESC, id DESC LIMIT :limit OFFSET :offset")
+    suspend fun getOlderRecords(offset: Int, limit: Int = 50): List<Record>
 
-    @Transaction
-    open suspend fun update(record: Record) {
-        validateRecord(record)
-        updateInternal(record)
-    }
+    @Query("SELECT * FROM record WHERE (date < :date) OR (date = :date AND orderNumber < :orderNumber) OR (date = :date AND orderNumber = :orderNumber AND id < :id) ORDER BY date DESC, orderNumber DESC, id DESC LIMIT :limit")
+    suspend fun getOlderRecordsAfter(date: Long, orderNumber: Int, id: String, limit: Int = 50): List<Record>
 
-    private fun validateRecord(record: Record) {
-        require(ValidateAndCorrect.validateSets(record.sets)) { "Invalid sets: ${record.sets}" }
-        require(ValidateAndCorrect.validateReps(record.reps)) { "Invalid reps: ${record.reps}" }
-        require(ValidateAndCorrect.validateWeight(record.weight)) { "Invalid weight: ${record.weight}" }
-    }
+    @Query("SELECT * FROM record WHERE (date > :date) OR (date = :date AND orderNumber > :orderNumber) OR (date = :date AND orderNumber = :orderNumber AND id > :id) ORDER BY date ASC, orderNumber ASC, id ASC LIMIT :limit")
+    suspend fun getNewerRecordsBefore(date: Long, orderNumber: Int, id: String, limit: Int = 50): List<Record>
 
-    // --- DELETE ---
+    @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date DESC, orderNumber DESC, id DESC LIMIT :limit OFFSET :offset")
+    suspend fun getOlderRecordsByExerciseId(exerciseId: String, offset: Int, limit: Int = 50): List<Record>
 
-    open suspend fun delete(recordId: Int) {
-        deleteInternal(recordId)
-    }
+    @Query("SELECT * FROM record WHERE exerciseId = :exerciseId AND ((date < :date) OR (date = :date AND orderNumber < :orderNumber) OR (date = :date AND orderNumber = :orderNumber AND id < :id)) ORDER BY date DESC, orderNumber DESC, id DESC LIMIT :limit")
+    suspend fun getOlderRecordsByExerciseIdAfter(exerciseId: String, date: Long, orderNumber: Int, id: String, limit: Int = 50): List<Record>
 
-    // --- OLDER RECORDS (beyond the latest 100) ---
-
-    @Query("SELECT * FROM record ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
-    abstract suspend fun getOlderRecords(offset: Int, limit: Int = 50): List<Record>
-
-    @Query("SELECT * FROM record WHERE exerciseId = :exerciseId ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
-    abstract suspend fun getOlderRecordsByExerciseId(exerciseId: Int, offset: Int, limit: Int = 50): List<Record>
-
-    @Query("SELECT * FROM record WHERE exerciseId IN (:exerciseIds) ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
-    abstract suspend fun getOlderRecordsByExerciseIds(exerciseIds: List<Int>, offset: Int, limit: Int = 50): List<Record>
+    @Query("SELECT * FROM record WHERE exerciseId IN (:exerciseIds) ORDER BY date DESC, orderNumber DESC, id DESC LIMIT :limit OFFSET :offset")
+    suspend fun getOlderRecordsByExerciseIds(exerciseIds: List<String>, offset: Int, limit: Int = 50): List<Record>
 
     @Query("SELECT COUNT(*) FROM record")
-    abstract suspend fun getTotalRecordCount(): Int
+    suspend fun getTotalRecordCount(): Int
 
     @Query("SELECT COUNT(*) FROM record WHERE exerciseId = :exerciseId")
-    abstract suspend fun getRecordCountByExerciseId(exerciseId: Int): Int
+    suspend fun getRecordCountByExerciseId(exerciseId: String): Int
 
     @Query("SELECT COUNT(*) FROM record WHERE exerciseId IN (:exerciseIds)")
-    abstract suspend fun getRecordCountByExerciseIds(exerciseIds: List<Int>): Int
+    suspend fun getRecordCountByExerciseIds(exerciseIds: List<String>): Int
 
-    @Query("SELECT * FROM record")
-    abstract suspend fun getAllRecords(): List<Record>
-
-    @Query("SELECT * FROM record WHERE date >= :startDate AND date <= :endDate ORDER BY date DESC, id DESC")
-    abstract fun getRecordsByDateRangeFlow(startDate: Long, endDate: Long): kotlinx.coroutines.flow.Flow<List<Record>>
-
-    @Query("SELECT * FROM record ORDER BY date DESC, id DESC")
-    abstract fun getAllRecordsFlow(): kotlinx.coroutines.flow.Flow<List<Record>>
+    @Query("SELECT * FROM record WHERE date >= :startDate AND date <= :endDate ORDER BY date DESC, orderNumber DESC, id DESC LIMIT 50000")
+    fun getRecordsByDateRangeFlow(startDate: Long, endDate: Long): Flow<List<Record>>
 
     @Query("SELECT COUNT(*) FROM record")
-    abstract fun getRecordCountFlow(): kotlinx.coroutines.flow.Flow<Int>
+    fun getRecordCountFlow(): Flow<Int>
 
-    @Query("SELECT * FROM record ORDER BY date ASC, id ASC")
-    abstract suspend fun getAllRecordsOrdered(): List<Record>
+    @Query("SELECT * FROM record ORDER BY date ASC, orderNumber ASC, id ASC")
+    suspend fun getAllRecordsOrdered(): List<Record>
+
+    @Query("SELECT COALESCE(MAX(orderNumber), -1) FROM record WHERE exerciseId = :exerciseId AND date = :date")
+    suspend fun getMaxOrderNumberForDate(exerciseId: String, date: Long): Int
+
+    @Query("SELECT * FROM record WHERE date >= :fromDate AND date <= :toDate ORDER BY date DESC, orderNumber DESC, id DESC LIMIT 500")
+    suspend fun getRecordsAroundDate(fromDate: Long, toDate: Long): List<Record>
 
     @Query("DELETE FROM record")
-    abstract suspend fun deleteAllRecords()
+    suspend fun deleteAllRecords()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertAll(records: List<Record>)
+    suspend fun insertAll(records: List<Record>)
 }

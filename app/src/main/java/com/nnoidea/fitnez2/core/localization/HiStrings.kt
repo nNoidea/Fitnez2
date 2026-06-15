@@ -16,7 +16,7 @@ object HiStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "'$name' नाम का व्यायाम पहले से मौजूद है"
     override fun errorExerciseRenameConflict(name: String) = "व्यायाम का नाम '$name' पहले से उपयोग में है"
-    override fun errorExerciseNotFoundById(id: Int) = "ID $id वाला व्यायाम मौजूद नहीं है"
+    override fun errorExerciseNotFoundById(id: String) = "ID $id वाला व्यायाम मौजूद नहीं है"
 
     override val errorWorkoutNameBlank = "कृपया एक नाम भरें"
     override fun errorWorkoutAlreadyExists(name: String) = "'$name' नाम का वर्कआउट पहले से मौजूद है"

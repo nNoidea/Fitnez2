@@ -16,7 +16,7 @@ object PlStrings : EnStrings(
 
     override fun errorExerciseAlreadyExists(name: String) = "Ćwiczenie o nazwie '$name' już istnieje"
     override fun errorExerciseRenameConflict(name: String) = "Nazwa ćwiczenia '$name' jest już w użyciu"
-    override fun errorExerciseNotFoundById(id: Int) = "Ćwiczenie o ID $id nie istnieje"
+    override fun errorExerciseNotFoundById(id: String) = "Ćwiczenie o ID $id nie istnieje"
 
     override val errorWorkoutNameBlank = "Proszę podać nazwę"
     override fun errorWorkoutAlreadyExists(name: String) = "Trening o nazwie '$name' już istnieje"

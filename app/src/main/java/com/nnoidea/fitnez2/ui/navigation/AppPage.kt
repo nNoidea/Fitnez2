@@ -8,12 +8,12 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.nnoidea.fitnez2.ui.screens.TimelineScreen
-import com.nnoidea.fitnez2.ui.screens.MonthlyScreen
-import com.nnoidea.fitnez2.ui.screens.GraphScreen
-import com.nnoidea.fitnez2.ui.screens.SettingsScreen
-import com.nnoidea.fitnez2.ui.screens.WorkoutScreen
-import com.nnoidea.fitnez2.ui.screens.DeveloperOptionsScreen
+import com.nnoidea.fitnez2.ui.screens.timeline.TimelineScreen
+import com.nnoidea.fitnez2.ui.screens.monthly.MonthlyScreen
+import com.nnoidea.fitnez2.ui.screens.graph.GraphScreen
+import com.nnoidea.fitnez2.ui.screens.settings.SettingsScreen
+import com.nnoidea.fitnez2.ui.screens.workout.WorkoutScreen
+import com.nnoidea.fitnez2.ui.screens.developer.DeveloperOptionsScreen
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import com.nnoidea.fitnez2.core.localization.globalLocalization
@@ -55,7 +55,7 @@ enum class AppPage(
             content = { _ ->
                 val context = androidx.compose.ui.platform.LocalContext.current
                 val activity = context as? android.app.Activity
-                val workoutId = activity?.intent?.getIntExtra("extra_workout_id", -1)?.takeIf { it != -1 }
+                val workoutId = activity?.intent?.getStringExtra("extra_workout_id")
                 WorkoutScreen(workoutId = workoutId, onBack = { activity?.finish() })
             }
     ),

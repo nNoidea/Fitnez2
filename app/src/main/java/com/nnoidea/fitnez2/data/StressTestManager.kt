@@ -10,71 +10,71 @@ import kotlin.random.Random
 
 object StressTestManager {
 
+    private val seedExercises = listOf(
+        "Squat", "Bench Press", "Deadlift", "Overhead Press", "Barbell Row",
+        "Pull Up", "Dips", "Lunge", "Bicep Curl", "Tricep Extension",
+        "Leg Press", "Lat Pulldown", "Chest Fly", "Lateral Raise", "Shrug",
+        "Calf Raise", "Hammer Curl", "Skull Crusher", "Face Pull", "Plank"
+    )
+
     suspend fun performStressTest(database: AppDatabase, onProgress: (Float, String) -> Unit) = withContext(Dispatchers.IO) {
         onProgress(0f, "Clearing existing data...")
         database.recordDao().deleteAllRecords()
         database.workoutDao().deleteAllWorkouts()
         database.exerciseDao().deleteAllExercises()
 
-        onProgress(0.1f, "Creating 20 exercises...")
-        val exercises = (1..20).map { i ->
-            Exercise(id = 0, name = "Exercise $i")
-        }
+        onProgress(0.05f, "Creating exercises...")
+        val exercises = seedExercises.map { Exercise(name = it) }
         database.exerciseDao().insertAll(exercises)
 
-        // Retrieve exercises to get their auto-generated IDs
         val savedExercises = database.exerciseDao().getAllExercises()
         if (savedExercises.isEmpty()) {
             throw IllegalStateException("Failed to create exercises")
         }
 
-        onProgress(0.2f, "Generating records...")
-        val startDate = LocalDate.of(2000, 1, 1) // Starting from 2000 as dialog says
+        val yesterday = LocalDate.now().minusDays(1)
         val daysToSimulate = 10000
         val recordsPerDay = 100
         val batchSize = 10000
         val records = ArrayList<Record>(batchSize)
+        var totalInserted = 0
 
         for (day in 0 until daysToSimulate) {
             if ((day % 100) == 0) {
-                val p = 0.2f + (0.8f * (day.toFloat() / daysToSimulate.toFloat()))
-                onProgress(p, "Generating and inserting day ${day + 1}...")
+                val p = 0.1f + (0.9f * (day.toFloat() / daysToSimulate))
+                val simulatedDate = yesterday.minusDays(day.toLong())
+                val recordsSoFar = (day + 1) * recordsPerDay
+                onProgress(p, "$recordsSoFar / ${daysToSimulate * recordsPerDay} records ($simulatedDate)")
             }
 
-            val currentDate = startDate.plusDays(day.toLong())
+            val currentDate = yesterday.minusDays(day.toLong())
             val timestamp = currentDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
             repeat(recordsPerDay) {
                 val exercise = savedExercises.random()
-                
-                val sets = Random.nextInt(1, 6)
-                val reps = Random.nextInt(5, 16)
-                val weight = Random.nextDouble(10.0, 100.0)
-
                 records.add(
                     Record(
-                        id = 0,
                         exerciseId = exercise.id,
                         date = timestamp,
-                        sets = sets,
-                        reps = reps,
-                        weight = weight,
+                        sets = Random.nextInt(1, 6),
+                        reps = Random.nextInt(5, 16),
+                        weight = Random.nextDouble(10.0, 100.0)
                     )
                 )
             }
 
-            // Insert in batches to prevent OutOfMemory crashes and massive SQL transactions
             if (records.size >= batchSize) {
                 database.recordDao().insertAll(records)
+                totalInserted += records.size
                 records.clear()
             }
         }
-        
-        // Insert any remaining records
+
         if (records.isNotEmpty()) {
             database.recordDao().insertAll(records)
+            totalInserted += records.size
         }
 
-        onProgress(1.0f, "Stress test complete. Created 20 exercises and ${records.size} records.")
+        onProgress(1.0f, "Complete. $totalInserted records across $daysToSimulate days (${yesterday.minusDays((daysToSimulate - 1).toLong())} → $yesterday)")
     }
 }
