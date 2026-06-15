@@ -1,18 +1,8 @@
 package com.nnoidea.fitnez2.ui.screens.settings
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import com.nnoidea.fitnez2.ui.components.dialog.LoadingDialog
 import com.nnoidea.fitnez2.ui.components.dialog.RadioSelectionDialog
 import com.nnoidea.fitnez2.ui.components.SettingsItem
 import androidx.compose.foundation.rememberScrollState
@@ -30,16 +20,13 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
@@ -47,25 +34,17 @@ import com.nnoidea.fitnez2.ui.common.UiSignal
 import com.nnoidea.fitnez2.ui.components.ScreenScaffold
 import com.nnoidea.fitnez2.service.LocalBackupService
 import com.nnoidea.fitnez2.service.LocalSettingsService
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.runtime.LaunchedEffect
 
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.input.KeyboardType
 import com.nnoidea.fitnez2.core.localization.EnStrings
-import com.nnoidea.fitnez2.ui.components.dialog.PredictiveAlertDialog
-import com.nnoidea.fitnez2.core.ValidateAndCorrect
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.nnoidea.fitnez2.core.RotationMode
 import android.widget.Toast
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -91,13 +70,18 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
     var showDefaultsDialog by remember { mutableStateOf(false) }
     var showImportConfirmation by remember { mutableStateOf(false) }
     var importUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var isExporting by remember { mutableStateOf(false) }
+    var isImporting by remember { mutableStateOf(false) }
+    var importingTitle by remember { mutableStateOf("") }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
-        uri?.let {
+        if (uri != null) {
+            isExporting = true
             scope.launch {
-                val result = backupService.exportData(it)
+                val result = backupService.exportData(uri)
+                isExporting = false
                 if (result.isSuccess) {
                     Toast.makeText(context, globalLocalization.labelExportSuccess, Toast.LENGTH_SHORT).show()
                 } else {
@@ -195,7 +179,7 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 value = "",
                 icon = Icons.Default.Share,
                 onClick = {
-                    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                    val timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss", Locale.getDefault()).format(Instant.now().atZone(java.time.ZoneId.systemDefault()))
                     val fileName = "Fitnez2-$timeStamp.json"
                     exportLauncher.launch(fileName)
                 }
@@ -298,114 +282,54 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
         }
     )
     
-    // Unified Default Values Dialog
-    if (showDefaultsDialog) {
-        var sets by remember { mutableStateOf(defaultSets) }
-        var reps by remember { mutableStateOf(defaultReps) }
-        var weight by remember { mutableStateOf(defaultWeight) }
+    DefaultValuesEditorDialog(
+        show = showDefaultsDialog,
+        currentDefaults = Defaults(defaultSets, defaultReps, defaultWeight),
+        onSave = { validSets, validReps, validWeight ->
+            scope.launch {
+                settingsService.setDefaultSets(validSets.toString())
+                settingsService.setDefaultReps(validReps.toString())
+                settingsService.setDefaultWeight(validWeight.toString())
+                showDefaultsDialog = false
+            }
+        },
+        onDismiss = { showDefaultsDialog = false }
+    )
 
-
-        PredictiveAlertDialog(
-            show = showDefaultsDialog,
-            onDismissRequest = { showDefaultsDialog = false },
-            title = globalLocalization.labelDefaultExerciseValues,
-            confirmButton = {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            val validSets = ValidateAndCorrect.sets(sets)
-                            val validReps = ValidateAndCorrect.reps(reps)
-                            val validWeight = ValidateAndCorrect.weight(weight)
-
-                            if (validSets != null && validReps != null && validWeight != null) {
-                                settingsService.setDefaultSets(validSets.toString())
-                                settingsService.setDefaultReps(validReps.toString())
-                                settingsService.setDefaultWeight(validWeight.toString())
-                                showDefaultsDialog = false
-                            }
-                        }
+    ImportConfirmationDialog(
+        show = showImportConfirmation,
+        onConfirm = {
+            showImportConfirmation = false
+            isImporting = true
+            importingTitle = globalLocalization.labelClearingDatabase
+            importUri?.let { uri ->
+                scope.launch {
+                    val result = backupService.importData(uri)
+                    isImporting = false
+                    if (result.isSuccess) {
+                        com.nnoidea.fitnez2.ui.common.GlobalUiState.emitToAll(UiSignal.DatabaseSeeded)
+                        Toast.makeText(context, globalLocalization.labelImportSuccess, Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, globalLocalization.labelImportFailed, Toast.LENGTH_SHORT).show()
                     }
-                ) {
-                    Text(globalLocalization.labelSave)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDefaultsDialog = false }) {
-                    Text(globalLocalization.labelCancel)
+                    importUri = null
                 }
             }
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Sets
-                OutlinedTextField(
-                    value = sets,
-                    onValueChange = { sets = it },
-                    label = { Text(globalLocalization.labelDefaultSets) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
+        },
+        onDismiss = { showImportConfirmation = false }
+    )
 
-                // Reps
-                OutlinedTextField(
-                    value = reps,
-                    onValueChange = { reps = it },
-                    label = { Text(globalLocalization.labelDefaultReps) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
+    LoadingDialog(
+        show = isExporting,
+        title = globalLocalization.labelExportingData,
+        progress = null
+    )
 
-                // Weight
-                OutlinedTextField(
-                    value = weight,
-                    onValueChange = { weight = it },
-                    label = { Text(globalLocalization.labelDefaultWeight) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                )
-            }
-        }
-    }
-
-    if (showImportConfirmation) {
-        PredictiveAlertDialog(
-            show = showImportConfirmation,
-            onDismissRequest = { showImportConfirmation = false },
-            title = globalLocalization.titleImportWarning,
-            confirmButton = {
-                Button(
-                    onClick = {
-                        importUri?.let { uri ->
-                            scope.launch {
-                                val result = backupService.importData(uri)
-                                if (result.isSuccess) {
-                                    com.nnoidea.fitnez2.ui.common.GlobalUiState.emitToAll(UiSignal.DatabaseSeeded)
-                                    Toast.makeText(context, globalLocalization.labelImportSuccess, Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, globalLocalization.labelImportFailed, Toast.LENGTH_SHORT).show()
-                                }
-                                showImportConfirmation = false
-                            }
-                        }
-                    }
-                ) {
-                    Text(globalLocalization.labelConfirm)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showImportConfirmation = false }) {
-                    Text(globalLocalization.labelCancel)
-                }
-            }
-        ) {
-           Text(globalLocalization.msgImportWarning)
-        }
-    }
+    LoadingDialog(
+        show = isImporting,
+        title = importingTitle,
+        progress = null
+    )
 
 }
 

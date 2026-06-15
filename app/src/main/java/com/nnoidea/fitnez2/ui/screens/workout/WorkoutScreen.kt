@@ -131,102 +131,50 @@ fun WorkoutScreen(
         }
     }
 
-    // --- "No Name" dialog (records exist but name is blank) ---
-    PredictiveAlertDialog(
-        show = dialogVariant == false,
-        onDismissRequest = { dialogVariant = null },
-        title = globalLocalization.titleNoName,
-        text = globalLocalization.msgNoName,
-        confirmButton = {
-            androidx.compose.material3.TextButton(
-                onClick = { dialogVariant = null }
-            ) {
-                Text(globalLocalization.labelEditAction)
-            }
-        },
-        dismissButton = {
-            androidx.compose.material3.TextButton(
-                onClick = { dialogVariant = null; onBack() },
-            ) {
-                Text(globalLocalization.labelDiscard, color = Color(0xFFEF5350))
-            }
+    suspend fun performSave(): Boolean {
+        val existing = workoutService.getWorkoutByName(workoutName.trim())
+        val isSelf = (existing != null) && (workoutId != null) && (existing.id == workoutId)
+        if ((existing != null) && (!isSelf)) {
+            Toast.makeText(
+                context,
+                globalLocalization.errorWorkoutAlreadyExists(workoutName.trim()),
+                Toast.LENGTH_SHORT
+            ).show()
+            return false
         }
-    )
 
-    // --- "Unsaved Work" dialog (name + records → offer discard / keep editing / save) ---
-    PredictiveAlertDialog(
-        show = dialogVariant == true,
-        onDismissRequest = { dialogVariant = null },
-        title = globalLocalization.titleUnsavedWork,
-        text = globalLocalization.msgUnsavedWork,
-        confirmButton = { } // buttons handled in content slot below
-    ) {
-        // Three separate buttons, right-aligned: Discard | Edit | Save
-        androidx.compose.foundation.layout.Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(
-                8.dp,
-                androidx.compose.ui.Alignment.End
+        val targetWorkoutId = if (workoutId != null) {
+            workoutService.updateWorkout(Workout(id = workoutId, name = workoutName.trim()))
+            workoutService.deleteRecordsByWorkoutId(workoutId)
+            workoutId
+        } else {
+            workoutService.createWorkout(workoutName.trim()).id
+        }
+        workoutItems.forEach { item ->
+            val newRecord = item.workoutRecord.copy(id = "", workoutId = targetWorkoutId)
+            workoutService.addRecordToWorkout(
+                workoutId = newRecord.workoutId,
+                exerciseId = newRecord.exerciseId,
+                sets = newRecord.sets,
+                reps = newRecord.reps,
+                weight = newRecord.weight
             )
-        ) {
-            androidx.compose.material3.TextButton(
-                onClick = { dialogVariant = null; onBack() },
-            ) {
-                Text(globalLocalization.labelDiscard, color = Color(0xFFEF5350))
-            }
-
-            androidx.compose.material3.TextButton(
-                onClick = { dialogVariant = null }
-            ) {
-                Text(globalLocalization.labelEditAction)
-            }
-
-            Button(
-                onClick = {
-                        scope.launch {
-                            val existing = workoutService.getWorkoutByName(workoutName.trim())
-                            val isSelf =
-                                (existing != null) && (workoutId != null) && (existing.id == workoutId)
-                            if ((existing != null) && (!isSelf)) {
-                                Toast.makeText(
-                                    context,
-                                    globalLocalization.errorWorkoutAlreadyExists(workoutName.trim()),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@launch
-                            }
-
-                            dialogVariant = null
-                            val targetWorkoutId = if (workoutId != null) {
-                                workoutService.updateWorkout(Workout( id = workoutId, name = workoutName.trim()))
-                                workoutService.deleteRecordsByWorkoutId(workoutId)
-                                workoutId
-                            } else {
-                                workoutService.createWorkout(workoutName.trim()).id
-                            }
-                            workoutItems.forEach { item ->
-                                val newRecord =
-                                    item.workoutRecord.copy( id = "", workoutId = targetWorkoutId)
-                                workoutService.addRecordToWorkout(
-                                    workoutId = newRecord.workoutId,
-                                    exerciseId = newRecord.exerciseId,
-                                    sets = newRecord.sets,
-                                    reps = newRecord.reps,
-                                    weight = newRecord.weight
-                                )
-                            }
-                            onBack()
-                        }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary,
-                )
-            ) {
-                Text(globalLocalization.labelSave)
-            }
         }
+        return true
     }
+
+    NoNameDialog(
+        show = dialogVariant == false,
+        onDismiss = { dialogVariant = null },
+        onDiscard = { onBack() }
+    )
+    UnsavedWorkDialog(
+        show = dialogVariant == true,
+        onDismiss = { dialogVariant = null },
+        onDiscard = { onBack() },
+        onSave = { scope.launch { if (performSave()) { dialogVariant = null; onBack() } } },
+        workoutName = workoutName
+    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -279,46 +227,7 @@ fun WorkoutScreen(
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
-                            scope.launch {
-                                val existing =
-                                    workoutService.getWorkoutByName(workoutName.trim())
-                                val isSelf =
-                                    (existing != null) && (workoutId != null) && (existing.id == workoutId)
-                                if ((existing != null) && (!isSelf)) {
-                                    Toast.makeText(
-                                        context,
-                                        globalLocalization.errorWorkoutAlreadyExists(workoutName.trim()),
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                    return@launch
-                                }
-
-                                val targetWorkoutId = if (workoutId != null) {
-                                    workoutService.updateWorkout(
-                                        Workout(
-            id = workoutId,
-                                            name = workoutName.trim()
-                                        )
-                                    )
-                                    workoutService.deleteRecordsByWorkoutId(workoutId)
-                                    workoutId
-                                } else {
-                                workoutService.createWorkout(workoutName.trim()).id
-                                }
-
-                                workoutItems.forEach { item ->
-                                    val newRecord =
-                                        item.workoutRecord.copy( id = "", workoutId = targetWorkoutId)
-                                    workoutService.addRecordToWorkout(
-                                        workoutId = newRecord.workoutId,
-                                        exerciseId = newRecord.exerciseId,
-                                        sets = newRecord.sets,
-                                        reps = newRecord.reps,
-                                        weight = newRecord.weight
-                                    )
-                                }
-                                onBack()
-                            }
+                            scope.launch { if (performSave()) onBack() }
                         }
                     },
                     modifier = Modifier

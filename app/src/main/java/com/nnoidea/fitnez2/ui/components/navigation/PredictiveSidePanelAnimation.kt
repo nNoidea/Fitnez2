@@ -33,7 +33,7 @@ private fun Modifier.predictiveSidePanelAnimation(state: PredictiveSidePanelStat
         }
 
 @Composable
-fun predictiveSidePanelContainer(
+fun PredictiveSidePanelContainer(
         drawerState: DrawerState,
         scope: CoroutineScope,
         content: @Composable () -> Unit

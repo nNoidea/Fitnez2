@@ -258,106 +258,25 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
 
 
 
-                                        BoxWithConstraints(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .fillMaxHeight()
-                                                .padding(1.5.dp) // Symmetrical 1.5.dp padding (giving a perfect 3.dp gap between days)
-                                                .clip(cellShape)
-                                                
-                                                .background(
-                                                    if (isCurrentMonth) MaterialTheme.colorScheme.secondaryContainer
-                                                    else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)
-                                                )
-                                                .clickable(enabled = hasExercises) {
-                                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                                    // Jump directly to the Timeline position for that day
-                                                    val epochMillis = day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                                                    val intent = Intent(context, MainActivity::class.java).apply {
-                                                        putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Timeline.route)
-                                                        putExtra("extra_target_date", epochMillis)
-                                                        putExtra("extra_source_route", AppPage.Monthly.route)
-                                                    }
-                                                    context.startActivity(intent)
-                                                },
-                                            contentAlignment = Alignment.TopCenter // Day numbers start at the top
-                                        ) {
-                                            val availableHeight = maxHeight - 26.dp
-                                            val maxPills = (availableHeight.value / 13).toInt().coerceAtLeast(1)
-
-                                            Column(
-                                                modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .padding(horizontal = 0.dp, vertical = 2.dp), // Zeroed horizontal padding so pills stretch edge-to-edge
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                verticalArrangement = Arrangement.Top
-                                            ) {
-                                                Box(
-                                                     modifier = if (isToday) {
-                                                          val pillBgColor = if (isCurrentMonth) {
-                                                              MaterialTheme.colorScheme.tertiary
-                                                          } else {
-                                                              MaterialTheme.colorScheme.tertiary.copy(alpha = 0.35f)
-                                                          }
-                                                          Modifier
-                                                              .width(28.dp)
-                                                              .height(20.dp)
-                                                              .background(
-                                                                  color = pillBgColor,
-                                                                  // Logical pill shape: since height is 20.dp, half of height (10.dp) makes left and right fully rounded
-                                                                  shape = RoundedCornerShape(10.dp)
-                                                              )
-                                                      } else {
-                                                          Modifier
-                                                              .width(28.dp)
-                                                              .height(20.dp)
-                                                      },
-                                                     contentAlignment = Alignment.Center
-                                                 ) {
-                                                     Text(
-                                                         text = day.dayOfMonth.toString(),
-                                                         style = MaterialTheme.typography.labelMedium.copy(
-                                                             fontSize = 13.sp,
-                                                             lineHeight = 13.sp,
-                                                             platformStyle = androidx.compose.ui.text.PlatformTextStyle(
-                                                                 includeFontPadding = false
-                                                             ),
-                                                             fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium
-                                                         ),
-                                                         textAlign = TextAlign.Center,
-                                                         color = if (isToday) {
-                                                             if (isCurrentMonth) MaterialTheme.colorScheme.onTertiary
-                                                             else lerp(MaterialTheme.colorScheme.onTertiary, Color.Black, 0.4f)
-                                                         } else {
-                                                             if (isCurrentMonth) MaterialTheme.colorScheme.onSecondaryContainer
-                                                             else lerp(MaterialTheme.colorScheme.onSecondaryContainer, Color.Black, 0.4f)
-                                                         }
-                                                     )
-                                                 }
-
-                                                if (hasExercises) {
-                                                    Spacer(modifier = Modifier.height(2.dp)) // Lowered gap
-
-                                                    val pillContainerColor = if (isCurrentMonth) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                                                    val pillContentColor = if (isCurrentMonth) MaterialTheme.colorScheme.onPrimary else lerp(MaterialTheme.colorScheme.onPrimary, Color.Black, 0.4f)
-
-                                                    // Safely display up to 6 items max. If larger, show 5 items + overflow pill ellipsis "..."
-                                                    val displayNames = if (dayExerciseNames.size > maxPills) {
-                                                        dayExerciseNames.take(maxPills - 1) + "..."
-                                                    } else {
-                                                        dayExerciseNames
-                                                    }
-
-                                                    displayNames.forEach { name ->
-                                                        ExercisePill(
-                                                            name = name,
-                                                            containerColor = pillContainerColor,
-                                                            contentColor = pillContentColor
-                                                        )
-                                                    }
+                                        CalendarDayCell(
+                                            date = day,
+                                            isCurrentMonth = isCurrentMonth,
+                                            isToday = isToday,
+                                            hasExercises = hasExercises,
+                                            exerciseDisplayNames = dayExerciseNames,
+                                            onClick = {
+                                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                                                val epochMillis = day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                                val intent = Intent(context, MainActivity::class.java).apply {
+                                                    putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Timeline.route)
+                                                    putExtra("extra_target_date", epochMillis)
+                                                    putExtra("extra_source_route", AppPage.Monthly.route)
                                                 }
-                                            }
-                                        }
+                                                context.startActivity(intent)
+                                            },
+                                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                                            cellShape = cellShape
+                                        )
                                     }
                                 }
                             }
@@ -369,33 +288,3 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
     }
 }
 
-@Composable
-private fun ExercisePill(
-    name: String,
-    containerColor: Color,
-    contentColor: Color
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(13.dp)
-            .padding(vertical = 0.5.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .background(containerColor)
-            .padding(horizontal = 2.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = name,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 8.5.sp, // Extremely compact font size
-                lineHeight = 9.sp,
-                fontWeight = FontWeight.Bold // Made bold
-            ),
-            color = contentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Clip, // Clip directly with zero ... ellipsis!
-            textAlign = TextAlign.Center
-        )
-    }
-}

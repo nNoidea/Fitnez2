@@ -77,18 +77,18 @@ fun HomeBottomSheet(modifier: Modifier = Modifier) {
                 } else null
 
                 if (filterIds != null && filterIds.isNotEmpty()) {
-                    val historyState = rememberRecordListState(filterIds, state.selectedWorkout != null)
+                    val recordListState = rememberRecordListState(filterIds, state.selectedWorkout != null)
                     RecordList(
-                        items = historyState.uiItems,
-                        weightUnit = historyState.weightUnit,
-                        listState = historyState.listState,
-                        expandedRecordIds = historyState.expandedRecordIds,
-                        timestampTokens = historyState.timestampTokens,
-                        onShowTimestamp = { historyState.showTimestampFor(it) },
+                        items = recordListState.uiItems,
+                        weightUnit = recordListState.weightUnit,
+                        listState = recordListState.listState,
+                        expandedRecordIds = recordListState.expandedRecordIds,
+                        timestampTokens = recordListState.timestampTokens,
+                        onShowTimestamp = { recordListState.showTimestampFor(it) },
                         modifier = Modifier.fillMaxSize(),
-                        onUpdateRequest = { historyState.onUpdateRequest(it) },
-                        onDeleteRequest = { historyState.onDeleteRequest(it) },
-                        onDeleteGroupRequest = { historyState.onDeleteGroupRequest(it) }
+                        onUpdateRequest = { recordListState.onUpdateRequest(it) },
+                        onDeleteRequest = { recordListState.onDeleteRequest(it) },
+                        onDeleteGroupRequest = { recordListState.onDeleteGroupRequest(it) }
                     )
                 }
             }

@@ -62,21 +62,21 @@ fun PredictiveSidePanel(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            Item(
+            DrawerNavItem(
                 label = AppPage.Timeline.label(),
                 icon = AppPage.Timeline.icon,
                 selected = currentRoute == AppPage.Timeline.route,
                 onClick = { onItemClick(AppPage.Timeline.route) }
             )
 
-            Item(
+            DrawerNavItem(
                 label = AppPage.Monthly.label(),
                 icon = AppPage.Monthly.icon,
                 selected = currentRoute == AppPage.Monthly.route,
                 onClick = { onItemClick(AppPage.Monthly.route) }
             )
 
-            Item(
+            DrawerNavItem(
                 label = AppPage.Graph.label(),
                 icon = AppPage.Graph.icon,
                 selected = currentRoute == AppPage.Graph.route,
@@ -90,13 +90,13 @@ fun PredictiveSidePanel(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
-            Item(
+            DrawerNavItem(
                 label = AppPage.Settings.label(),
                 icon = AppPage.Settings.icon,
                 selected = currentRoute == AppPage.Settings.route,
                 onClick = { onItemClick(AppPage.Settings.route) }
             )
-            Item(
+            DrawerNavItem(
                 label = globalLocalization.labelVersion,
                 icon = Icons.Default.Info,
                 onClick = {}
@@ -107,7 +107,7 @@ fun PredictiveSidePanel(
 }
 
 @Composable
-private fun Item(
+private fun DrawerNavItem(
     modifier: Modifier = Modifier,
     label: String,
     icon: ImageVector,

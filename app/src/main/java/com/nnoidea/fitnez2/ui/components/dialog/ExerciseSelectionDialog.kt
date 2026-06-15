@@ -313,79 +313,50 @@ fun ExerciseSelectionDialog(
         }
     }
 
-    // Delete Confirmation Dialog
-    PredictiveConfirmationDialog(
+    DeleteExerciseDialog(
         show = exerciseToDelete != null,
-        onDismissRequest = { exerciseToDelete = null },
-        title = globalLocalization.labelDelete,
-        message = globalLocalization.labelDeleteExerciseWarning,
-        confirmLabel = globalLocalization.labelDelete,
-        cancelLabel = globalLocalization.labelCancel,
-        isDestructive = true,
-        onConfirm = {
-            exerciseToDelete?.let { exercise ->
-                scope.launch {
-                    exerciseService.deleteExercise(exercise.id)
-                    exerciseToDelete = null
-                }
+        onDismiss = { exerciseToDelete = null },
+        onConfirmDelete = { exercise ->
+            scope.launch {
+                exerciseService.deleteExercise(exercise.id)
+                exerciseToDelete = null
             }
-        }
+        },
+        exercise = exerciseToDelete
     )
 
-    // Edit Dialog
-    PredictiveInputDialog(
+    EditExerciseDialog(
         show = exerciseToEdit != null,
-        title = globalLocalization.labelEditExercise,
-        initialValue = exerciseToEdit?.name ?: "",
-        label = globalLocalization.labelExerciseName,
-        confirmLabel = globalLocalization.labelSave,
-        cancelLabel = globalLocalization.labelCancel,
-        onDismissRequest = { exerciseToEdit = null },
-        onConfirm = { newName ->
-            exerciseToEdit?.let { exercise ->
-                scope.launch {
-                    try {
-                        exerciseService.updateExercise(exercise.id, newName)
-                        exerciseToEdit = null
-                    } catch (_: Exception) {
-                        // Error handling could be added here
-                    }
+        exercise = exerciseToEdit,
+        onDismiss = { exerciseToEdit = null },
+        onConfirmEdit = { exercise, newName ->
+            scope.launch {
+                try {
+                    exerciseService.updateExercise(exercise.id, newName)
+                    exerciseToEdit = null
+                } catch (_: Exception) {
                 }
             }
         }
     )
 
-    // Delete Confirmation Dialog for Workout
-    PredictiveConfirmationDialog(
+    DeleteWorkoutDialog(
         show = workoutToDelete != null,
-        onDismissRequest = { workoutToDelete = null },
-        title = globalLocalization.labelDelete,
-        message = globalLocalization.labelDeleteWorkoutWarning,
-        confirmLabel = globalLocalization.labelDelete,
-        cancelLabel = globalLocalization.labelCancel,
-        isDestructive = true,
-        onConfirm = {
-            workoutToDelete?.let { workout ->
-                scope.launch {
-                    workoutService?.deleteWorkout(workout)
-                    workoutToDelete = null
-                }
+        onDismiss = { workoutToDelete = null },
+        onConfirmDelete = { workout ->
+            scope.launch {
+                workoutService?.deleteWorkout(workout)
+                workoutToDelete = null
             }
-        }
+        },
+        workout = workoutToDelete
     )
 
-    // Create Dialog
     val createDialogContext = LocalContext.current
-    PredictiveInputDialog(
+    CreateExerciseDialog(
         show = showCreateDialog,
-        title = globalLocalization.labelCreateExercise,
-        initialValue = "",
-        label = globalLocalization.labelExerciseName,
-        confirmLabel = globalLocalization.labelAdd,
-        cancelLabel = globalLocalization.labelCancel,
-        placeholder = globalLocalization.labelExerciseNamePlaceholder,
-        onDismissRequest = { showCreateDialog = false },
-        onConfirm = { newName ->
+        onDismiss = { showCreateDialog = false },
+        onConfirmCreate = { newName ->
             scope.launch {
                 try {
                     val newExercise = exerciseService.createExercise(newName)

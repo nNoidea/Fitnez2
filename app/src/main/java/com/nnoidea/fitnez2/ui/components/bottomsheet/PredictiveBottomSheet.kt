@@ -91,7 +91,7 @@ fun PredictiveBottomSheet(
         LaunchedEffect(state.isExpanded, globalUiState.isBottomSheetHidden, globalUiState.isScrollToTopButtonVisible, navBarPadding) {
             val buttonOffset = if (globalUiState.isScrollToTopButtonVisible) 80.dp else 0.dp
             
-            globalUiState.bottomSheetSnackbarOffset = if (globalUiState.isBottomSheetHidden) {
+            globalUiState.snackbarBottomInset = if (globalUiState.isBottomSheetHidden) {
                 navBarPadding + 80.dp // 24.dp padding + 56.dp button height
             } else if (state.isExpanded) {
                 navBarPadding + buttonOffset

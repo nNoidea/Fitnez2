@@ -162,7 +162,7 @@ fun SwipeToDeleteContainer(
                                         // Haptic Feedback Logic
                                         if ((-proposed) >= dismissThreshold && !hasVibrated) {
                                             // Just crossed threshold
-                                            view.performHapticFeedback(HapticFeedbackConstants.REJECT)
+                                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                             hasVibrated = true
                                         } else if ((-proposed) < dismissThreshold && hasVibrated) {
                                             // Crossed back
@@ -183,7 +183,7 @@ fun SwipeToDeleteContainer(
                                     view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                     // Animate away
                                     // User requested 50% faster animation. Default is usually ~300-400ms.
-                                    // using tween(200) ensures a snappy exit.
+                                    // using tween(50) ensures a swift exit.
                                     offsetX.animateTo(
                                         targetValue = -itemWidth,
                                         animationSpec = tween(durationMillis = 50)

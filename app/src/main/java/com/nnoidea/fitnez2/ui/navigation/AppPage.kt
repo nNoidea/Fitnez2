@@ -2,7 +2,6 @@ package com.nnoidea.fitnez2.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Timeline
-import androidx.compose.material.icons.filled.CalendarViewWeek
 import androidx.compose.material.icons.filled.CalendarViewMonth
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.automirrored.filled.List
@@ -50,7 +49,7 @@ enum class AppPage(
     ),
     Workout(
             route = "workout",
-            label = { "Workout" },
+            label = { globalLocalization.labelWorkout },
             icon = Icons.AutoMirrored.Filled.List,
             content = { _ ->
                 val context = androidx.compose.ui.platform.LocalContext.current

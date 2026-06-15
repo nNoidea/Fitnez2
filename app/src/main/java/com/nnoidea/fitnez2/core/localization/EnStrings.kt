@@ -133,6 +133,9 @@ sealed class EnStrings(
     open val devStressTestConfirmMessage: String = "⚠️ WARNING: This will permanently DELETE ALL existing data (exercises & records) and replace it with ~1 million generated records (2000-2025).\n\nThis process may take a minute."
     open val devWipeAndGenerate: String = "Wipe & Generate"
     open val devGeneratingData: String = "Generating Data..."
+    open val labelClearingDatabase: String = "Clearing database..."
+    open val labelImportingData: String = "Importing data..."
+    open val labelExportingData: String = "Exporting data..."
     open val devHapticsTest: String = "Haptics Test"
     open val devMoveSlider: String = "Move slider to feel different vibrations"
 

@@ -3,27 +3,15 @@ package com.nnoidea.fitnez2.ui.common
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.RotationMode
-import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.EnStrings
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
-import com.nnoidea.fitnez2.data.AppDatabase
-import com.nnoidea.fitnez2.service.LocalSettingsService
-import com.nnoidea.fitnez2.service.ProvideAppServices
 import com.nnoidea.fitnez2.service.SettingsService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -31,21 +19,12 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-// Simple global UI signals
-sealed interface UiSignal {
-    data class ScrollToTop(val recordId: String? = null) : UiSignal
-    data class RecordInserted(val recordId: String) : UiSignal
-    data class RecordUpdated(val record: com.nnoidea.fitnez2.data.entities.Record) : UiSignal
-    data class RecordDeleted(val recordId: String) : UiSignal
-    data object DatabaseSeeded : UiSignal
-}
-
 class GlobalUiState(
     val scope: CoroutineScope,
     private val settingsService: SettingsService
 ) {
     // State: Day Change Tracker Key (invalidated automatically at midnight)
-    var currentDayKey by mutableLongStateOf(System.currentTimeMillis())
+    var midnightTransitionTimestamp by mutableLongStateOf(System.currentTimeMillis())
         private set
 
     var isScrollToTopButtonVisible by mutableStateOf(false)
@@ -59,7 +38,7 @@ class GlobalUiState(
             while (true) {
                 val delayMillis = getMillisUntilNextMidnight()
                 kotlinx.coroutines.delay(delayMillis)
-                currentDayKey = System.currentTimeMillis()
+                midnightTransitionTimestamp = System.currentTimeMillis()
             }
         }
     }
@@ -120,7 +99,7 @@ class GlobalUiState(
     var weightUnit by mutableStateOf("kg")
 
     // State: BottomSheet Offset for Snackbars
-    var bottomSheetSnackbarOffset by mutableStateOf(0.dp)
+    var snackbarBottomInset by mutableStateOf(0.dp)
 
     // State: BottomSheet Hide (for auto-hide on scroll)
     var isBottomSheetHidden by mutableStateOf(false)
@@ -189,80 +168,6 @@ class GlobalUiState(
             if (result == SnackbarResult.ActionPerformed) {
                 onActionPerformed()
             }
-        }
-    }
-}
-
-val LocalGlobalUiState = staticCompositionLocalOf<GlobalUiState> {
-    error("No GlobalUiState provided")
-}
-
-@Composable
-fun rememberGlobalUiState(settingsService: SettingsService): GlobalUiState {
-    val scope = rememberCoroutineScope()
-
-    val state = remember(settingsService, scope) {
-        GlobalUiState(scope, settingsService)
-    }
-
-    // Sync persistence -> State / LocalizationManager
-    LaunchedEffect(state) {
-        launch {
-            settingsService.languageCodeFlow.collect { code ->
-                val lang = if (code != null) LocalizationManager.getLanguageByCode(code) else null
-                if (LocalizationManager.selectedLanguage != lang) {
-                    LocalizationManager.setLanguage(lang)
-                }
-            }
-        }
-        launch {
-            settingsService.weightUnitFlow.collect { unit ->
-                state.weightUnit = unit
-            }
-        }
-        launch {
-            settingsService.rotationModeFlow.collect { mode ->
-                state.rotationMode = mode
-            }
-        }
-        launch {
-            settingsService.fontModeFlow.collect { mode ->
-                state.fontMode = mode
-            }
-        }
-    }
-
-    return state
-}
-
-@Composable
-fun ProvideGlobalUiState(
-    database: AppDatabase,
-    settingsService: SettingsService,
-    state: GlobalUiState = rememberGlobalUiState(settingsService),
-    content: @Composable () -> Unit
-) {
-    GlobalUiState.setInstance(state)
-
-    DisposableEffect(state) {
-        GlobalUiState.register(state)
-        onDispose {
-            GlobalUiState.unregister(state)
-        }
-    }
-
-    val context = LocalContext.current
-    ValidateAndCorrect.appContext = context.applicationContext
-
-    ProvideAppServices(
-        context = context,
-        database = database
-    ) {
-        CompositionLocalProvider(
-            LocalGlobalUiState provides state,
-            LocalSettingsService provides settingsService,
-        ) {
-            content()
         }
     }
 }

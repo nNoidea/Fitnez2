@@ -94,9 +94,9 @@ internal fun SheetFormRow(
                 items = listOf(
                     { ts, te, bs, be ->
                         BottomSheetSetsField(
-                            value = state.sets,
-                            onValidChange = { state.onSetsChange(it) },
-                            onRawValueChange = { state.setsRaw = it },
+                            value = state.committedSets,
+                            onValidChange = { state.onCommittedSetsChange(it) },
+                            onRawValueChange = { state.pendingSets = it },
                             modifier = Modifier.weight(1f).height(buttonHeight),
                             topStartRadius = ts,
                             topEndRadius = te,
@@ -106,9 +106,9 @@ internal fun SheetFormRow(
                     },
                     { ts, te, bs, be ->
                         BottomSheetRepsField(
-                            value = state.reps,
-                            onValidChange = { state.onRepsChange(it) },
-                            onRawValueChange = { state.repsRaw = it },
+                            value = state.committedReps,
+                            onValidChange = { state.onCommittedRepsChange(it) },
+                            onRawValueChange = { state.pendingReps = it },
                             modifier = Modifier.weight(1f).height(buttonHeight),
                             topStartRadius = ts,
                             topEndRadius = te,
@@ -118,10 +118,10 @@ internal fun SheetFormRow(
                     },
                     { ts, te, bs, be ->
                         BottomSheetWeightField(
-                            value = state.weight.toDoubleOrNull() ?: 0.0,
+                            value = state.committedWeight.toDoubleOrNull() ?: 0.0,
                             label = state.weightUnit,
-                            onValidChange = { state.onWeightChange(it) },
-                            onRawValueChange = { state.weightRaw = it },
+                            onValidChange = { state.onCommittedWeightChange(it) },
+                            onRawValueChange = { state.pendingWeight = it },
                             modifier = Modifier.weight(1f).height(buttonHeight),
                             topStartRadius = ts,
                             topEndRadius = te,

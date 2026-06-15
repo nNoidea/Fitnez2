@@ -27,20 +27,20 @@ fun TimelineScreen(onOpenDrawer: () -> Unit) {
             headerContent = { HamburgerMenu(onClick = onOpenDrawer) },
         ) {
             val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-            val historyState = rememberRecordListState()
+            val recordListState = rememberRecordListState()
             RecordList(
-                items = historyState.uiItems,
-                weightUnit = historyState.weightUnit,
-                listState = historyState.listState,
-                expandedRecordIds = historyState.expandedRecordIds,
-                timestampTokens = historyState.timestampTokens,
-                onShowTimestamp = { historyState.showTimestampFor(it) },
+                items = recordListState.uiItems,
+                weightUnit = recordListState.weightUnit,
+                listState = recordListState.listState,
+                expandedRecordIds = recordListState.expandedRecordIds,
+                timestampTokens = recordListState.timestampTokens,
+                onShowTimestamp = { recordListState.showTimestampFor(it) },
                 modifier = Modifier.weight(1f),
                 extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp + navBarPadding,
                 enableAutoHide = true,
-                onUpdateRequest = { historyState.onUpdateRequest(it) },
-                onDeleteRequest = { historyState.onDeleteRequest(it) },
-                onDeleteGroupRequest = { historyState.onDeleteGroupRequest(it) }
+                onUpdateRequest = { recordListState.onUpdateRequest(it) },
+                onDeleteRequest = { recordListState.onDeleteRequest(it) },
+                onDeleteGroupRequest = { recordListState.onDeleteGroupRequest(it) }
             )
         }
 
@@ -51,7 +51,7 @@ fun TimelineScreen(onOpenDrawer: () -> Unit) {
             hostState = globalUiState.snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = globalUiState.bottomSheetSnackbarOffset)
+                .padding(bottom = globalUiState.snackbarBottomInset)
         )
     }
 }

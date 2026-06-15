@@ -19,7 +19,7 @@ import com.nnoidea.fitnez2.service.SettingsService
 import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
 import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import androidx.compose.ui.Modifier
-import com.nnoidea.fitnez2.ui.components.navigation.predictiveSidePanelContainer
+import com.nnoidea.fitnez2.ui.components.navigation.PredictiveSidePanelContainer
 import com.nnoidea.fitnez2.ui.components.navigation.PredictiveSidePanel
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
@@ -49,7 +49,6 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.surfaceContainer,
                 ) {
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-                    val scope = rememberCoroutineScope()
 
                     // Sync Drawer State to Global UI State
                     LaunchedEffect(drawerState.isOpen) {
@@ -75,7 +74,7 @@ class MainActivity : ComponentActivity() {
                             drawerState = drawerState,
 
                             drawerContent = {
-                                predictiveSidePanelContainer(
+                                PredictiveSidePanelContainer(
                                     drawerState = drawerState,
                                     scope = scope
                                 ) {

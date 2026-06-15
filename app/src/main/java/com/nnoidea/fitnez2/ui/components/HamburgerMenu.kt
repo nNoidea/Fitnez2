@@ -1,7 +1,6 @@
 package com.nnoidea.fitnez2.ui.components
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
@@ -13,9 +12,6 @@ import com.nnoidea.fitnez2.core.localization.globalLocalization
 
 @Composable
 fun HamburgerMenu(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    // In Breezy Weather, the hamburger is part of a Toolbar that handles status bar insets.
-    // We'll apply statusBarsPadding to ensure it's not overlapping with system icons,
-    // and use the standard Material 3 navigation icon offset.
     IconButton(
         onClick = onClick,
         modifier = modifier

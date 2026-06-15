@@ -1,20 +1,14 @@
 package com.nnoidea.fitnez2.ui.screens.workout
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.entities.Exercise
@@ -28,8 +22,8 @@ import com.nnoidea.fitnez2.service.LocalWorkoutService
 import com.nnoidea.fitnez2.service.RecordService
 import com.nnoidea.fitnez2.service.SettingsService
 import com.nnoidea.fitnez2.service.WorkoutService
-import com.nnoidea.fitnez2.ui.components.bottomsheet.PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PredictiveBottomSheetState
+import com.nnoidea.fitnez2.ui.components.bottomsheet.rememberBottomSheetLayoutParams
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -72,7 +66,7 @@ class WorkoutBottomSheetState(
                     val latestRecord = records.last()
                     selectedExerciseId = latestRecord.workoutRecord.exerciseId
                     selectedExerciseName = latestRecord.exerciseName
-                    loadInputsForExercise(latestRecord.workoutRecord.exerciseId)
+                    loadInputsForExercise(latestRecord.workoutRecord.exerciseId, recordService::getLatestRecordByExerciseId)
                 } else {
                     initializeSession()
                 }
@@ -87,30 +81,17 @@ class WorkoutBottomSheetState(
         if (latest != null) {
             selectedExerciseName = latest.exerciseName
             selectedExerciseId = latest.record.exerciseId
-            loadInputsForExercise(latest.record.exerciseId)
+            loadInputsForExercise(latest.record.exerciseId, recordService::getLatestRecordByExerciseId)
         } else {
-            sets = defaultSets
-            reps = defaultReps
-            weight = defaultWeight
-        }
-    }
-
-    private suspend fun loadInputsForExercise(exerciseId: String) {
-        val latestForExercise = recordService.getLatestRecordByExerciseId(exerciseId)
-        if (latestForExercise != null) {
-            sets = latestForExercise.record.sets.toString()
-            reps = latestForExercise.record.reps.toString()
-            weight = latestForExercise.record.weight.toString()
-        } else {
-            sets = defaultSets
-            reps = defaultReps
-            weight = defaultWeight
+            committedSets = defaultSets
+            committedReps = defaultReps
+            committedWeight = defaultWeight
         }
     }
 
     override fun onExerciseSelected(exercise: Exercise, closeDialog: Boolean) {
         super.onExerciseSelected(exercise, closeDialog)
-        scope.launch { loadInputsForExercise(exercise.id) }
+        scope.launch { loadInputsForExercise(exercise.id, recordService::getLatestRecordByExerciseId) }
     }
 
     override fun onAddClick() {
@@ -124,9 +105,9 @@ class WorkoutBottomSheetState(
                     return@launch
                 }
 
-                val validatedSets = ValidateAndCorrect.sets(resolvedSets()) ?: return@launch
-                val validatedReps = ValidateAndCorrect.reps(resolvedReps()) ?: return@launch
-                val validatedWeight = ValidateAndCorrect.weight(resolvedWeight()) ?: return@launch
+                val validatedSets = ValidateAndCorrect.sets(resolveSets()) ?: return@launch
+                val validatedReps = ValidateAndCorrect.reps(resolveReps()) ?: return@launch
+                val validatedWeight = ValidateAndCorrect.weight(resolveWeight()) ?: return@launch
 
                 dismissInput()
 
@@ -165,21 +146,10 @@ fun rememberWorkoutBottomSheetState(
     val workoutService = LocalWorkoutService.current
     val settingsService = LocalSettingsService.current
     val scope = rememberCoroutineScope()
-    val density = LocalDensity.current
+    val layoutParams = rememberBottomSheetLayoutParams()
     val view = androidx.compose.ui.platform.LocalView.current
 
-    val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val peekHeight = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp + navBarPadding
-    val peekHeightPx = with(density) { peekHeight.toPx() }
-
-    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-    val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
-    val topPaddingPx = with(density) { WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx() }
-
-    val maxOffset = screenHeightPx - topPaddingPx - peekHeightPx
-    val minOffset = 0f
-
-    val state = remember(maxOffset, minOffset, workoutId) {
+    val state = remember(layoutParams, workoutId) {
         WorkoutBottomSheetState(
             scope = scope,
             exerciseService = exerciseService,
@@ -189,8 +159,8 @@ fun rememberWorkoutBottomSheetState(
             keyboardController = keyboardController,
             focusManager = focusManager,
             context = context,
-            maxOffset = maxOffset,
-            minOffset = minOffset,
+            maxOffset = layoutParams.maxOffset,
+            minOffset = layoutParams.minOffset,
             workoutId = workoutId,
             onHapticFeedback = { view.performHapticFeedback(it) },
             onRecordCreated = onRecordCreated

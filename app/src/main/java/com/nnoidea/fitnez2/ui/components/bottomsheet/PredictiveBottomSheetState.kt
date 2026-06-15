@@ -17,6 +17,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.unit.Velocity
 import com.nnoidea.fitnez2.data.entities.Exercise
+import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.service.ExerciseService
 import com.nnoidea.fitnez2.service.SettingsService
 import kotlinx.coroutines.CoroutineScope
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
 /**
  * Base implementation of [PredictiveBottomSheetState] that contains ALL shared logic:
  * - Animation state (offsetY, predictiveProgress, isExpanded, hasBeenOpened)
- * - Form fields (sets, reps, weight, setsRaw, repsRaw, weightRaw, fallbacks)
+ * - Form fields (committedSets, committedReps, committedWeight, pendingSets, pendingReps, pendingWeight, fallbacks)
  * - Settings collection (exercises, weight unit, defaults)
  * - Sheet physics (settleSpring, nestedScrollConnection, predictive back handlers)
  * - Exercise selection (onExerciseSelected, toggleExerciseSelection)
@@ -48,20 +49,20 @@ abstract class PredictiveBottomSheetState(
     // ── Form Fields ──────────────────────────────────────────────────────
 
     var selectedExerciseId by mutableStateOf<String?>(null)
-    var selectedExerciseNameSnapshot by mutableStateOf<String?>(null)
+    var overrideExerciseName by mutableStateOf<String?>(null)
     open var selectedExerciseName: String?
-        get() = exercises.find { it.id == selectedExerciseId }?.name ?: selectedExerciseNameSnapshot
+        get() = exercises.find { it.id == selectedExerciseId }?.name ?: overrideExerciseName
         set(value) {
-            selectedExerciseNameSnapshot = value
+            overrideExerciseName = value
         }
-    var sets by mutableStateOf("")
-    var reps by mutableStateOf("")
-    var weight by mutableStateOf("")
+    var committedSets by mutableStateOf("")
+    var committedReps by mutableStateOf("")
+    var committedWeight by mutableStateOf("")
     var weightUnit by mutableStateOf("kg")
 
-    var setsRaw by mutableStateOf("")
-    var repsRaw by mutableStateOf("")
-    var weightRaw by mutableStateOf("")
+    var pendingSets by mutableStateOf("")
+    var pendingReps by mutableStateOf("")
+    var pendingWeight by mutableStateOf("")
     var showExerciseSelection by mutableStateOf(false)
     var exercises by mutableStateOf<List<Exercise>>(emptyList())
 
@@ -71,7 +72,7 @@ abstract class PredictiveBottomSheetState(
             snapshotFlow { exercises }.collect { currentExercises ->
                 if (selectedExerciseId != null && currentExercises.none { it.id == selectedExerciseId }) {
                     selectedExerciseId = null
-                    selectedExerciseNameSnapshot = null
+                    overrideExerciseName = null
                 }
             }
         }
@@ -133,6 +134,22 @@ abstract class PredictiveBottomSheetState(
         }
     }
 
+    protected suspend fun loadInputsForExercise(
+        exerciseId: String,
+        lookup: suspend (String) -> RecordWithExercise?
+    ) {
+        val latestForExercise = lookup(exerciseId)
+        if (latestForExercise != null) {
+            committedSets = latestForExercise.record.sets.toString()
+            committedReps = latestForExercise.record.reps.toString()
+            committedWeight = latestForExercise.record.weight.toString()
+        } else {
+            committedSets = defaultSets
+            committedReps = defaultReps
+            committedWeight = defaultWeight
+        }
+    }
+
     abstract fun onAddClick()
 
     fun toggleExerciseSelection(show: Boolean) {
@@ -141,31 +158,31 @@ abstract class PredictiveBottomSheetState(
 
     // ── Form Field Changes ───────────────────────────────────────────────
 
-    fun onSetsChange(value: String) {
-        sets = value
+    fun onCommittedSetsChange(value: String) {
+        committedSets = value
         if (value.isNotEmpty()) setsFallback = value
     }
 
-    fun onRepsChange(value: String) {
-        reps = value
+    fun onCommittedRepsChange(value: String) {
+        committedReps = value
         if (value.isNotEmpty()) repsFallback = value
     }
 
-    fun onWeightChange(value: String) {
-        weight = value
+    fun onCommittedWeightChange(value: String) {
+        committedWeight = value
         if (value.isNotEmpty()) weightFallback = value
     }
 
     // ── Validated Input Resolution ───────────────────────────────────────
 
     /** Resolves sets from raw → committed → fallback. */
-    protected fun resolvedSets(): String = setsRaw.ifEmpty { sets }.ifEmpty { setsFallback }
+    protected fun resolveSets(): String = pendingSets.ifEmpty { committedSets }.ifEmpty { setsFallback }
 
     /** Resolves reps from raw → committed → fallback. */
-    protected fun resolvedReps(): String = repsRaw.ifEmpty { reps }.ifEmpty { repsFallback }
+    protected fun resolveReps(): String = pendingReps.ifEmpty { committedReps }.ifEmpty { repsFallback }
 
     /** Resolves weight from raw → committed → fallback. */
-    protected fun resolvedWeight(): String = weightRaw.ifEmpty { weight }.ifEmpty { weightFallback }
+    protected fun resolveWeight(): String = pendingWeight.ifEmpty { committedWeight }.ifEmpty { weightFallback }
 
     /** Clears focus and hides keyboard. Call after successful add. */
     protected fun dismissInput() {
