@@ -125,6 +125,19 @@ fun PredictiveBottomSheet(
         val overshootBuffer = 150.dp
         val sheetTotalHeight = expandedHeight + overshootBuffer
 
+        val sheetDraggableState = rememberDraggableState { delta ->
+            if (!isOverlayOpen) {
+                scope.launch {
+                    if (globalUiState.isBottomSheetHidden) {
+                        globalUiState.isBottomSheetHidden = false
+                    }
+                    val newOffset = (state.offsetY.value + delta)
+                        .coerceIn(state.minOffset, state.maxOffset)
+                    state.offsetY.snapTo(newOffset)
+                }
+            }
+        }
+
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
@@ -144,6 +157,14 @@ fun PredictiveBottomSheet(
                     RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
                 )
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .draggable(
+                    state = sheetDraggableState,
+                    orientation = Orientation.Vertical,
+                    onDragStarted = { },
+                    onDragStopped = { velocity ->
+                        scope.launch { state.settleSpring(velocity) }
+                    }
+                )
                 .nestedScroll(state.nestedScrollConnection)
         ) {
             Column(
@@ -156,26 +177,7 @@ fun PredictiveBottomSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 10.dp)
-                        .draggable(
-                            state = rememberDraggableState { delta ->
-                                if (!isOverlayOpen) {
-                                    scope.launch {
-                                        if (globalUiState.isBottomSheetHidden) {
-                                            globalUiState.isBottomSheetHidden = false
-                                        }
-                                        val newOffset = (state.offsetY.value + delta)
-                                            .coerceIn(state.minOffset, state.maxOffset)
-                                        state.offsetY.snapTo(newOffset)
-                                    }
-                                }
-                            },
-                            orientation = Orientation.Vertical,
-                            onDragStarted = { },
-                            onDragStopped = { velocity ->
-                                scope.launch { state.settleSpring(velocity) }
-                            }
-                        ),
+                        .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
