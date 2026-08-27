@@ -63,6 +63,7 @@ fun RecordList(
     onUpdateRequest: ((Record) -> Unit)? = null,
     onDeleteRequest: ((Record) -> Unit)? = null,
     onDeleteGroupRequest: ((List<Record>) -> Unit)? = null,
+    onSwipeRight: (() -> Unit)? = null,
     onScrollToTopClick: (() -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
@@ -97,7 +98,8 @@ fun RecordList(
                     onShowTimestamp = effectiveShowTimestamp,
                     onUpdateRequest = onUpdateRequest,
                     onDeleteRequest = onDeleteRequest,
-                    onDeleteGroupRequest = onDeleteGroupRequest
+                    onDeleteGroupRequest = onDeleteGroupRequest,
+                    onSwipeRight = onSwipeRight
                 )
             }
         }

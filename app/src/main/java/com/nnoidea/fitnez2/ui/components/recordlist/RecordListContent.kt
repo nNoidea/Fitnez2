@@ -51,7 +51,8 @@ fun RecordListContent(
     showSwipe: Boolean,
     onUpdateRequest: ((Record) -> Unit)?,
     onDeleteRequest: ((Record) -> Unit)?,
-    onDeleteGroupRequest: ((List<Record>) -> Unit)?
+    onDeleteGroupRequest: ((List<Record>) -> Unit)?,
+    onSwipeRight: (() -> Unit)? = null
 ) {
     val firstGroupIndex = remember(items) {
         items.indexOfFirst { it is RecordDisplayItem.RecordGroup }
@@ -129,6 +130,7 @@ fun RecordListContent(
                         onUpdateRequest = onUpdateRequest,
                         onDeleteRequest = onDeleteRequest,
                         onDeleteGroupRequest = onDeleteGroupRequest,
+                        onSwipeRight = onSwipeRight,
                         prevRenderItem = prevRenderItem,
                         modifier = Modifier.animateItem()
                     )

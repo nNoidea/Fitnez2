@@ -30,6 +30,7 @@ fun RecordListGroupCard(
     onUpdateRequest: ((Record) -> Unit)?,
     onDeleteRequest: ((Record) -> Unit)?,
     onDeleteGroupRequest: ((List<Record>) -> Unit)?,
+    onSwipeRight: (() -> Unit)? = null,
     prevRenderItem: RecordDisplayItem?,
     modifier: Modifier = Modifier
 ) {
@@ -59,6 +60,7 @@ fun RecordListGroupCard(
                 onDelete = {
                     onDeleteGroupRequest?.invoke(groupRecords.map { it.record })
                 },
+                onSwipeRight = onSwipeRight,
                 modifier = modifier
             ) {
                 Column {
@@ -121,6 +123,7 @@ fun RecordListGroupCard(
                     if (showSwipe) {
                         SwipeToDeleteContainer(
                             onDelete = { onDeleteRequest?.invoke(recordItem.record) },
+                            onSwipeRight = onSwipeRight,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             cardContent()

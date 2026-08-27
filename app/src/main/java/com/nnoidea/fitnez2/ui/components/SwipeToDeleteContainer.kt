@@ -35,6 +35,7 @@ import kotlin.math.roundToInt
 fun SwipeToDeleteContainer(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    onSwipeRight: (() -> Unit)? = null,
     enableSwipeRight: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -46,7 +47,7 @@ fun SwipeToDeleteContainer(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .pointerInput(enableSwipeRight) {
+            .pointerInput(onSwipeRight, enableSwipeRight) {
                 detectHorizontalDragGestures(
                     onDragStart = { isTriggered = false },
                     onDragEnd = {
@@ -66,10 +67,12 @@ fun SwipeToDeleteContainer(
                         scope.launch { offsetX.animateTo(0f, spring(stiffness = Spring.StiffnessMedium)) }
                     },
                     onHorizontalDrag = { change, dragAmount ->
-                        // Only consume drag when swiping LEFT (or already dragged left)
-                        // When swiping RIGHT (dragAmount > 0 and offsetX == 0), we DO NOT consume
-                        // so parent components (like ModalNavigationDrawer) can receive the gesture!
-                        if (dragAmount < 0 || offsetX.value < 0 || enableSwipeRight) {
+                        if (dragAmount > 0 && offsetX.value >= 0f) {
+                            if (dragAmount > 8f && onSwipeRight != null) {
+                                change.consume()
+                                onSwipeRight()
+                            }
+                        } else {
                             change.consume()
                             val minOffset = -size.width.toFloat()
                             val maxOffset = if (enableSwipeRight) size.width.toFloat() else 0f

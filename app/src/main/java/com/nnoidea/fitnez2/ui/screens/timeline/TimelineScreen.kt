@@ -44,7 +44,8 @@ fun TimelineScreen(
                 enableAutoHide = true,
                 onUpdateRequest = { recordListState.onUpdateRequest(it) },
                 onDeleteRequest = { recordListState.onDeleteRequest(it) },
-                onDeleteGroupRequest = { recordListState.onDeleteGroupRequest(it) }
+                onDeleteGroupRequest = { recordListState.onDeleteGroupRequest(it) },
+                onSwipeRight = onOpenDrawer
             )
         }
 
