@@ -139,33 +139,14 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         ) {
-                            val isTopLevelScreen = currentDestination in listOf(
-                                AppPage.Timeline.route,
-                                AppPage.Monthly.route,
-                                AppPage.Graph.route,
-                                AppPage.Settings.route
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .pointerInput(isTopLevelScreen) {
-                                        if (isTopLevelScreen) {
-                                            detectHorizontalDragGestures { _, dragAmount ->
-                                                if (dragAmount > 15f && !drawerState.isOpen) {
-                                                    scope.launch { drawerState.open() }
-                                                }
-                                            }
-                                        }
-                                    }
+                            NavHost(
+                                navController = navController,
+                                startDestination = AppPage.Timeline.route,
+                                enterTransition = { slideInHorizontally { it / 3 } + fadeIn() },
+                                exitTransition = { slideOutHorizontally { -it / 3 } + fadeOut() },
+                                popEnterTransition = { slideInHorizontally { -it / 3 } + fadeIn() },
+                                popExitTransition = { slideOutHorizontally { it / 3 } + fadeOut() }
                             ) {
-                                NavHost(
-                                    navController = navController,
-                                    startDestination = AppPage.Timeline.route,
-                                    enterTransition = { slideInHorizontally { it / 3 } + fadeIn() },
-                                    exitTransition = { slideOutHorizontally { -it / 3 } + fadeOut() },
-                                    popEnterTransition = { slideInHorizontally { -it / 3 } + fadeIn() },
-                                    popExitTransition = { slideOutHorizontally { it / 3 } + fadeOut() }
-                                ) {
                                 composable(
                                     route = AppPage.Timeline.route,
                                     arguments = listOf(
@@ -216,12 +197,7 @@ class MainActivity : ComponentActivity() {
                                     MonthlyScreen(
                                         onOpenDrawer = { scope.launch { drawerState.open() } },
                                         onNavigateToTimelineDate = { epochMillis ->
-                                            navController.navigate("${AppPage.Timeline.route}?targetDate=$epochMillis") {
-                                                popUpTo(AppPage.Timeline.route) {
-                                                    inclusive = false
-                                                }
-                                                launchSingleTop = true
-                                            }
+                                            navController.navigate("${AppPage.Timeline.route}?targetDate=$epochMillis")
                                         }
                                     )
                                 }
@@ -277,5 +253,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 }

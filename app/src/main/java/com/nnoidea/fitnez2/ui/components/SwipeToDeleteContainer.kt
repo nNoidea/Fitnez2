@@ -47,40 +47,43 @@ fun SwipeToDeleteContainer(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .pointerInput(onSwipeRight, enableSwipeRight) {
+            .pointerInput(Unit) {
+                var dragOffset = 0f
                 detectHorizontalDragGestures(
-                    onDragStart = { isTriggered = false },
+                    onDragStart = {
+                        isTriggered = false
+                        dragOffset = offsetX.value
+                    },
                     onDragEnd = {
                         scope.launch {
                             val threshold = size.width * 0.35f
-                            if (offsetX.value < -threshold) {
+                            if (dragOffset < -threshold) {
                                 view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                                 offsetX.animateTo(-size.width.toFloat(), spring(stiffness = Spring.StiffnessMedium))
                                 onDelete()
                                 offsetX.snapTo(0f)
+                                dragOffset = 0f
                             } else {
                                 offsetX.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
+                                dragOffset = 0f
                             }
                         }
                     },
                     onDragCancel = {
+                        dragOffset = 0f
                         scope.launch { offsetX.animateTo(0f, spring(stiffness = Spring.StiffnessMedium)) }
                     },
                     onHorizontalDrag = { change, dragAmount ->
-                        if (dragAmount > 0 && offsetX.value >= 0f) {
-                            if (dragAmount > 8f && onSwipeRight != null) {
-                                change.consume()
-                                onSwipeRight()
-                            }
-                        } else {
+                        // Only intercept and consume leftward dragging (for deletion)
+                        // Rightward dragging is not consumed so parent ModalNavigationDrawer can track finger progressively
+                        if (dragAmount < 0f || dragOffset < 0f) {
                             change.consume()
                             val minOffset = -size.width.toFloat()
-                            val maxOffset = if (enableSwipeRight) size.width.toFloat() else 0f
-                            val newOffset = (offsetX.value + dragAmount).coerceIn(minOffset, maxOffset)
-                            scope.launch { offsetX.snapTo(newOffset) }
+                            dragOffset = (dragOffset + dragAmount).coerceIn(minOffset, 0f)
+                            scope.launch { offsetX.snapTo(dragOffset) }
 
                             val threshold = size.width * 0.35f
-                            val progress = -newOffset / threshold
+                            val progress = -dragOffset / threshold
                             if (progress >= 1f && !isTriggered) {
                                 isTriggered = true
                                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
