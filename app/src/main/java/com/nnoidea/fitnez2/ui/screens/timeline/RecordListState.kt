@@ -247,7 +247,6 @@ class RecordListStateImpl(
                             exerciseId = recordSnapshot.exerciseId, sets = recordSnapshot.sets,
                             reps = recordSnapshot.reps, weight = recordSnapshot.weight, date = recordSnapshot.date
                         )
-                        insertRecordIntoList(newRecord.id)
                         GlobalUiState.emitToAll(UiSignal.RecordInserted(newRecord.id))
                     }
                 }
@@ -272,7 +271,6 @@ class RecordListStateImpl(
                                 exerciseId = it.exerciseId, sets = it.sets,
                                 reps = it.reps, weight = it.weight, date = it.date
                             )
-                            insertRecordIntoList(r.id)
                             GlobalUiState.emitToAll(UiSignal.RecordInserted(r.id))
                         }
                     }
@@ -298,8 +296,10 @@ class RecordListStateImpl(
 
     private fun insertRecordIntoList(recordId: String) {
         scope.launch {
+            if (loadedRecords.any { it.id == recordId }) return@launch
             val record = recordService.getRecordById(recordId) ?: return@launch
             if (filterExerciseIds != null && record.exerciseId !in filterExerciseIds) return@launch
+            if (loadedRecords.any { it.id == record.id }) return@launch
             val insertAt = loadedRecords.indexOfFirst { it.date <= record.date }
             val updated = loadedRecords.toMutableList()
             if (insertAt < 0) updated.add(record) else updated.add(insertAt, record)
