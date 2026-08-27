@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -273,6 +274,7 @@ fun ExerciseSelectionDialog(
                     .fillMaxWidth()
                     .background(containerColor, RoundedCornerShape(12.dp))
                     .clip(RoundedCornerShape(12.dp))
+                    .testTag("exercise_option_${exercise.name}")
                     .clickable {
                         view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                         onExerciseSelected(exercise)

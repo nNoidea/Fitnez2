@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.ui.components.HistoryRepsField
@@ -68,6 +69,7 @@ fun RecordCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = topPadding, bottom = bottomPadding)
+            .testTag("record_card_$exerciseName")
             .clip(shape)
             .clickable(enabled = onCardClick != null) { 
                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
@@ -80,7 +82,11 @@ fun RecordCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.animateContentSize()) {
+        Column(
+            modifier = Modifier
+                .animateContentSize()
+                .testTag("record_card")
+        ) {
             if (showTitle) {
                 Text(
                     text = exerciseName,

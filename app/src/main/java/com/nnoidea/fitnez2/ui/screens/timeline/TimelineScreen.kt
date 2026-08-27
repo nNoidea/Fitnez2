@@ -10,6 +10,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.components.recordlist.RecordList
@@ -39,7 +40,9 @@ fun TimelineScreen(
                 expandedRecordIds = recordListState.expandedRecordIds,
                 timestampTokens = recordListState.timestampTokens,
                 onShowTimestamp = { recordListState.showTimestampFor(it) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("main_timeline_record_list"),
                 extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp + navBarPadding,
                 enableAutoHide = true,
                 onUpdateRequest = { recordListState.onUpdateRequest(it) },
@@ -55,11 +58,13 @@ fun TimelineScreen(
         )
 
         // Snackbar — positioned above the bottom sheet
-        SnackbarHost(
-            hostState = globalUiState.snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = globalUiState.snackbarBottomInset)
-        )
+        if (globalUiState.snackbarHostState.currentSnackbarData != null) {
+            SnackbarHost(
+                hostState = globalUiState.snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = globalUiState.snackbarBottomInset)
+            )
+        }
     }
 }

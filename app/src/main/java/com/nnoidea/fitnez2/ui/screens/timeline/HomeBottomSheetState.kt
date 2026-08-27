@@ -138,7 +138,9 @@ class HomeBottomSheetState(
                     return@launch
                 }
 
-                val exerciseId = selectedExerciseId
+                val exerciseId = selectedExerciseId ?: (exerciseService.getAllExercises().firstOrNull()?.id?.also {
+                    selectedExerciseId = it
+                })
                 if (exerciseId == null) {
                     Toast.makeText(context, globalLocalization.labelSelectExercise, Toast.LENGTH_SHORT).show()
                     return@launch
@@ -164,7 +166,9 @@ class HomeBottomSheetState(
 
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }

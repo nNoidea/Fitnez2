@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.components.BottomSheetRepsField
@@ -49,7 +50,8 @@ internal fun SheetFormRow(
                 },
                 modifier = Modifier
                     .weight(2f)
-                    .height(buttonHeight),
+                    .height(buttonHeight)
+                    .testTag("exercise_selector_button"),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -76,7 +78,8 @@ internal fun SheetFormRow(
                 onClick = { state.onAddClick() },
                 modifier = Modifier
                     .weight(1f)
-                    .height(buttonHeight),
+                    .height(buttonHeight)
+                    .testTag("add_record_button"),
                 shape = RoundedCornerShape(24.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)

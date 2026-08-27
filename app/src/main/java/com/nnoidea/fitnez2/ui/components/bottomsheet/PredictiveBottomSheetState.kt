@@ -99,7 +99,12 @@ abstract class PredictiveBottomSheetState(
 
     init {
         scope.launch {
-            exerciseService.getAllExercisesFlow().collect { exercises = it }
+            exerciseService.getAllExercisesFlow().collect {
+                exercises = it
+                if (selectedExerciseId == null && it.isNotEmpty()) {
+                    selectedExerciseId = it.first().id
+                }
+            }
         }
         scope.launch {
             settingsService.weightUnitFlow.collect { weightUnit = it }
@@ -175,14 +180,14 @@ abstract class PredictiveBottomSheetState(
 
     // ── Validated Input Resolution ───────────────────────────────────────
 
-    /** Resolves sets from raw → committed → fallback. */
-    protected fun resolveSets(): String = pendingSets.ifEmpty { committedSets }.ifEmpty { setsFallback }
+    /** Resolves sets from raw → committed → fallback → default. */
+    protected fun resolveSets(): String = pendingSets.ifEmpty { committedSets }.ifEmpty { setsFallback }.ifEmpty { defaultSets }
 
-    /** Resolves reps from raw → committed → fallback. */
-    protected fun resolveReps(): String = pendingReps.ifEmpty { committedReps }.ifEmpty { repsFallback }
+    /** Resolves reps from raw → committed → fallback → default. */
+    protected fun resolveReps(): String = pendingReps.ifEmpty { committedReps }.ifEmpty { repsFallback }.ifEmpty { defaultReps }
 
-    /** Resolves weight from raw → committed → fallback. */
-    protected fun resolveWeight(): String = pendingWeight.ifEmpty { committedWeight }.ifEmpty { weightFallback }
+    /** Resolves weight from raw → committed → fallback → default. */
+    protected fun resolveWeight(): String = pendingWeight.ifEmpty { committedWeight }.ifEmpty { weightFallback }.ifEmpty { defaultWeight }
 
     /** Clears focus and hides keyboard. Call after successful add. */
     protected fun dismissInput() {

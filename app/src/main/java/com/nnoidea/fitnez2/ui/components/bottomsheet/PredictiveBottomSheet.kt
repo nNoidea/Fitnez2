@@ -145,25 +145,6 @@ fun PredictiveBottomSheet(
                 )
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .nestedScroll(state.nestedScrollConnection)
-                .draggable(
-                    state = rememberDraggableState { delta ->
-                        if (!isOverlayOpen) {
-                            scope.launch {
-                                if (globalUiState.isBottomSheetHidden) {
-                                    globalUiState.isBottomSheetHidden = false
-                                }
-                                val newOffset = (state.offsetY.value + delta)
-                                    .coerceIn(state.minOffset, state.maxOffset)
-                                state.offsetY.snapTo(newOffset)
-                            }
-                        }
-                    },
-                    orientation = Orientation.Vertical,
-                    onDragStarted = { },
-                    onDragStopped = { velocity ->
-                        scope.launch { state.settleSpring(velocity) }
-                    }
-                )
         ) {
             Column(
                 modifier = Modifier
@@ -174,14 +155,39 @@ fun PredictiveBottomSheet(
                 // Custom Drag Handle with halved vertical padding (10.dp instead of standard 20-22.dp)
                 Box(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(vertical = 10.dp)
-                        .width(32.dp)
-                        .height(4.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(2.dp)
-                        )
-                )
+                        .draggable(
+                            state = rememberDraggableState { delta ->
+                                if (!isOverlayOpen) {
+                                    scope.launch {
+                                        if (globalUiState.isBottomSheetHidden) {
+                                            globalUiState.isBottomSheetHidden = false
+                                        }
+                                        val newOffset = (state.offsetY.value + delta)
+                                            .coerceIn(state.minOffset, state.maxOffset)
+                                        state.offsetY.snapTo(newOffset)
+                                    }
+                                }
+                            },
+                            orientation = Orientation.Vertical,
+                            onDragStarted = { },
+                            onDragStopped = { velocity ->
+                                scope.launch { state.settleSpring(velocity) }
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(32.dp)
+                            .height(4.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(2.dp)
+                            )
+                    )
+                }
 
                 // Screen-specific content goes here
                 content()
