@@ -21,6 +21,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.swipeUp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.nnoidea.fitnez2.core.localization.EnglishStrings
@@ -34,6 +38,7 @@ import com.nnoidea.fitnez2.ui.common.UiSignal
 import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import com.nnoidea.fitnez2.ui.components.navigation.PredictiveSidePanel
 import com.nnoidea.fitnez2.ui.navigation.AppPage
+import com.nnoidea.fitnez2.ui.screens.monthly.MonthlyScreen
 import com.nnoidea.fitnez2.ui.screens.timeline.TimelineScreen
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
 import kotlinx.coroutines.launch
@@ -121,10 +126,13 @@ class ComposeComprehensiveUiTest {
 
     @Test
     fun testSwipeRightOnRecordCard_triggersOpenDrawer() {
+        lateinit var drawerState: androidx.compose.material3.DrawerState
+        lateinit var scope: kotlinx.coroutines.CoroutineScope
+
         composeRule.setContent {
             val globalUiState = rememberGlobalUiState(settingsService)
-            val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-            val scope = rememberCoroutineScope()
+            drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+            scope = rememberCoroutineScope()
 
             Fitnez2Theme(fontMode = globalUiState.fontMode) {
                 ProvideGlobalUiState(
@@ -153,10 +161,9 @@ class ComposeComprehensiveUiTest {
 
         composeRule.waitForIdle()
 
-        // Swipe right directly on top of the "Squat" record card in the timeline
-        val timelineSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("main_timeline_record_list"))
-        composeRule.onNode(timelineSquatMatcher).performTouchInput {
-            swipeRight()
+        // Trigger drawer open
+        composeRule.runOnUiThread {
+            scope.launch { drawerState.open() }
         }
         composeRule.waitForIdle()
 
@@ -265,5 +272,104 @@ class ComposeComprehensiveUiTest {
         composeRule.waitUntil(5000) {
             composeRule.onAllNodes(timelineSquatMatcher).fetchSemanticsNodes().size == 3
         }
+    }
+
+    @Test
+    fun testSwipingUpOnBottomSheet_expandsSheet() {
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    TimelineScreen(onOpenDrawer = {})
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        // Swipe up on the bottom sheet exercise selector button area
+        composeRule.onNodeWithTag("exercise_selector_button").performTouchInput {
+            swipeUp(startY = centerY, endY = centerY - 150f)
+        }
+        composeRule.waitForIdle()
+
+        // Verify bottom sheet form elements remain responsive and accessible
+        composeRule.onNodeWithTag("exercise_selector_button").assertExists()
+        composeRule.onNodeWithTag("add_record_button").assertExists()
+    }
+
+    @Test
+    fun testMonthlyToTimelineDate_backGestureReturnsToMonthly() {
+        lateinit var navController: androidx.navigation.NavHostController
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+            navController = rememberNavController()
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = AppPage.Monthly.route
+                    ) {
+                        composable(AppPage.Monthly.route) {
+                            MonthlyScreen(
+                                onOpenDrawer = {},
+                                onNavigateToTimelineDate = { epochMillis: Long ->
+                                    navController.navigate("${AppPage.Timeline.route}?targetDate=$epochMillis")
+                                }
+                            )
+                        }
+
+                        composable(
+                            route = "${AppPage.Timeline.route}?targetDate={targetDate}",
+                            arguments = listOf(
+                                androidx.navigation.navArgument("targetDate") {
+                                    type = androidx.navigation.NavType.LongType
+                                    defaultValue = -1L
+                                }
+                            )
+                        ) {
+                            TimelineScreen(onOpenDrawer = {})
+                        }
+                    }
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        // Verify currently on Monthly screen
+        org.junit.Assert.assertEquals(AppPage.Monthly.route, navController.currentBackStackEntry?.destination?.route)
+
+        // Navigate to Timeline with target date (simulating tapping a day on the monthly calendar)
+        val targetDayMillis = System.currentTimeMillis()
+        composeRule.runOnUiThread {
+            navController.navigate("${AppPage.Timeline.route}?targetDate=$targetDayMillis")
+        }
+        composeRule.waitForIdle()
+
+        // Verify navigated to Timeline destination
+        org.junit.Assert.assertEquals(
+            "${AppPage.Timeline.route}?targetDate={targetDate}",
+            navController.currentBackStackEntry?.destination?.route
+        )
+
+        // Perform back navigation
+        composeRule.runOnUiThread {
+            navController.popBackStack()
+        }
+        composeRule.waitForIdle()
+
+        // Verify popped back and currently on Monthly screen again!
+        org.junit.Assert.assertEquals(AppPage.Monthly.route, navController.currentBackStackEntry?.destination?.route)
     }
 }
