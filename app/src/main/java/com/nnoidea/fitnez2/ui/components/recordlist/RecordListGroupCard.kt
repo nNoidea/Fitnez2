@@ -86,8 +86,7 @@ fun RecordListGroupCard(
                 val nextIsSame = groupIndex < groupRecords.lastIndex
                 val shape = recordCardShape(prevIsSame, nextIsSame)
                 val timestamp = remember(recordItem.record.date) {
-                    java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
-                        .format(java.util.Date(recordItem.record.date))
+                    com.nnoidea.fitnez2.core.TimeUtils.formatTime(recordItem.record.date)
                 }
 
                 key(recordId) {
@@ -158,8 +157,7 @@ private fun CollapsedGroupItems(
         }
         val recordId = recordItem.record.id
         val timestamp = remember(recordItem.record.date) {
-            java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
-                .format(java.util.Date(recordItem.record.date))
+            com.nnoidea.fitnez2.core.TimeUtils.formatTime(recordItem.record.date)
         }
 
         key(recordId) {

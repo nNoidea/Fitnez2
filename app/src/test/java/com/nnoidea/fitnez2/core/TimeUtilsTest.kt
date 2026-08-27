@@ -65,4 +65,12 @@ class TimeUtilsTest {
             .toInstant().toEpochMilli()
         assertFalse(TimeUtils.isSameDay(jan1Millis, jan2Millis))
     }
+
+    @Test
+    fun `formatTime formats correct hours minutes seconds`() {
+        val utc = ZoneId.of("UTC")
+        val date = LocalDate.of(2024, 1, 1)
+        val millis = date.atTime(LocalTime.of(14, 30, 45)).atZone(utc).toInstant().toEpochMilli()
+        org.junit.Assert.assertEquals("14:30:45", TimeUtils.formatTime(millis, utc))
+    }
 }
