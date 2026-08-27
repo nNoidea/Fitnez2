@@ -16,6 +16,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -40,6 +41,10 @@ import com.nnoidea.fitnez2.ui.screens.workout.WorkoutScreen
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
 import kotlinx.coroutines.launch
 
+import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.runtime.mutableFloatStateOf
+import kotlinx.coroutines.CancellationException
+
 class MainActivity : ComponentActivity() {
     companion object {
         const val EXTRA_PAGE_ROUTE = "extra_page_route"
@@ -62,10 +67,26 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                    var drawerPredictiveProgress by remember { mutableFloatStateOf(0f) }
 
                     // Sync Drawer State to Global UI State
                     LaunchedEffect(drawerState.isOpen) {
                         globalUiState.isOverlayOpen = drawerState.isOpen
+                    }
+
+                    // Predictive Back Handler for Drawer
+                    PredictiveBackHandler(enabled = drawerState.isOpen) { progress ->
+                        try {
+                            progress.collect { backEvent ->
+                                drawerPredictiveProgress = backEvent.progress
+                            }
+                            scope.launch {
+                                drawerState.close()
+                                drawerPredictiveProgress = 0f
+                            }
+                        } catch (e: CancellationException) {
+                            drawerPredictiveProgress = 0f
+                        }
                     }
 
                     // Handle Rotation Mode
@@ -97,6 +118,7 @@ class MainActivity : ComponentActivity() {
                             drawerContent = {
                                 PredictiveSidePanel(
                                     currentRoute = currentDestination,
+                                    predictiveProgress = drawerPredictiveProgress,
                                     onItemClick = { clickedRoute ->
                                         scope.launch {
                                             drawerState.close()

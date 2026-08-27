@@ -26,6 +26,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.graphicsLayer
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import com.nnoidea.fitnez2.ui.theme.AppTitleFontFamily
@@ -35,8 +37,22 @@ fun PredictiveSidePanel(
     currentRoute: String?,
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier,
+    predictiveProgress: Float = 0f,
 ) {
-    ModalDrawerSheet(modifier = modifier.width(320.dp)) {
+    ModalDrawerSheet(
+        modifier = modifier
+            .width(320.dp)
+            .graphicsLayer {
+                if (predictiveProgress > 0f) {
+                    val scale = 1f - (predictiveProgress * 0.08f)
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = -size.width * predictiveProgress * 0.25f
+                    shape = RoundedCornerShape(16.dp * predictiveProgress)
+                    clip = true
+                }
+            }
+    ) {
         Column(
             modifier =
                 Modifier.fillMaxHeight()
