@@ -623,4 +623,63 @@ class ComposeComprehensiveUiTest {
         org.junit.Assert.assertEquals(rec1.id, allRecordsAfterUndo[2].id)
         org.junit.Assert.assertEquals(rec1.orderNumber, allRecordsAfterUndo[2].orderNumber)
     }
+
+    @Test
+    fun testClosingDrawer_allowsImmediateContentInteractionsWithoutWaitingForAnimation() {
+        lateinit var drawerState: com.nnoidea.fitnez2.ui.components.navigation.PredictiveDrawerState
+        lateinit var scope: kotlinx.coroutines.CoroutineScope
+        lateinit var sheetState: com.nnoidea.fitnez2.ui.screens.timeline.HomeBottomSheetState
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Open)
+                    scope = rememberCoroutineScope()
+                    sheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
+
+                    com.nnoidea.fitnez2.ui.components.navigation.PredictiveNavigationDrawer(
+                        drawerState = drawerState,
+                        drawerContent = {
+                            PredictiveSidePanel(
+                                currentRoute = AppPage.Timeline.route,
+                                onItemClick = {}
+                            )
+                        }
+                    ) {
+                        TimelineScreen(
+                            onOpenDrawer = {},
+                            bottomSheetState = sheetState
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        // 1. Drawer is initially open
+        assert(drawerState.isOpen)
+
+        // 2. Initiate closing the drawer
+        composeRule.runOnUiThread {
+            scope.launch { drawerState.close() }
+        }
+
+        // 3. Immediately swipe left on the Squat record card to delete it on the main screen
+        val timelineSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("main_timeline_record_list"))
+        composeRule.onNode(timelineSquatMatcher).performTouchInput {
+            swipeLeft()
+        }
+        composeRule.waitForIdle()
+
+        // Verify that the record was deleted and Undo snackbar appeared immediately
+        composeRule.onAllNodes(timelineSquatMatcher).assertCountEquals(0)
+        composeRule.onNodeWithText(EnglishStrings.labelUndo).assertIsDisplayed()
+    }
 }

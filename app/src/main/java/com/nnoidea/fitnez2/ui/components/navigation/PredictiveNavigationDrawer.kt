@@ -61,11 +61,11 @@ class PredictiveDrawerState(
         }
 
     suspend fun open() {
-        offsetX.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow))
+        offsetX.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
     }
 
     suspend fun close() {
-        offsetX.animateTo(-drawerWidthPx, spring(stiffness = Spring.StiffnessMediumLow))
+        offsetX.animateTo(-drawerWidthPx, spring(stiffness = Spring.StiffnessMedium))
     }
 
     suspend fun snapTo(value: DrawerValue) {
@@ -82,7 +82,7 @@ class PredictiveDrawerState(
         } else {
             -drawerWidthPx // Closed
         }
-        offsetX.animateTo(target, spring(stiffness = Spring.StiffnessMediumLow))
+        offsetX.animateTo(target, spring(stiffness = Spring.StiffnessMedium))
     }
 }
 
@@ -128,6 +128,11 @@ fun PredictiveNavigationDrawer(
                             var isDragging = false
                             val startPos = down.position
 
+                            // If user touches screen while drawer is closing, finish close immediately
+                            if (drawerState.targetValue == DrawerValue.Closed && drawerState.offsetX.isRunning) {
+                                scope.launch { drawerState.snapTo(DrawerValue.Closed) }
+                            }
+
                             while (true) {
                                 val event = awaitPointerEvent(pass = PointerEventPass.Initial)
                                 val change = event.changes.firstOrNull() ?: break
@@ -137,14 +142,14 @@ fun PredictiveNavigationDrawer(
                                 val totalDy = change.position.y - startPos.y
 
                                 if (!isDragging) {
-                                    if (drawerState.isClosed) {
+                                    if (drawerState.isClosed || drawerState.targetValue == DrawerValue.Closed) {
                                         // Detect rightward swipe to open: movement > slop and horizontally dominant
                                         if (totalDx > touchSlop && totalDx > abs(totalDy) * 1.15f) {
                                             isDragging = true
                                             change.consume()
                                             view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                         }
-                                    } else if (drawerState.isOpen) {
+                                    } else if (drawerState.isOpen && drawerState.targetValue == DrawerValue.Open) {
                                         // Detect leftward swipe to close: movement < -slop and horizontally dominant
                                         if (totalDx < -touchSlop && abs(totalDx) > abs(totalDy) * 1.15f) {
                                             isDragging = true
@@ -188,7 +193,7 @@ fun PredictiveNavigationDrawer(
             content()
         }
 
-        // Scrim overlay
+        // Scrim overlay - only captures clicks when fully open and target is open
         if (drawerState.progress > 0f) {
             Box(
                 modifier = Modifier
@@ -196,13 +201,16 @@ fun PredictiveNavigationDrawer(
                     .testTag("drawer_scrim")
                     .graphicsLayer { alpha = drawerState.progress * 0.45f }
                     .background(Color.Black)
-                    .clickable(
-                        enabled = drawerState.isOpen,
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        scope.launch { drawerState.close() }
-                    }
+                    .then(
+                        if (drawerState.isOpen && drawerState.targetValue == DrawerValue.Open) {
+                            Modifier.clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                scope.launch { drawerState.close() }
+                            }
+                        } else Modifier
+                    )
             )
         }
 
