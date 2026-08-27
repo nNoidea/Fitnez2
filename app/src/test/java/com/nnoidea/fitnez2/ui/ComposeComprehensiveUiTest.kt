@@ -9,6 +9,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -61,6 +62,7 @@ class ComposeComprehensiveUiTest {
     private lateinit var database: AppDatabase
     private lateinit var recordService: RecordService
     private lateinit var exerciseService: ExerciseService
+    private lateinit var workoutService: com.nnoidea.fitnez2.service.WorkoutService
     private lateinit var settingsService: SettingsService
 
     @Before
@@ -72,6 +74,7 @@ class ComposeComprehensiveUiTest {
                 .build()
             recordService = RecordService(database)
             exerciseService = ExerciseService(database)
+            workoutService = com.nnoidea.fitnez2.service.WorkoutService(database)
             settingsService = SettingsService(context)
 
             // Seed exercise and initial record
@@ -371,5 +374,112 @@ class ComposeComprehensiveUiTest {
 
         // Verify popped back and currently on Monthly screen again!
         org.junit.Assert.assertEquals(AppPage.Monthly.route, navController.currentBackStackEntry?.destination?.route)
+    }
+
+    @Test
+    fun testBottomSheet_filtersTimelineBySelectedExercise() {
+        lateinit var bench: com.nnoidea.fitnez2.data.entities.Exercise
+        runBlocking {
+            bench = exerciseService.createExercise("Bench Press")
+            recordService.createRecord(bench.id, sets = 4, reps = 8, weight = 80.0, date = System.currentTimeMillis() - 500)
+        }
+
+        lateinit var sheetState: com.nnoidea.fitnez2.ui.screens.timeline.HomeBottomSheetState
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    sheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
+                    TimelineScreen(
+                        onOpenDrawer = {},
+                        bottomSheetState = sheetState
+                    )
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        val bsSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("bottom_sheet_record_list"))
+        val bsBenchMatcher = hasTestTag("record_card_Bench Press") and hasAnyAncestor(hasTestTag("bottom_sheet_record_list"))
+
+        // When Squat is selected: bottom sheet timeline only displays Squat (0 Bench Press)
+        composeRule.onAllNodes(bsSquatMatcher).assertCountEquals(1)
+        composeRule.onAllNodes(bsBenchMatcher).assertCountEquals(0)
+
+        // Select Bench Press exercise
+        composeRule.runOnUiThread {
+            sheetState.onExerciseSelected(bench, closeDialog = true)
+        }
+        composeRule.waitForIdle()
+
+        // Verify bottom sheet timeline updates to show ONLY Bench Press records and 0 Squat records
+        composeRule.onAllNodes(bsBenchMatcher).assertCountEquals(1)
+        composeRule.onAllNodes(bsSquatMatcher).assertCountEquals(0)
+    }
+
+    @Test
+    fun testBottomSheet_filtersTimelineBySelectedWorkout() {
+        lateinit var squat: com.nnoidea.fitnez2.data.entities.Exercise
+        lateinit var bench: com.nnoidea.fitnez2.data.entities.Exercise
+        lateinit var deadlift: com.nnoidea.fitnez2.data.entities.Exercise
+        lateinit var workout: com.nnoidea.fitnez2.data.entities.Workout
+
+        runBlocking {
+            bench = exerciseService.createExercise("Bench Press")
+            deadlift = exerciseService.createExercise("Deadlift")
+            squat = exerciseService.getExerciseByName("Squat")!!
+
+            recordService.createRecord(bench.id, sets = 3, reps = 10, weight = 80.0, date = System.currentTimeMillis() - 400)
+            recordService.createRecord(deadlift.id, sets = 1, reps = 5, weight = 150.0, date = System.currentTimeMillis() - 300)
+
+            // Create a workout containing only Squat and Bench Press (NOT Deadlift)
+            workout = workoutService.createWorkout("Strength Workout")
+            workoutService.addRecordToWorkout(workout.id, squat.id, sets = 3, reps = 10, weight = 100.0)
+            workoutService.addRecordToWorkout(workout.id, bench.id, sets = 3, reps = 10, weight = 80.0)
+        }
+
+        lateinit var sheetState: com.nnoidea.fitnez2.ui.screens.timeline.HomeBottomSheetState
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    sheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
+                    TimelineScreen(
+                        onOpenDrawer = {},
+                        bottomSheetState = sheetState
+                    )
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        val bsSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("bottom_sheet_record_list"))
+        val bsBenchMatcher = hasTestTag("record_card_Bench Press") and hasAnyAncestor(hasTestTag("bottom_sheet_record_list"))
+        val bsDeadliftMatcher = hasTestTag("record_card_Deadlift") and hasAnyAncestor(hasTestTag("bottom_sheet_record_list"))
+
+        // Select the workout
+        composeRule.runOnUiThread {
+            sheetState.onWorkoutSelected(workout, closeDialog = true)
+        }
+        composeRule.waitForIdle()
+
+        // Verify bottom sheet timeline includes records from the workout (Squat and Bench Press), but EXCLUDES Deadlift
+        composeRule.onAllNodes(bsSquatMatcher).assertCountEquals(1)
+        composeRule.onAllNodes(bsBenchMatcher).assertCountEquals(1)
+        composeRule.onAllNodes(bsDeadliftMatcher).assertCountEquals(0)
     }
 }
