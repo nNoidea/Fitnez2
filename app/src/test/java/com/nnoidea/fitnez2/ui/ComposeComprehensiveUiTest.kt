@@ -237,6 +237,53 @@ class ComposeComprehensiveUiTest {
     }
 
     @Test
+    fun testDrawerScrimClick_closesDrawer() {
+        lateinit var drawerState: com.nnoidea.fitnez2.ui.components.navigation.PredictiveDrawerState
+        lateinit var scope: kotlinx.coroutines.CoroutineScope
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Open)
+                    scope = rememberCoroutineScope()
+
+                    com.nnoidea.fitnez2.ui.components.navigation.PredictiveNavigationDrawer(
+                        drawerState = drawerState,
+                        drawerContent = {
+                            PredictiveSidePanel(
+                                currentRoute = AppPage.Timeline.route,
+                                onItemClick = {}
+                            )
+                        }
+                    ) {
+                        TimelineScreen(onOpenDrawer = {})
+                    }
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        // Verify drawer is initially open
+        assert(drawerState.isOpen)
+        composeRule.onNodeWithText(EnglishStrings.labelMonthly).assertIsDisplayed()
+
+        // Tap the scrim overlay outside the drawer
+        composeRule.onNodeWithTag("drawer_scrim").performClick()
+        composeRule.waitForIdle()
+
+        // Verify drawer is closed
+        assert(drawerState.isClosed)
+        assert(drawerState.progress == 0f)
+    }
+
+    @Test
     fun testAddingRecordsBackToBack_updatesTimelineCorrectly() {
         val squatId = runBlocking { exerciseService.getAllExercises().first().id }
 

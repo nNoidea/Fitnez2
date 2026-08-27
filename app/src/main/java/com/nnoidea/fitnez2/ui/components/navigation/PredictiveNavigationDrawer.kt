@@ -34,6 +34,7 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -192,6 +193,7 @@ fun PredictiveNavigationDrawer(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .testTag("drawer_scrim")
                     .graphicsLayer { alpha = drawerState.progress * 0.45f }
                     .background(Color.Black)
                     .clickable(
