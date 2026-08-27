@@ -48,7 +48,10 @@ import com.nnoidea.fitnez2.ui.components.recordlist.RecordList
  * - "Create Workout" visible in exercise dialog
  */
 @Composable
-fun HomeBottomSheet(modifier: Modifier = Modifier) {
+fun HomeBottomSheet(
+    modifier: Modifier = Modifier,
+    onNavigateToWorkout: ((String?) -> Unit)? = null
+) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val state = rememberHomeBottomSheetState()
 
@@ -69,14 +72,26 @@ fun HomeBottomSheet(modifier: Modifier = Modifier) {
                     alpha = (1f - progress).coerceIn(0f, 1f)
                 }
         ) {
-            if (state.hasBeenOpened) {
-                val filterIds = if (state.selectedWorkout != null) {
-                    state.selectedWorkoutRecords.map { it.workoutRecord.exerciseId }.distinct()
-                } else if (state.selectedExerciseId != null) {
-                    listOf(state.selectedExerciseId!!)
-                } else null
-
-                if (filterIds != null && filterIds.isNotEmpty()) {
+            when {
+                state.selectedExerciseId == null && state.selectedWorkout == null -> {
+                    // Placeholder when no exercise or workout is selected
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = globalLocalization.labelSelectExercise,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                else -> {
+                    val filterIds = if (state.selectedWorkout != null) {
+                        state.selectedWorkoutRecords.map { it.workoutRecord.exerciseId }.distinct()
+                    } else if (state.selectedExerciseId != null) {
+                        listOf(state.selectedExerciseId!!)
+                    } else null
                     val recordListState = rememberRecordListState(filterIds, state.selectedWorkout != null)
                     RecordList(
                         items = recordListState.uiItems,
@@ -111,13 +126,17 @@ fun HomeBottomSheet(modifier: Modifier = Modifier) {
         },
         onWorkoutEdit = { workout ->
             state.toggleExerciseSelection(false)
-            val intent = android.content.Intent(context, com.nnoidea.fitnez2.MainActivity::class.java).apply {
-                putExtra(com.nnoidea.fitnez2.MainActivity.EXTRA_PAGE_ROUTE, com.nnoidea.fitnez2.ui.navigation.AppPage.Workout.route)
-                putExtra("extra_workout_id", workout.id)
+            if (onNavigateToWorkout != null) {
+                onNavigateToWorkout(workout.id)
+            } else {
+                val intent = android.content.Intent(context, com.nnoidea.fitnez2.MainActivity::class.java).apply {
+                    putExtra(com.nnoidea.fitnez2.MainActivity.EXTRA_PAGE_ROUTE, com.nnoidea.fitnez2.ui.navigation.AppPage.Workout.route)
+                    putExtra("extra_workout_id", workout.id)
+                }
+                context.startActivity(intent)
             }
-            context.startActivity(intent)
         },
-        showCreateWorkout = true
+        showCreateWorkout = true,
+        onNavigateToWorkout = { onNavigateToWorkout?.invoke(null) }
     )
 }
-

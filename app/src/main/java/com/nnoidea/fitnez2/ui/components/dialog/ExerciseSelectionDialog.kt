@@ -69,7 +69,8 @@ fun ExerciseSelectionDialog(
     onWorkoutSelected: (Workout) -> Unit = {},
     onWorkoutEdit: (Workout) -> Unit = {},
     onExerciseCreated: (Exercise) -> Unit = {},
-    showCreateWorkout: Boolean = true
+    showCreateWorkout: Boolean = true,
+    onNavigateToWorkout: (() -> Unit)? = null
 ) {
     val view = LocalView.current
     val scope = rememberCoroutineScope()
@@ -102,10 +103,14 @@ fun ExerciseSelectionDialog(
                     .clickable { 
                         view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                         onDismissRequest()
-                        val intent = Intent(context, MainActivity::class.java).apply {
-                            putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Workout.route)
+                        if (onNavigateToWorkout != null) {
+                            onNavigateToWorkout()
+                        } else {
+                            val intent = Intent(context, MainActivity::class.java).apply {
+                                putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Workout.route)
+                            }
+                            context.startActivity(intent)
                         }
-                        context.startActivity(intent)
                     }
                     .padding(vertical = 12.dp, horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically

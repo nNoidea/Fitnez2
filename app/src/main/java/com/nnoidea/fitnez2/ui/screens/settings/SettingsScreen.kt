@@ -49,7 +49,10 @@ import java.util.Locale
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(onOpenDrawer: () -> Unit) {
+fun SettingsScreen(
+    onOpenDrawer: () -> Unit,
+    onNavigateToDeveloper: (() -> Unit)? = null
+) {
     val globalState = LocalGlobalUiState.current
     val supportedLanguages = LocalizationManager.supportedLanguages
     
@@ -205,10 +208,14 @@ fun SettingsScreen(onOpenDrawer: () -> Unit) {
                 value = "",
                 icon = Icons.Default.Build,
                 onClick = {
-                   val intent = android.content.Intent(context, com.nnoidea.fitnez2.MainActivity::class.java).apply {
-                       putExtra(com.nnoidea.fitnez2.MainActivity.EXTRA_PAGE_ROUTE, "developer")
-                   }
-                   context.startActivity(intent)
+                    if (onNavigateToDeveloper != null) {
+                        onNavigateToDeveloper()
+                    } else {
+                        val intent = android.content.Intent(context, com.nnoidea.fitnez2.MainActivity::class.java).apply {
+                            putExtra(com.nnoidea.fitnez2.MainActivity.EXTRA_PAGE_ROUTE, "developer")
+                        }
+                        context.startActivity(intent)
+                    }
                 }
             )
         }

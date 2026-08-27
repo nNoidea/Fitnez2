@@ -19,7 +19,11 @@ import com.nnoidea.fitnez2.ui.components.bottomsheet.PREDICTIVE_BOTTOM_SHEET_PEE
 
 
 @Composable
-fun TimelineScreen(onOpenDrawer: () -> Unit) {
+fun TimelineScreen(
+    targetDate: Long? = null,
+    onOpenDrawer: () -> Unit,
+    onNavigateToWorkout: ((String?) -> Unit)? = null
+) {
     val globalUiState = LocalGlobalUiState.current
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -27,7 +31,7 @@ fun TimelineScreen(onOpenDrawer: () -> Unit) {
             headerContent = { HamburgerMenu(onClick = onOpenDrawer) },
         ) {
             val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-            val recordListState = rememberRecordListState()
+            val recordListState = rememberRecordListState(targetDate = targetDate)
             RecordList(
                 items = recordListState.uiItems,
                 weightUnit = recordListState.weightUnit,
@@ -44,7 +48,10 @@ fun TimelineScreen(onOpenDrawer: () -> Unit) {
             )
         }
 
-        HomeBottomSheet(modifier = Modifier.fillMaxSize())
+        HomeBottomSheet(
+            modifier = Modifier.fillMaxSize(),
+            onNavigateToWorkout = onNavigateToWorkout
+        )
 
         // Snackbar — positioned above the bottom sheet
         SnackbarHost(

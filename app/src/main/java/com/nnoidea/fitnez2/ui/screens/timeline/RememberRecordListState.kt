@@ -25,7 +25,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 @Composable
 fun rememberRecordListState(
     filterExerciseIds: List<String>? = null,
-    useAlternatingColors: Boolean = true
+    useAlternatingColors: Boolean = true,
+    targetDate: Long? = null
 ): RecordListState {
     val scope = rememberCoroutineScope()
     val recordService = LocalRecordService.current
@@ -80,27 +81,25 @@ fun rememberRecordListState(
     val context = LocalContext.current
     val activity = context as? Activity
     var intentHandled by remember { mutableStateOf(false) }
-    LaunchedEffect(state.initialLoadDone) {
-        if (!state.initialLoadDone || intentHandled) return@LaunchedEffect
-        val intent = activity?.intent
-        val targetDate = intent?.getLongExtra("extra_target_date", -1L)?.takeIf { it != -1L }
-        if (targetDate != null) {
-            state.loadUntilDate(targetDate)
-            withTimeoutOrNull(5000) {
-                snapshotFlow { state.uiItems }
-                    .first { items ->
-                        items.any { it is RecordDisplayItem.DateHeader &&
-                            TimeUtils.isSameDay(it.date, targetDate) }
-                    }
-            }
-            val items = state.uiItems
-            val targetIndex = items.indexOfFirst {
-                it is RecordDisplayItem.DateHeader && TimeUtils.isSameDay(it.date, targetDate)
-            }
-            if (targetIndex >= 0) state.listState.scrollToItem(targetIndex)
-            intent.removeExtra("extra_target_date")
-            intentHandled = true
+    val effectiveTargetDate = targetDate ?: activity?.intent?.getLongExtra("extra_target_date", -1L)?.takeIf { it != -1L }
+
+    LaunchedEffect(state.initialLoadDone, effectiveTargetDate) {
+        if (!state.initialLoadDone || effectiveTargetDate == null || intentHandled) return@LaunchedEffect
+        state.loadUntilDate(effectiveTargetDate)
+        withTimeoutOrNull(5000) {
+            snapshotFlow { state.uiItems }
+                .first { items ->
+                    items.any { it is RecordDisplayItem.DateHeader &&
+                        TimeUtils.isSameDay(it.date, effectiveTargetDate) }
+                }
         }
+        val items = state.uiItems
+        val targetIndex = items.indexOfFirst {
+            it is RecordDisplayItem.DateHeader && TimeUtils.isSameDay(it.date, effectiveTargetDate)
+        }
+        if (targetIndex >= 0) state.listState.scrollToItem(targetIndex)
+        activity?.intent?.removeExtra("extra_target_date")
+        intentHandled = true
     }
 
     LaunchedEffect(state, globalUiState) {

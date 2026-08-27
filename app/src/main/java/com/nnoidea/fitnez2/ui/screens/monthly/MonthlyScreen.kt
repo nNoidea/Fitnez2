@@ -39,7 +39,10 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 
 @Composable
-fun MonthlyScreen(onOpenDrawer: () -> Unit) {
+fun MonthlyScreen(
+    onOpenDrawer: () -> Unit,
+    onNavigateToTimelineDate: ((Long) -> Unit)? = null
+) {
     val context = LocalContext.current
     val view = LocalView.current
     val exerciseService = LocalExerciseService.current
@@ -267,12 +270,16 @@ fun MonthlyScreen(onOpenDrawer: () -> Unit) {
                                             onClick = {
                                                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                                 val epochMillis = day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                                                val intent = Intent(context, MainActivity::class.java).apply {
-                                                    putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Timeline.route)
-                                                    putExtra("extra_target_date", epochMillis)
-                                                    putExtra("extra_source_route", AppPage.Monthly.route)
+                                                if (onNavigateToTimelineDate != null) {
+                                                    onNavigateToTimelineDate(epochMillis)
+                                                } else {
+                                                    val intent = Intent(context, MainActivity::class.java).apply {
+                                                        putExtra(MainActivity.EXTRA_PAGE_ROUTE, AppPage.Timeline.route)
+                                                        putExtra("extra_target_date", epochMillis)
+                                                        putExtra("extra_source_route", AppPage.Monthly.route)
+                                                    }
+                                                    context.startActivity(intent)
                                                 }
-                                                context.startActivity(intent)
                                             },
                                             modifier = Modifier.weight(1f).fillMaxHeight(),
                                             cellShape = cellShape
