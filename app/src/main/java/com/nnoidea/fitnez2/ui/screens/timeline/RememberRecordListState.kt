@@ -54,12 +54,12 @@ fun rememberRecordListState(
         )
     }
 
-    LaunchedEffect(exerciseMap) {
+    LaunchedEffect(state, exerciseMap) {
         state.updateExerciseMap(exerciseMap)
         if (exerciseMap.isNotEmpty()) state.loadInitial()
     }
 
-    LaunchedEffect(weightUnit) { (state as RecordListStateImpl).updateWeightUnit(weightUnit) }
+    LaunchedEffect(state, weightUnit) { (state as RecordListStateImpl).updateWeightUnit(weightUnit) }
 
     LaunchedEffect(state.listState) {
         snapshotFlow {

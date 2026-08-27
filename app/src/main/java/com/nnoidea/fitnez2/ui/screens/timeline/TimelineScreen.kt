@@ -23,7 +23,8 @@ import com.nnoidea.fitnez2.ui.components.bottomsheet.PREDICTIVE_BOTTOM_SHEET_PEE
 fun TimelineScreen(
     targetDate: Long? = null,
     onOpenDrawer: () -> Unit,
-    onNavigateToWorkout: ((String?) -> Unit)? = null
+    onNavigateToWorkout: ((String?) -> Unit)? = null,
+    bottomSheetState: HomeBottomSheetState = rememberHomeBottomSheetState()
 ) {
     val globalUiState = LocalGlobalUiState.current
 
@@ -33,6 +34,7 @@ fun TimelineScreen(
         ) {
             val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
             val recordListState = rememberRecordListState(targetDate = targetDate)
+
             RecordList(
                 items = recordListState.uiItems,
                 weightUnit = recordListState.weightUnit,
@@ -54,6 +56,7 @@ fun TimelineScreen(
 
         HomeBottomSheet(
             modifier = Modifier.fillMaxSize(),
+            state = bottomSheetState,
             onNavigateToWorkout = onNavigateToWorkout
         )
 

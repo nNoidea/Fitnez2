@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.components.BottomSheetRepsField
@@ -50,10 +51,10 @@ import com.nnoidea.fitnez2.ui.components.recordlist.RecordList
 @Composable
 fun HomeBottomSheet(
     modifier: Modifier = Modifier,
+    state: HomeBottomSheetState = rememberHomeBottomSheetState(),
     onNavigateToWorkout: ((String?) -> Unit)? = null
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val state = rememberHomeBottomSheetState()
 
     PredictiveBottomSheet(state = state, modifier = modifier) {
         SheetFormRow(
@@ -100,7 +101,9 @@ fun HomeBottomSheet(
                         expandedRecordIds = recordListState.expandedRecordIds,
                         timestampTokens = recordListState.timestampTokens,
                         onShowTimestamp = { recordListState.showTimestampFor(it) },
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag("bottom_sheet_record_list"),
                         onUpdateRequest = { recordListState.onUpdateRequest(it) },
                         onDeleteRequest = { recordListState.onDeleteRequest(it) },
                         onDeleteGroupRequest = { recordListState.onDeleteGroupRequest(it) }
