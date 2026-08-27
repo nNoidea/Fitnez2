@@ -243,11 +243,8 @@ class RecordListStateImpl(
                 onActionPerformed = {
                     onHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                     scope.launch {
-                        val newRecord = recordService.createRecord(
-                            exerciseId = recordSnapshot.exerciseId, sets = recordSnapshot.sets,
-                            reps = recordSnapshot.reps, weight = recordSnapshot.weight, date = recordSnapshot.date
-                        )
-                        GlobalUiState.emitToAll(UiSignal.RecordInserted(newRecord.id))
+                        val restoredRecord = recordService.restoreRecord(recordSnapshot)
+                        GlobalUiState.emitToAll(UiSignal.RecordInserted(restoredRecord.id))
                     }
                 }
             )
@@ -267,10 +264,7 @@ class RecordListStateImpl(
                     onHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                     scope.launch {
                         snapshotRecords.forEach {
-                            val r = recordService.createRecord(
-                                exerciseId = it.exerciseId, sets = it.sets,
-                                reps = it.reps, weight = it.weight, date = it.date
-                            )
+                            val r = recordService.restoreRecord(it)
                             GlobalUiState.emitToAll(UiSignal.RecordInserted(r.id))
                         }
                     }
@@ -300,7 +294,11 @@ class RecordListStateImpl(
             val record = recordService.getRecordById(recordId) ?: return@launch
             if (filterExerciseIds != null && record.exerciseId !in filterExerciseIds) return@launch
             if (loadedRecords.any { it.id == record.id }) return@launch
-            val insertAt = loadedRecords.indexOfFirst { it.date <= record.date }
+            val insertAt = loadedRecords.indexOfFirst {
+                it.date < record.date ||
+                (it.date == record.date && it.orderNumber < record.orderNumber) ||
+                (it.date == record.date && it.orderNumber == record.orderNumber && it.id <= record.id)
+            }
             val updated = loadedRecords.toMutableList()
             if (insertAt < 0) updated.add(record) else updated.add(insertAt, record)
             loadedRecords = updated

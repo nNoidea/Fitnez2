@@ -92,4 +92,10 @@ class RecordService(private val database: AppDatabase) {
             ?: throw IllegalArgumentException(globalLocalization.errorRecordNotFoundById(id))
         dao.deleteRecord(record)
     }
+
+    suspend fun restoreRecord(record: Record): Record {
+        RecordVerifier.validateRecord(record.sets, record.reps, record.weight)
+        dao.insertRecord(record)
+        return record
+    }
 }
