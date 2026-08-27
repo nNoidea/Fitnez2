@@ -30,7 +30,6 @@ import com.nnoidea.fitnez2.service.SettingsService
 import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
 import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import com.nnoidea.fitnez2.ui.components.navigation.PredictiveSidePanel
-import com.nnoidea.fitnez2.ui.components.navigation.PredictiveSidePanelContainer
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import com.nnoidea.fitnez2.ui.screens.developer.DeveloperOptionsScreen
 import com.nnoidea.fitnez2.ui.screens.graph.GraphScreen
@@ -96,28 +95,23 @@ class MainActivity : ComponentActivity() {
                                 AppPage.Settings.route
                             ),
                             drawerContent = {
-                                PredictiveSidePanelContainer(
-                                    drawerState = drawerState,
-                                    scope = scope
-                                ) {
-                                    PredictiveSidePanel(
-                                        currentRoute = currentDestination,
-                                        onItemClick = { clickedRoute ->
-                                            scope.launch {
-                                                drawerState.close()
-                                            }
-                                            if (clickedRoute != currentDestination) {
-                                                navController.navigate(clickedRoute) {
-                                                    popUpTo(AppPage.Timeline.route) {
-                                                        saveState = true
-                                                    }
-                                                    launchSingleTop = true
-                                                    restoreState = true
+                                PredictiveSidePanel(
+                                    currentRoute = currentDestination,
+                                    onItemClick = { clickedRoute ->
+                                        scope.launch {
+                                            drawerState.close()
+                                        }
+                                        if (clickedRoute != currentDestination) {
+                                            navController.navigate(clickedRoute) {
+                                                popUpTo(AppPage.Timeline.route) {
+                                                    saveState = true
                                                 }
+                                                launchSingleTop = true
+                                                restoreState = true
                                             }
                                         }
-                                    )
-                                }
+                                    }
+                                )
                             }
                         ) {
                             NavHost(
@@ -130,8 +124,16 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 composable(
                                     route = AppPage.Timeline.route,
-                                ) {
+                                    arguments = listOf(
+                                        navArgument("targetDate") {
+                                            type = NavType.LongType
+                                            defaultValue = -1L
+                                        }
+                                    )
+                                ) { backStackEntry ->
+                                    val targetDate = backStackEntry.arguments?.getLong("targetDate")?.takeIf { it != -1L }
                                     TimelineScreen(
+                                        targetDate = targetDate,
                                         onOpenDrawer = { scope.launch { drawerState.open() } },
                                         onNavigateToWorkout = { workoutId ->
                                             if (workoutId != null) {
@@ -172,7 +174,7 @@ class MainActivity : ComponentActivity() {
                                         onNavigateToTimelineDate = { epochMillis ->
                                             navController.navigate("${AppPage.Timeline.route}?targetDate=$epochMillis") {
                                                 popUpTo(AppPage.Timeline.route) {
-                                                    saveState = true
+                                                    inclusive = false
                                                 }
                                                 launchSingleTop = true
                                             }
