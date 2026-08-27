@@ -72,10 +72,14 @@ class PredictiveDrawerState(
     }
 
     suspend fun settle(velocity: Float) {
-        val target = if (velocity > 800f || (velocity >= -400f && offsetX.value > -drawerWidthPx * 0.65f)) {
-            0f // Settle Open
+        val target = if (velocity > 800f) {
+            0f // Flung open to the right
+        } else if (velocity < -800f) {
+            -drawerWidthPx // Flung closed to the left
+        } else if (offsetX.value > -drawerWidthPx * 0.5f) {
+            0f // Open
         } else {
-            -drawerWidthPx // Settle Closed
+            -drawerWidthPx // Closed
         }
         offsetX.animateTo(target, spring(stiffness = Spring.StiffnessMediumLow))
     }
@@ -91,8 +95,8 @@ fun rememberPredictiveDrawerState(
 /**
  * A smooth, progressive navigation drawer container.
  *
- * Provides true 1-to-1 finger tracking for rightward swipes across the entire screen
- * (including over cards, lists, and empty space) without blocking child taps or vertical scrolling.
+ * Provides true 1-to-1 finger tracking for rightward swipes (to open) and leftward swipes (to close)
+ * across the entire screen and drawer sheet without blocking child taps or vertical scrolling.
  */
 @Composable
 fun PredictiveNavigationDrawer(
@@ -107,7 +111,68 @@ fun PredictiveNavigationDrawer(
     val view = LocalView.current
     val viewConfig = LocalViewConfiguration.current
 
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxSize()
+            .then(
+                if (gesturesEnabled) {
+                    Modifier.pointerInput(gesturesEnabled) {
+                        val widthPx = drawerState.drawerWidthPx.takeIf { it > 0f } ?: (320.dp.toPx())
+                        val touchSlop = viewConfig.touchSlop
+
+                        awaitEachGesture {
+                            val down = awaitFirstDown(pass = PointerEventPass.Initial, requireUnconsumed = false)
+                            val tracker = VelocityTracker()
+                            tracker.addPosition(down.uptimeMillis, down.position)
+                            var isDragging = false
+                            val startPos = down.position
+
+                            while (true) {
+                                val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                                val change = event.changes.firstOrNull() ?: break
+                                tracker.addPosition(change.uptimeMillis, change.position)
+
+                                val totalDx = change.position.x - startPos.x
+                                val totalDy = change.position.y - startPos.y
+
+                                if (!isDragging) {
+                                    if (drawerState.isClosed) {
+                                        // Detect rightward swipe to open: movement > slop and horizontally dominant
+                                        if (totalDx > touchSlop && totalDx > abs(totalDy) * 1.15f) {
+                                            isDragging = true
+                                            change.consume()
+                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                                        }
+                                    } else if (drawerState.isOpen) {
+                                        // Detect leftward swipe to close: movement < -slop and horizontally dominant
+                                        if (totalDx < -touchSlop && abs(totalDx) > abs(totalDy) * 1.15f) {
+                                            isDragging = true
+                                            change.consume()
+                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                                        }
+                                    }
+                                }
+
+                                if (isDragging) {
+                                    val delta = change.position.x - change.previousPosition.x
+                                    val newOffset = (drawerState.offsetX.value + delta).coerceIn(-widthPx, 0f)
+                                    scope.launch { drawerState.offsetX.snapTo(newOffset) }
+                                    change.consume()
+                                }
+
+                                if (!change.pressed && change.previousPressed) {
+                                    if (isDragging) {
+                                        val velocity = tracker.calculateVelocity().x
+                                        scope.launch { drawerState.settle(velocity) }
+                                    }
+                                    break
+                                }
+                            }
+                        }
+                    }
+                } else Modifier
+            )
+    ) {
         val widthPx = with(density) { 320.dp.toPx() }
 
         LaunchedEffect(widthPx) {
@@ -117,68 +182,8 @@ fun PredictiveNavigationDrawer(
             }
         }
 
-        val touchSlop = viewConfig.touchSlop
-
-        // Content slot with gesture detection
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(
-                    if (gesturesEnabled) {
-                        Modifier.pointerInput(gesturesEnabled, widthPx) {
-                            awaitEachGesture {
-                                val down = awaitFirstDown(pass = PointerEventPass.Initial, requireUnconsumed = false)
-                                val tracker = VelocityTracker()
-                                tracker.addPosition(down.uptimeMillis, down.position)
-                                var isDragging = false
-                                val startPos = down.position
-
-                                while (true) {
-                                    val event = awaitPointerEvent(pass = PointerEventPass.Initial)
-                                    val change = event.changes.firstOrNull() ?: break
-                                    tracker.addPosition(change.uptimeMillis, change.position)
-
-                                    val totalDx = change.position.x - startPos.x
-                                    val totalDy = change.position.y - startPos.y
-
-                                    if (!isDragging) {
-                                        if (drawerState.isClosed) {
-                                            // Detect rightward swipe: horizontal movement > slop and horizontally dominant
-                                            if (totalDx > touchSlop && totalDx > abs(totalDy) * 1.15f) {
-                                                isDragging = true
-                                                change.consume()
-                                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                            }
-                                        } else if (drawerState.isOpen) {
-                                            // Detect leftward swipe to close
-                                            if (totalDx < -touchSlop && abs(totalDx) > abs(totalDy) * 1.15f) {
-                                                isDragging = true
-                                                change.consume()
-                                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                            }
-                                        }
-                                    }
-
-                                    if (isDragging) {
-                                        val delta = change.position.x - change.previousPosition.x
-                                        val newOffset = (drawerState.offsetX.value + delta).coerceIn(-widthPx, 0f)
-                                        scope.launch { drawerState.offsetX.snapTo(newOffset) }
-                                        change.consume()
-                                    }
-
-                                    if (!change.pressed && change.previousPressed) {
-                                        if (isDragging) {
-                                            val velocity = tracker.calculateVelocity().x
-                                            scope.launch { drawerState.settle(velocity) }
-                                        }
-                                        break
-                                    }
-                                }
-                            }
-                        }
-                    } else Modifier
-                )
-        ) {
+        // Content slot
+        Box(modifier = Modifier.fillMaxSize()) {
             content()
         }
 

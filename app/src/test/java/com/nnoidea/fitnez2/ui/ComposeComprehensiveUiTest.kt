@@ -82,6 +82,9 @@ class ComposeComprehensiveUiTest {
 
             val now = System.currentTimeMillis()
             recordService.createRecord(squat.id, sets = 3, reps = 10, weight = 100.0, date = now)
+
+            com.nnoidea.fitnez2.core.localization.LocalizationManager.setLanguage(null)
+            androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications()
         }
     }
 
@@ -128,14 +131,12 @@ class ComposeComprehensiveUiTest {
     }
 
     @Test
-    fun testSwipeRightOnRecordCard_triggersOpenDrawer() {
+    fun testSwipeRightToOpenAndSwipeLeftToCloseDrawer() {
         lateinit var drawerState: com.nnoidea.fitnez2.ui.components.navigation.PredictiveDrawerState
         lateinit var scope: kotlinx.coroutines.CoroutineScope
 
         composeRule.setContent {
             val globalUiState = rememberGlobalUiState(settingsService)
-            drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Closed)
-            scope = rememberCoroutineScope()
 
             Fitnez2Theme(fontMode = globalUiState.fontMode) {
                 ProvideGlobalUiState(
@@ -143,6 +144,9 @@ class ComposeComprehensiveUiTest {
                     settingsService = settingsService,
                     state = globalUiState
                 ) {
+                    drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Closed)
+                    scope = rememberCoroutineScope()
+
                     com.nnoidea.fitnez2.ui.components.navigation.PredictiveNavigationDrawer(
                         drawerState = drawerState,
                         drawerContent = {
@@ -164,7 +168,7 @@ class ComposeComprehensiveUiTest {
 
         composeRule.waitForIdle()
 
-        // Swipe right directly on top of the "Squat" record card in the timeline
+        // 1. Swipe right directly on top of the "Squat" record card in the timeline to OPEN drawer
         val timelineSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("main_timeline_record_list"))
         composeRule.onNode(timelineSquatMatcher).performTouchInput {
             swipeRight(startX = centerX, endX = centerX + 400f)
@@ -175,14 +179,22 @@ class ComposeComprehensiveUiTest {
         composeRule.onNodeWithText(EnglishStrings.labelMonthly).assertIsDisplayed()
         composeRule.onNodeWithText(EnglishStrings.labelGraph).assertIsDisplayed()
         composeRule.onNodeWithText(EnglishStrings.labelSettings).assertIsDisplayed()
+
+        // 2. Swipe LEFT on the open side panel to CLOSE the drawer
+        composeRule.onNodeWithText(EnglishStrings.labelMonthly).performTouchInput {
+            swipeLeft(startX = centerX, endX = centerX - 400f)
+        }
+        composeRule.waitForIdle()
+
+        // Verify drawer is closed
+        assert(drawerState.isClosed)
+        assert(drawerState.progress == 0f)
     }
 
     @Test
     fun testHamburgerMenuButton_opensNavigationDrawer() {
         composeRule.setContent {
             val globalUiState = rememberGlobalUiState(settingsService)
-            val drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Closed)
-            val scope = rememberCoroutineScope()
 
             Fitnez2Theme(fontMode = globalUiState.fontMode) {
                 ProvideGlobalUiState(
@@ -190,6 +202,9 @@ class ComposeComprehensiveUiTest {
                     settingsService = settingsService,
                     state = globalUiState
                 ) {
+                    val drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Closed)
+                    val scope = rememberCoroutineScope()
+
                     com.nnoidea.fitnez2.ui.components.navigation.PredictiveNavigationDrawer(
                         drawerState = drawerState,
                         drawerContent = {
