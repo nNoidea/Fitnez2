@@ -11,9 +11,9 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Surface
-import androidx.compose.material3.rememberDrawerState
+import com.nnoidea.fitnez2.ui.components.navigation.PredictiveNavigationDrawer
+import com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.surfaceContainer,
                 ) {
                     val navController = rememberNavController()
-                    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                    val drawerState = rememberPredictiveDrawerState(initialValue = DrawerValue.Closed)
                     var drawerPredictiveProgress by remember { mutableFloatStateOf(0f) }
 
                     // Sync Drawer State to Global UI State
@@ -110,7 +110,7 @@ class MainActivity : ComponentActivity() {
                         settingsService = settingsService,
                         state = globalUiState
                     ) {
-                        ModalNavigationDrawer(
+                        PredictiveNavigationDrawer(
                             drawerState = drawerState,
                             gesturesEnabled = currentDestination in listOf(
                                 AppPage.Timeline.route,
