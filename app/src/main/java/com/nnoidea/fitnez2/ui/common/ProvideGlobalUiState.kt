@@ -9,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
-import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.data.AppDatabase
 import com.nnoidea.fitnez2.service.LocalSettingsService
@@ -78,9 +77,6 @@ fun ProvideGlobalUiState(
     }
 
     val context = LocalContext.current
-    SideEffect {
-        ValidateAndCorrect.appContext = context.applicationContext
-    }
 
     ProvideAppServices(
         context = context,

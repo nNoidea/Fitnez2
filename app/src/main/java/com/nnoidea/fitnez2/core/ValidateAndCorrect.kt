@@ -1,56 +1,26 @@
 package com.nnoidea.fitnez2.core
 
-import android.content.Context
-import android.widget.Toast
-import com.nnoidea.fitnez2.core.localization.LocalizationManager
-
 object ValidateAndCorrect {
-
-    /** Set once from ProvideGlobalUiState. */
-    var appContext: Context? = null
-
-    private fun showError(message: String) {
-        appContext?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
-    }
 
     /**
      * Shared validation for positive integer inputs (sets, reps).
      * Rules: Must be an integer > 0.
      * Handles inputs like "01" -> 1, "5.0" -> 5.
      */
-    private fun positiveInt(
-        input: String,
-        errorEmpty: String,
-        errorFormat: String,
-        errorWholeNumber: String,
-        errorPositive: String
-    ): Int? {
-        if (input.isBlank()) { showError(errorEmpty); return null }
-        val number = input.toDoubleOrNull()
-            ?: run { showError(errorFormat); return null }
-        if (number % 1.0 != 0.0) { showError(errorWholeNumber); return null }
+    private fun positiveInt(input: String): Int? {
+        if (input.isBlank()) return null
+        val number = input.toDoubleOrNull() ?: return null
+        if (number % 1.0 != 0.0) return null
         val intValue = number.toInt()
-        if (intValue <= 0) { showError(errorPositive); return null }
+        if (intValue <= 0) return null
         return intValue
     }
 
     /** Validates and corrects Sets input. Returns the valid Integer or null. */
-    fun sets(input: String): Int? = positiveInt(
-        input,
-        LocalizationManager.strings.errorSetsEmpty,
-        LocalizationManager.strings.errorSetsFormat,
-        LocalizationManager.strings.errorSetsWholeNumber,
-        LocalizationManager.strings.errorSetsPositive
-    )
+    fun sets(input: String): Int? = positiveInt(input)
 
     /** Validates and corrects Reps input. Returns the valid Integer or null. */
-    fun reps(input: String): Int? = positiveInt(
-        input,
-        LocalizationManager.strings.errorRepsEmpty,
-        LocalizationManager.strings.errorRepsFormat,
-        LocalizationManager.strings.errorRepsWholeNumber,
-        LocalizationManager.strings.errorRepsPositive
-    )
+    fun reps(input: String): Int? = positiveInt(input)
 
     /**
      * Validates and corrects Weight input.
@@ -59,17 +29,11 @@ object ValidateAndCorrect {
      */
     fun weight(input: String): Double? {
         if (input.isBlank()) {
-            showError(LocalizationManager.strings.errorWeightEmpty)
             return null
         }
-        val number = input.toDoubleOrNull()
-        if (number == null) {
-            showError(LocalizationManager.strings.errorWeightFormat)
-            return null
-        }
+        val number = input.toDoubleOrNull() ?: return null
         if (number.isNaN() || number.isInfinite()) {
-           showError(LocalizationManager.strings.errorWeightInvalid)
-           return null
+            return null
         }
         return number
     }
