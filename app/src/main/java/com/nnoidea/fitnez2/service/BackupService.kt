@@ -33,16 +33,12 @@ class BackupService(
     suspend fun exportData(uri: Uri): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val exercises = database.exerciseDao().getAllExercises()
-            // TODO: Paginate for large datasets — loads entire table into memory
-            val records = database.recordDao().getAllRecordsOrdered()
             val workouts = database.workoutDao().getAllWorkouts()
             val workoutRecords = database.workoutDao().getAllWorkoutRecords()
-
-            val recordsByExercise = records.groupBy { it.exerciseId }
             val workoutRecordsByWorkout = workoutRecords.groupBy { it.workoutId }
 
             val exportedData = exercises.map { exercise ->
-                val exerciseRecords = (recordsByExercise[exercise.id] ?: emptyList())
+                val exerciseRecords = database.recordDao().getRecordsByExerciseId(exercise.id, limit = 100000)
                     .map { ExportedRecord(it.id, it.sets, it.reps, it.weight, it.date) }
                 ExportedExercise(exercise.id, exercise.name, exerciseRecords)
             }
@@ -59,7 +55,7 @@ class BackupService(
                     )
                 }
                 ExportedWorkout(
-            id = workout.id,
+                    id = workout.id,
                     name = workout.name,
                     records = wr
                 )
@@ -151,21 +147,23 @@ class BackupService(
                         ))
                     }
                     if (recordBatch.isNotEmpty()) {
-                        database.recordDao().insertAll(recordBatch)
+                        recordBatch.chunked(500).forEach { chunk ->
+                            database.recordDao().insertAll(chunk)
+                        }
                     }
                 }
 
                 backupData.workouts?.forEach { exportedWorkout ->
                     WorkoutVerifier.validateName(exportedWorkout.name)
                     val workoutId = if (exportedWorkout.id.isNotEmpty()) exportedWorkout.id else java.util.UUID.randomUUID().toString()
-                    val workout = Workout( id = workoutId, name = exportedWorkout.name.trim())
+                    val workout = Workout(id = workoutId, name = exportedWorkout.name.trim())
                     database.workoutDao().insertWorkout(workout)
 
                     val workoutRecordBatch = mutableListOf<WorkoutRecord>()
                     exportedWorkout.records?.forEach { r ->
                         val resolvedExerciseId = exerciseIdMap[r.exerciseId] ?: r.exerciseId
                         workoutRecordBatch.add(WorkoutRecord(
-            id = if (r.id.isNotEmpty()) r.id else java.util.UUID.randomUUID().toString(),
+                            id = if (r.id.isNotEmpty()) r.id else java.util.UUID.randomUUID().toString(),
                             workoutId = workoutId,
                             exerciseId = resolvedExerciseId,
                             sets = r.sets,
@@ -175,7 +173,9 @@ class BackupService(
                         ))
                     }
                     if (workoutRecordBatch.isNotEmpty()) {
-                        database.workoutDao().insertAllWorkoutRecords(workoutRecordBatch)
+                        workoutRecordBatch.chunked(500).forEach { chunk ->
+                            database.workoutDao().insertAllWorkoutRecords(chunk)
+                        }
                     }
                 }
             }
