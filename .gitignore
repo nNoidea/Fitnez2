@@ -15,7 +15,8 @@
 local.properties
 
 .idea/
-.agent/
+.agent/*
+!.agent/rules/
 /breezy-weather-main
 .kotlin/
 *.json
