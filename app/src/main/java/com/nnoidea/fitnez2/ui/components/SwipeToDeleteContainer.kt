@@ -89,7 +89,7 @@ fun SwipeToDeleteContainer(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = com.nnoidea.fitnez2.core.localization.globalLocalization.labelDelete,
                         modifier = Modifier.scale(iconScale)
                     )
                 }

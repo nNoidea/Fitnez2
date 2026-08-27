@@ -55,9 +55,9 @@ fun LoadingShowcaseDialog(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-            Text("Material 3 Loading Indicators", style = MaterialTheme.typography.titleMedium)
+            Text(com.nnoidea.fitnez2.core.localization.globalLocalization.devLoadingIndicatorsTitle, style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(8.dp))
-            Text("--- M3 Expressive (Wavy) ---", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Text("--- ${com.nnoidea.fitnez2.core.localization.globalLocalization.devExpressiveWavySection} ---", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(16.dp))
 
             // 1. LinearWavyProgressIndicator (indeterminate)
@@ -121,7 +121,7 @@ fun LoadingShowcaseDialog(
             )
             Spacer(Modifier.height(24.dp))
 
-            Text("--- Classic M3 ---", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+            Text("--- ${com.nnoidea.fitnez2.core.localization.globalLocalization.devClassicM3Section} ---", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
             Spacer(Modifier.height(16.dp))
 
             // 7. Linear indefinite

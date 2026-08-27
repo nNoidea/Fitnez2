@@ -77,8 +77,8 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
                 HorizontalDivider()
 
                 SettingsItem(
-                    label = "Loading Indicators",
-                    value = "View all M3 loading styles",
+                    label = globalLocalization.devLoadingIndicators,
+                    value = globalLocalization.devLoadingIndicatorsDescription,
                     icon = Icons.Default.Star,
                     onClick = { showLoadingShowcase = true }
                 )

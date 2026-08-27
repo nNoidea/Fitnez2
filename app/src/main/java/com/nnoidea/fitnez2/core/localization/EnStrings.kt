@@ -181,6 +181,13 @@ sealed class EnStrings(
     open val labelInAppFont: String = "In-App Font"
     open val labelFontSystemDefault: String = "System Default"
     open val labelFontGoogleSansFlexRounded: String = "Google Sans Flex Rounded"
+
+    // Showcase / Showcase Dialogs
+    open val devLoadingIndicators: String = "Loading Indicators"
+    open val devLoadingIndicatorsDescription: String = "View all M3 loading styles"
+    open val devLoadingIndicatorsTitle: String = "Material 3 Loading Indicators"
+    open val devExpressiveWavySection: String = "M3 Expressive (Wavy)"
+    open val devClassicM3Section: String = "Classic M3"
 }
 
 /**
