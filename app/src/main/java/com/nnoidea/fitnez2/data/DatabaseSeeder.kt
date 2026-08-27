@@ -10,16 +10,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class DatabaseSeeder(
-    private val applicationScope: CoroutineScope
+    private val applicationScope: CoroutineScope,
+    private val databaseProvider: () -> AppDatabase
 ) : RoomDatabase.Callback() {
-
-    lateinit var database: AppDatabase
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
         Log.d("DatabaseSeeder", "Database created for the first time. Seeding...")
         applicationScope.launch(Dispatchers.IO) {
-            populateDatabase(database)
+            try {
+                populateDatabase(databaseProvider())
+            } catch (e: Exception) {
+                Log.e("DatabaseSeeder", "Error populating database", e)
+            }
         }
     }
 

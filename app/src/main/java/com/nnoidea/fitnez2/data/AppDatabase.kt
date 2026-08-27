@@ -26,18 +26,19 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: android.content.Context, scope: kotlinx.coroutines.CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val seeder = DatabaseSeeder(scope)
-                val instance = androidx.room.Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "fitnez2_database"
-                )
-                .addCallback(seeder)
-                .fallbackToDestructiveMigration(true)
-                .build()
-                seeder.database = instance
-                INSTANCE = instance
-                instance
+                INSTANCE ?: run {
+                    val seeder = DatabaseSeeder(scope) { INSTANCE ?: getDatabase(context, scope) }
+                    val instance = androidx.room.Room.databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        "fitnez2_database"
+                    )
+                    .addCallback(seeder)
+                    .fallbackToDestructiveMigration(true)
+                    .build()
+                    INSTANCE = instance
+                    instance
+                }
             }
         }
     }
