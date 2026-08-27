@@ -73,8 +73,8 @@ class MainActivity : ComponentActivity() {
                     var drawerPredictiveProgress by remember { mutableFloatStateOf(0f) }
 
                     // Sync Drawer State to Global UI State
-                    LaunchedEffect(drawerState.isOpen) {
-                        globalUiState.isOverlayOpen = drawerState.isOpen
+                    LaunchedEffect(drawerState.isOpen, drawerState.targetValue) {
+                        globalUiState.isOverlayOpen = (drawerState.isOpen && drawerState.targetValue == DrawerValue.Open)
                     }
 
                     // Predictive Back Handler for Drawer

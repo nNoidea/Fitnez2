@@ -682,4 +682,63 @@ class ComposeComprehensiveUiTest {
         composeRule.onAllNodes(timelineSquatMatcher).assertCountEquals(0)
         composeRule.onNodeWithText(EnglishStrings.labelUndo).assertIsDisplayed()
     }
+
+    @Test
+    fun testClosingDrawer_allowsImmediateBottomSheetSwipeUp() {
+        lateinit var drawerState: com.nnoidea.fitnez2.ui.components.navigation.PredictiveDrawerState
+        lateinit var scope: kotlinx.coroutines.CoroutineScope
+        lateinit var sheetState: com.nnoidea.fitnez2.ui.screens.timeline.HomeBottomSheetState
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Open)
+                    scope = rememberCoroutineScope()
+                    sheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
+
+                    com.nnoidea.fitnez2.ui.components.navigation.PredictiveNavigationDrawer(
+                        drawerState = drawerState,
+                        drawerContent = {
+                            PredictiveSidePanel(
+                                currentRoute = AppPage.Timeline.route,
+                                onItemClick = {}
+                            )
+                        }
+                    ) {
+                        TimelineScreen(
+                            onOpenDrawer = {},
+                            bottomSheetState = sheetState
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        // 1. Drawer is initially open, bottom sheet is collapsed
+        assert(drawerState.isOpen)
+        assert(!sheetState.isExpanded)
+
+        // 2. Initiate closing the drawer
+        composeRule.runOnUiThread {
+            scope.launch { drawerState.close() }
+        }
+
+        // 3. Immediately swipe up on the bottom sheet exercise selector button area
+        composeRule.onNodeWithTag("exercise_selector_button").performTouchInput {
+            swipeUp(startY = centerY, endY = centerY - 500f)
+        }
+        composeRule.waitForIdle()
+
+        // 4. Verify bottom sheet elements are visible and accessible
+        composeRule.onNodeWithTag("exercise_selector_button").assertExists()
+        composeRule.onNodeWithTag("add_record_button").assertExists()
+    }
 }
