@@ -16,7 +16,11 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -39,9 +43,28 @@ fun SwipeToDeleteContainer(
         }
     )
 
-    androidx.compose.runtime.LaunchedEffect(state.currentValue) {
+    // Trigger haptic when dragging crosses the deletion threshold ("letting go will delete")
+    var hasVibratedForThreshold by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.targetValue) {
+        if (state.targetValue == SwipeToDismissBoxValue.EndToStart) {
+            if (!hasVibratedForThreshold) {
+                val feedbackConstant = if (android.os.Build.VERSION.SDK_INT >= 34) {
+                    HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE
+                } else {
+                    HapticFeedbackConstants.VIRTUAL_KEY
+                }
+                view.performHapticFeedback(feedbackConstant)
+                hasVibratedForThreshold = true
+            }
+        } else {
+            // Reverted back under threshold: reset so dragging back across will vibrate again
+            hasVibratedForThreshold = false
+        }
+    }
+
+    LaunchedEffect(state.currentValue) {
         if (state.currentValue == SwipeToDismissBoxValue.EndToStart) {
-            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
             onDelete()
             state.snapTo(SwipeToDismissBoxValue.Settled)
         }

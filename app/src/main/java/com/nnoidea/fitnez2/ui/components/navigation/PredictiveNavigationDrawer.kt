@@ -32,7 +32,6 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntOffset
@@ -109,7 +108,6 @@ fun PredictiveNavigationDrawer(
 ) {
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
-    val view = LocalView.current
     val viewConfig = LocalViewConfiguration.current
 
     BoxWithConstraints(
@@ -147,14 +145,12 @@ fun PredictiveNavigationDrawer(
                                         if (totalDx > touchSlop && totalDx > abs(totalDy) * 1.15f) {
                                             isDragging = true
                                             change.consume()
-                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                         }
                                     } else if (drawerState.isOpen && drawerState.targetValue == DrawerValue.Open) {
                                         // Detect leftward swipe to close: movement < -slop and horizontally dominant
                                         if (totalDx < -touchSlop && abs(totalDx) > abs(totalDy) * 1.15f) {
                                             isDragging = true
                                             change.consume()
-                                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                                         }
                                     }
                                 }
