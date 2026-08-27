@@ -547,4 +547,80 @@ class ComposeComprehensiveUiTest {
         composeRule.onAllNodes(bsBenchMatcher).assertCountEquals(1)
         composeRule.onAllNodes(bsDeadliftMatcher).assertCountEquals(0)
     }
+
+    @Test
+    fun testRecordDeleteAndUndo_restoresExactOriginalOrderWithoutMergingAtTop() {
+        val today = System.currentTimeMillis()
+        lateinit var squat: com.nnoidea.fitnez2.data.entities.Exercise
+        lateinit var rec1: com.nnoidea.fitnez2.data.entities.Record
+        lateinit var rec2: com.nnoidea.fitnez2.data.entities.Record
+        lateinit var rec3: com.nnoidea.fitnez2.data.entities.Record
+
+        runBlocking {
+            squat = exerciseService.getExerciseByName("Squat")!!
+            val initialRecords = recordService.getLatestRecords()
+            initialRecords.forEach { recordService.deleteRecord(it.id) }
+
+            rec1 = recordService.createRecord(squat.id, sets = 1, reps = 5, weight = 60.0, date = today)
+            rec2 = recordService.createRecord(squat.id, sets = 1, reps = 5, weight = 80.0, date = today)
+            rec3 = recordService.createRecord(squat.id, sets = 1, reps = 5, weight = 100.0, date = today)
+        }
+
+        lateinit var globalUiState: com.nnoidea.fitnez2.ui.common.GlobalUiState
+
+        composeRule.setContent {
+            globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    TimelineScreen(onOpenDrawer = {})
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        val timelineSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("main_timeline_record_list"))
+        composeRule.onAllNodes(timelineSquatMatcher).assertCountEquals(3)
+
+        // Delete the bottom record (rec1 = 60kg) and show undo snackbar
+        runBlocking {
+            val snapshot = recordService.getRecordById(rec1.id)!!
+            recordService.deleteRecord(rec1.id)
+            com.nnoidea.fitnez2.ui.common.GlobalUiState.emitToAll(com.nnoidea.fitnez2.ui.common.UiSignal.RecordDeleted(rec1.id))
+            globalUiState.showSnackbar(
+                message = EnglishStrings.labelRecordDeleted,
+                actionLabel = EnglishStrings.labelUndo,
+                onActionPerformed = {
+                    kotlinx.coroutines.runBlocking {
+                        val restored = recordService.restoreRecord(snapshot)
+                        com.nnoidea.fitnez2.ui.common.GlobalUiState.emitToAll(com.nnoidea.fitnez2.ui.common.UiSignal.RecordInserted(restored.id))
+                    }
+                }
+            )
+        }
+
+        composeRule.waitForIdle()
+        composeRule.onAllNodes(timelineSquatMatcher).assertCountEquals(2)
+
+        // Click Undo
+        composeRule.onNodeWithText(EnglishStrings.labelUndo).performClick()
+        composeRule.waitForIdle()
+
+        // Verify all 3 records are back in timeline
+        composeRule.onAllNodes(timelineSquatMatcher).assertCountEquals(3)
+
+        // Verify that in the database, records maintain exact ordering: rec3 (100kg, order 3), rec2 (80kg, order 2), rec1 (60kg, order 1)
+        val allRecordsAfterUndo = runBlocking { recordService.getLatestRecords() }
+        org.junit.Assert.assertEquals(3, allRecordsAfterUndo.size)
+        org.junit.Assert.assertEquals(100.0, allRecordsAfterUndo[0].weight, 0.01) // Top record is still 100kg
+        org.junit.Assert.assertEquals(80.0, allRecordsAfterUndo[1].weight, 0.01)  // Middle record is still 80kg
+        org.junit.Assert.assertEquals(60.0, allRecordsAfterUndo[2].weight, 0.01)  // Restored record goes back to the bottom (60kg) - NOT top!
+        org.junit.Assert.assertEquals(rec1.id, allRecordsAfterUndo[2].id)
+        org.junit.Assert.assertEquals(rec1.orderNumber, allRecordsAfterUndo[2].orderNumber)
+    }
 }
