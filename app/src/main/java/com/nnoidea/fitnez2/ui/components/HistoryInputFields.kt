@@ -2,6 +2,7 @@ package com.nnoidea.fitnez2.ui.components
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -182,7 +183,7 @@ private fun HistoryInputSkin(
         bottomEndRadius = bottomEndRadius,
         decorationBox = { innerTextField, contentColor, textStyle ->
             Box(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (displayValue.isEmpty()) {
@@ -197,16 +198,20 @@ private fun HistoryInputSkin(
             }
         },
         facade = { clickModifier, _ ->
-            val facadeText = displayValue.ifEmpty { placeholder }
-            Text(
-                text = if (facadeText.length > 6) facadeText.take(6) + "\u2026" else facadeText,
-                style = textStyle.copy(
-                    color = if (displayValue.isEmpty()) unfocusedTextColor.copy(alpha = 0.5f)
-                           else unfocusedTextColor
-                ),
-                maxLines = 1,
-                modifier = clickModifier.padding(horizontal = 4.dp)
-            )
+            Box(
+                modifier = clickModifier.padding(horizontal = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                val facadeText = displayValue.ifEmpty { placeholder }
+                Text(
+                    text = if (facadeText.length > 6) facadeText.take(6) + "\u2026" else facadeText,
+                    style = textStyle.copy(
+                        color = if (displayValue.isEmpty()) unfocusedTextColor.copy(alpha = 0.5f)
+                               else unfocusedTextColor
+                    ),
+                    maxLines = 1
+                )
+            }
         }
     )
 }
