@@ -1,12 +1,15 @@
 package com.nnoidea.fitnez2.ui.screens.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.ui.components.dialog.LoadingDialog
 import com.nnoidea.fitnez2.ui.components.dialog.RadioSelectionDialog
-import com.nnoidea.fitnez2.ui.components.SettingsItem
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import com.nnoidea.fitnez2.ui.components.SettingsPageScaffold
+import com.nnoidea.fitnez2.ui.components.SettingsGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.ScreenRotation
@@ -103,26 +106,19 @@ fun SettingsScreen(
         }
     }
 
-    ScreenScaffold(
+    SettingsPageScaffold(
         title = globalLocalization.labelSettings,
         onOpenDrawer = onOpenDrawer
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            HorizontalDivider()
-
+        // Group 1: General Preferences & Appearance
+        SettingsGroup {
             // Language Setting
-            SettingsItem(
+            item(
                 label = globalLocalization.labelLanguage,
                 value = globalState.selectedLanguage?.languageName ?: globalLocalization.labelSystemLanguage,
                 icon = Icons.Default.Language,
                 onClick = { showLanguageDialog = true }
             )
-
-            HorizontalDivider()
 
             // Rotation Setting
             val rotationLabel = when (globalState.rotationMode) {
@@ -132,24 +128,20 @@ fun SettingsScreen(
                 else -> globalLocalization.labelRotationSystem
             }
 
-            SettingsItem(
+            item(
                 label = globalLocalization.labelRotation,
                 value = rotationLabel,
                 icon = Icons.Default.ScreenRotation,
                 onClick = { showRotationDialog = true }
             )
 
-            HorizontalDivider()
-            
             // Weight Unit Setting
-            SettingsItem(
+            item(
                 label = globalLocalization.labelWeightUnit,
                 value = globalState.weightUnit,
                 icon = Icons.Default.FitnessCenter,
                 onClick = { showWeightUnitDialog = true }
             )
-
-            HorizontalDivider()
 
             // In-App Font Setting
             val fontLabel = when (globalState.fontMode) {
@@ -158,26 +150,26 @@ fun SettingsScreen(
                 else -> globalLocalization.labelFontSystemDefault
             }
 
-            SettingsItem(
+            item(
                 label = globalLocalization.labelInAppFont,
                 value = fontLabel,
                 icon = Icons.Default.Edit,
                 onClick = { showFontDialog = true }
             )
 
-            HorizontalDivider()
-
-            SettingsItem(
+            // Default Exercise Values Setting
+            item(
                 label = globalLocalization.labelDefaultExerciseValues,
-                value = "$defaultSets x $defaultReps @ $defaultWeight", 
+                value = "$defaultSets x $defaultReps @ $defaultWeight",
                 icon = Icons.Default.Star,
                 onClick = { showDefaultsDialog = true }
             )
+        }
 
-            HorizontalDivider()
-
+        // Group 2: Data Management
+        SettingsGroup {
             // Export Data
-            SettingsItem(
+            item(
                 label = globalLocalization.labelExportData,
                 value = "",
                 icon = Icons.Default.Share,
@@ -188,10 +180,8 @@ fun SettingsScreen(
                 }
             )
 
-            HorizontalDivider()
-
             // Import Data
-            SettingsItem(
+            item(
                 label = globalLocalization.labelImportData,
                 value = "",
                 icon = Icons.Default.ArrowDownward,
@@ -199,11 +189,12 @@ fun SettingsScreen(
                     importLauncher.launch(arrayOf("application/json"))
                 }
             )
+        }
 
-            HorizontalDivider()
-
+        // Group 3: Advanced
+        SettingsGroup {
             // Developer Settings
-            SettingsItem(
+            item(
                 label = globalLocalization.labelDeveloperOptions,
                 value = "",
                 icon = Icons.Default.Build,

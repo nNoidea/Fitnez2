@@ -13,25 +13,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+
 @Composable
 fun SettingsItem(
     label: String,
+    modifier: Modifier = Modifier,
     value: String = "",
     icon: ImageVector? = null,
+    iconTint: Color = MaterialTheme.colorScheme.onSurface,
+    showChevron: Boolean = false,
+    trailingContent: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = iconTint,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -42,6 +49,7 @@ fun SettingsItem(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             if (value.isNotEmpty()) {
@@ -53,12 +61,18 @@ fun SettingsItem(
                 )
             }
         }
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-            modifier = Modifier.size(20.dp)
-        )
+        if (trailingContent != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            trailingContent()
+        } else if (showChevron) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
+

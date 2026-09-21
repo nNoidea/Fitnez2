@@ -22,6 +22,9 @@ import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.components.dialog.LoadingDialog
 import com.nnoidea.fitnez2.ui.components.dialog.PredictiveConfirmationDialog
 
+import com.nnoidea.fitnez2.ui.components.SettingsPageScaffold
+import com.nnoidea.fitnez2.ui.components.SettingsGroup
+
 @Composable
 fun DeveloperOptionsScreen(onBack: () -> Unit) {
     var showColorPalette by remember { mutableStateOf(false) }
@@ -34,55 +37,42 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
     var stressTestProgressValue by remember { mutableFloatStateOf(0f) }
     var showLoadingShowcase by remember { mutableStateOf(false) }
 
-    ScreenScaffold(
+    SettingsPageScaffold(
         title = globalLocalization.labelDeveloperOptions,
         onBack = onBack
     ) {
-            HorizontalDivider()
+        // Theme & UI Group
+        SettingsGroup {
+            item(
+                label = globalLocalization.devColorPalette,
+                value = globalLocalization.devViewColors,
+                icon = Icons.Default.Palette,
+                onClick = { showColorPalette = true }
+            )
+        }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                // Developer Settings
-                SettingsItem(
-                    label = globalLocalization.devColorPalette,
-                    value = globalLocalization.devViewColors,
-                    icon = Icons.Default.Palette,
-                    onClick = { showColorPalette = true }
-                )
-
-                HorizontalDivider()
-
+        // Haptics Group
+        SettingsGroup(title = globalLocalization.devHapticsTest) {
+            custom {
                 HapticsTestSection()
-
-                HorizontalDivider()
-
-                // --- Database Section ---
-                Text(
-                    text = globalLocalization.devDatabase,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-                )
-
-                SettingsItem(
-                    label = globalLocalization.devRunStressTest,
-                    value = globalLocalization.devStressTestDescription,
-                    icon = Icons.Default.Storage,
-                    onClick = { showStressTestDialog = true }
-                )
-
-                HorizontalDivider()
-
-                SettingsItem(
-                    label = globalLocalization.devLoadingIndicators,
-                    value = globalLocalization.devLoadingIndicatorsDescription,
-                    icon = Icons.Default.Star,
-                    onClick = { showLoadingShowcase = true }
-                )
             }
+        }
+
+        // Database & Diagnostics Group
+        SettingsGroup(title = globalLocalization.devDatabase) {
+            item(
+                label = globalLocalization.devRunStressTest,
+                value = globalLocalization.devStressTestDescription,
+                icon = Icons.Default.Storage,
+                onClick = { showStressTestDialog = true }
+            )
+            item(
+                label = globalLocalization.devLoadingIndicators,
+                value = globalLocalization.devLoadingIndicatorsDescription,
+                icon = Icons.Default.Star,
+                onClick = { showLoadingShowcase = true }
+            )
+        }
     }
 
     if (showColorPalette) {
