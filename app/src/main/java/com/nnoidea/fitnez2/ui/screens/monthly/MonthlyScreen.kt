@@ -181,10 +181,10 @@ fun MonthlyScreen(
                                         val event = awaitPointerEvent()
                                         val firstChange = event.changes.firstOrNull() ?: continue
                                         if (firstChange.pressed) {
-                                            // If gesture starts in leftmost 30dp (the navigation drawer's drag zone),
+                                            // If gesture starts in leftmost 40dp (the navigation drawer's drag zone),
                                             // temporarily disable the pager to let the parent drawer handle the swipe!
                                             val startX = firstChange.position.x
-                                            val edgeThreshold = 30.dp.toPx()
+                                            val edgeThreshold = 40.dp.toPx()
                                             if (startX < edgeThreshold) {
                                                 pagerScrollEnabled = false
                                             }

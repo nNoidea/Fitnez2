@@ -1,4 +1,4 @@
-.PHONY: build install clean stop prod prod-install emulator
+.PHONY: build install clean stop prod prod-install emulator test test-unit coverage coverage-report
 
 # Default task: Builds the debug APK
 build:
@@ -45,6 +45,23 @@ stop:
 	@echo "Stopping gradle daemon..."
 	./gradlew --stop
 
+# Runs fast local unit, integration & UI tests on JVM
+test-unit:
+	@echo "Running local unit & integration tests..."
+	./gradlew testDebugUnitTest
+
+# Runs tests and prints coverage summary to terminal
+coverage:
+	@echo "Computing test coverage..."
+	./gradlew koverLogDebug
+
+# Generates HTML and XML coverage reports
+coverage-report:
+	@echo "Generating Kover HTML & XML coverage reports..."
+	./gradlew koverHtmlReportDebug koverXmlReportDebug
+	@echo "HTML report generated at: app/build/reports/kover/htmlDebug/index.html"
+
+# Runs instrumented tests on connected device/emulator
 test:
 	@echo "Testing..."
 	./gradlew connectedAndroidTest --rerun-tasks

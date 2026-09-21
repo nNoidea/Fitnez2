@@ -102,6 +102,8 @@ fun rememberPredictiveDrawerState(
 fun PredictiveNavigationDrawer(
     drawerState: PredictiveDrawerState,
     gesturesEnabled: Boolean = true,
+    edgeOnly: Boolean = false,
+    edgeWidth: androidx.compose.ui.unit.Dp = 40.dp,
     drawerContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
@@ -115,8 +117,9 @@ fun PredictiveNavigationDrawer(
             .fillMaxSize()
             .then(
                 if (gesturesEnabled) {
-                    Modifier.pointerInput(gesturesEnabled) {
+                    Modifier.pointerInput(gesturesEnabled, edgeOnly, edgeWidth) {
                         val widthPx = drawerState.drawerWidthPx.takeIf { it > 0f } ?: (320.dp.toPx())
+                        val edgeWidthPx = if (edgeOnly) edgeWidth.toPx() else Float.MAX_VALUE
                         val touchSlop = viewConfig.touchSlop
 
                         awaitEachGesture {
@@ -141,8 +144,8 @@ fun PredictiveNavigationDrawer(
 
                                 if (!isDragging) {
                                     if (drawerState.isClosed || drawerState.targetValue == DrawerValue.Closed) {
-                                        // Detect rightward swipe to open: movement > slop and horizontally dominant
-                                        if (totalDx > touchSlop && totalDx > abs(totalDy) * 1.15f) {
+                                        // Detect rightward swipe to open: only if started from screen edge, movement > slop, and horizontally dominant
+                                        if (startPos.x <= edgeWidthPx && totalDx > touchSlop && totalDx > abs(totalDy) * 1.15f) {
                                             isDragging = true
                                             change.consume()
                                         }

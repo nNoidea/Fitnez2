@@ -18,6 +18,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
@@ -131,6 +132,51 @@ class ComposeComprehensiveUiTest {
     }
 
     @Test
+    fun testTimelineScreen_swipeRightFromCenter_opensDrawer() {
+        lateinit var drawerState: com.nnoidea.fitnez2.ui.components.navigation.PredictiveDrawerState
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Closed)
+
+                    com.nnoidea.fitnez2.ui.components.navigation.PredictiveNavigationDrawer(
+                        drawerState = drawerState,
+                        edgeOnly = false,
+                        drawerContent = {
+                            PredictiveSidePanel(
+                                currentRoute = AppPage.Timeline.route,
+                                onItemClick = {}
+                            )
+                        }
+                    ) {
+                        TimelineScreen(onOpenDrawer = {})
+                    }
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        // Swipe right from center of the screen on Timeline
+        val timelineSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("main_timeline_record_list"))
+        composeRule.onNode(timelineSquatMatcher).performTouchInput {
+            swipeRight(startX = centerX, endX = centerX + 400f)
+        }
+        composeRule.waitForIdle()
+
+        // Verify drawer is now open on Timeline screen
+        org.junit.Assert.assertTrue("Drawer should open when swiping right from center on Timeline screen", drawerState.isOpen)
+        org.junit.Assert.assertEquals(1f, drawerState.progress, 0.05f)
+    }
+
+    @Test
     fun testSwipeRightToOpenAndSwipeLeftToCloseDrawer() {
         lateinit var drawerState: com.nnoidea.fitnez2.ui.components.navigation.PredictiveDrawerState
         lateinit var scope: kotlinx.coroutines.CoroutineScope
@@ -168,10 +214,10 @@ class ComposeComprehensiveUiTest {
 
         composeRule.waitForIdle()
 
-        // 1. Swipe right directly on top of the "Squat" record card in the timeline to OPEN drawer
+        // 1. Swipe right from the left EDGE of the screen (startX = 10f) to OPEN drawer
         val timelineSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("main_timeline_record_list"))
         composeRule.onNode(timelineSquatMatcher).performTouchInput {
-            swipeRight(startX = centerX, endX = centerX + 400f)
+            swipeRight(startX = 10f, endX = 400f)
         }
         composeRule.waitForIdle()
 
@@ -189,6 +235,115 @@ class ComposeComprehensiveUiTest {
         // Verify drawer is closed
         assert(drawerState.isClosed)
         assert(drawerState.progress == 0f)
+    }
+
+    @Test
+    fun testMonthlyScreen_horizontalSwipeScrollsMonthWithoutOpeningDrawer() {
+        lateinit var drawerState: com.nnoidea.fitnez2.ui.components.navigation.PredictiveDrawerState
+        lateinit var scope: kotlinx.coroutines.CoroutineScope
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Closed)
+                    scope = rememberCoroutineScope()
+
+                    com.nnoidea.fitnez2.ui.components.navigation.PredictiveNavigationDrawer(
+                        drawerState = drawerState,
+                        edgeOnly = true,
+                        drawerContent = {
+                            PredictiveSidePanel(
+                                currentRoute = AppPage.Monthly.route,
+                                onItemClick = {}
+                            )
+                        }
+                    ) {
+                        MonthlyScreen(
+                            onOpenDrawer = {
+                                scope.launch { drawerState.open() }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        // Current month header should be displayed, and drawer should be closed
+        assert(drawerState.isClosed)
+
+        // Perform swipe left from the center of the calendar grid (navigating to next month)
+        // Day "15" is located safely in the center of the monthly calendar grid
+        composeRule.onAllNodesWithText("15")[0].performTouchInput {
+            swipeLeft(startX = centerX, endX = centerX - 400f)
+        }
+        composeRule.waitForIdle()
+
+        // Drawer must still be closed
+        org.junit.Assert.assertTrue("Drawer must remain closed after swiping on MonthlyScreen", drawerState.isClosed)
+
+        // Next month is now visible and "Today" action button appears
+        composeRule.onNodeWithContentDescription(EnglishStrings.labelGoToCurrentMonth).assertIsDisplayed()
+
+        // Now swipe right from center of the calendar grid to return
+        composeRule.onAllNodesWithText("15")[0].performTouchInput {
+            swipeRight(startX = centerX, endX = centerX + 400f)
+        }
+        composeRule.waitForIdle()
+
+        // Drawer must still be closed after swiping right from center
+        org.junit.Assert.assertTrue("Drawer must remain closed after swiping right from center on MonthlyScreen", drawerState.isClosed)
+    }
+
+    @Test
+    fun testMonthlyScreen_edgeSwipeRight_opensDrawer() {
+        lateinit var drawerState: com.nnoidea.fitnez2.ui.components.navigation.PredictiveDrawerState
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    drawerState = com.nnoidea.fitnez2.ui.components.navigation.rememberPredictiveDrawerState(initialValue = DrawerValue.Closed)
+
+                    com.nnoidea.fitnez2.ui.components.navigation.PredictiveNavigationDrawer(
+                        drawerState = drawerState,
+                        edgeOnly = true,
+                        drawerContent = {
+                            PredictiveSidePanel(
+                                currentRoute = AppPage.Monthly.route,
+                                onItemClick = {}
+                            )
+                        }
+                    ) {
+                        MonthlyScreen(onOpenDrawer = {})
+                    }
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        // Swipe right from the left EDGE (startX = 10f) of the screen on Monthly
+        composeRule.onRoot().performTouchInput {
+            swipeRight(startX = 10f, endX = 400f)
+        }
+        composeRule.waitForIdle()
+
+        // Verify drawer is opened from edge swipe
+        org.junit.Assert.assertTrue("Drawer should open when swiping from edge on MonthlyScreen", drawerState.isOpen)
+        org.junit.Assert.assertEquals(1f, drawerState.progress, 0.05f)
     }
 
     @Test

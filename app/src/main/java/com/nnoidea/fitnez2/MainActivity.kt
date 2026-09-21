@@ -118,6 +118,7 @@ class MainActivity : ComponentActivity() {
                                 AppPage.Graph.route,
                                 AppPage.Settings.route
                             ),
+                            edgeOnly = currentDestination == AppPage.Monthly.route,
                             drawerContent = {
                                 PredictiveSidePanel(
                                     currentRoute = currentDestination,

@@ -84,9 +84,15 @@ class BackupService(
                 }
             }
 
-            var backupData: BackupData? = gson.fromJson(rawJsonString, BackupData::class.java)
+            var backupData: BackupData? = null
+            try {
+                backupData = gson.fromJson(rawJsonString, BackupData::class.java)
+            } catch (e: Exception) {
+                Log.d("BackupService", "Standard deserialization failed", e)
+            }
 
-            if (backupData == null || backupData.data.isEmpty()) {
+            @Suppress("SENSELESS_COMPARISON")
+            if (backupData == null || backupData.data == null || backupData.data.isEmpty()) {
                 Log.d("BackupService", "Attempting legacy/minified import fallback...")
                 try {
                     val mapType = object : TypeToken<Map<String, Any>>() {}.type
@@ -114,7 +120,8 @@ class BackupService(
                 }
             }
 
-            if (backupData == null || backupData.data.isEmpty()) {
+            @Suppress("SENSELESS_COMPARISON")
+            if (backupData == null || backupData.data == null || backupData.data.isEmpty()) {
                 throw Exception("Invalid backup file: data is missing")
             }
 

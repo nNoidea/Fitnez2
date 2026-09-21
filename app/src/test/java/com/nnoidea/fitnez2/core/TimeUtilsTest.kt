@@ -1,76 +1,65 @@
 package com.nnoidea.fitnez2.core
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 
 class TimeUtilsTest {
 
     @Test
-    fun `isSameDay same day same millisecond`() {
-        val millis = System.currentTimeMillis()
-        assertTrue(TimeUtils.isSameDay(millis, millis))
+    fun isSameDay_sameTimestamp_returnsTrue() {
+        val now = System.currentTimeMillis()
+        assertTrue(TimeUtils.isSameDay(now, now))
     }
 
     @Test
-    fun `isSameDay same day different times`() {
+    fun isSameDay_differentTimesSameDay_returnsTrue() {
         val zone = ZoneId.systemDefault()
-        val date = LocalDate.of(2024, 6, 15)
-        val morningMillis = date.atTime(LocalTime.of(8, 0)).atZone(zone).toInstant().toEpochMilli()
-        val eveningMillis = date.atTime(LocalTime.of(20, 0)).atZone(zone).toInstant().toEpochMilli()
-        assertTrue(TimeUtils.isSameDay(morningMillis, eveningMillis))
+        val baseDate = LocalDate.of(2026, 6, 15)
+        val morning = baseDate.atTime(8, 30).atZone(zone).toInstant().toEpochMilli()
+        val evening = baseDate.atTime(21, 45).atZone(zone).toInstant().toEpochMilli()
+
+        assertTrue(TimeUtils.isSameDay(morning, evening))
     }
 
     @Test
-    fun `isSameDay different days`() {
+    fun isSameDay_consecutiveDays_returnsFalse() {
         val zone = ZoneId.systemDefault()
-        val day1 = LocalDate.of(2024, 6, 15).atStartOfDay(zone).toInstant().toEpochMilli()
-        val day2 = LocalDate.of(2024, 6, 16).atStartOfDay(zone).toInstant().toEpochMilli()
+        val day1 = LocalDate.of(2026, 6, 15).atTime(23, 59).atZone(zone).toInstant().toEpochMilli()
+        val day2 = LocalDate.of(2026, 6, 16).atTime(0, 1).atZone(zone).toInstant().toEpochMilli()
+
         assertFalse(TimeUtils.isSameDay(day1, day2))
     }
 
     @Test
-    fun `isSameDay one day apart`() {
+    fun isSameDay_differentYearsSameDayOfMonth_returnsFalse() {
         val zone = ZoneId.systemDefault()
-        val day1 = LocalDate.of(2024, 6, 15).atStartOfDay(zone).toInstant().toEpochMilli()
-        val day3 = LocalDate.of(2024, 6, 17).atStartOfDay(zone).toInstant().toEpochMilli()
-        assertFalse(TimeUtils.isSameDay(day1, day3))
+        val y2025 = LocalDate.of(2025, 6, 15).atTime(12, 0).atZone(zone).toInstant().toEpochMilli()
+        val y2026 = LocalDate.of(2026, 6, 15).atTime(12, 0).atZone(zone).toInstant().toEpochMilli()
+
+        assertFalse(TimeUtils.isSameDay(y2025, y2026))
     }
 
     @Test
-    fun `isSameDay boundary end of day vs start of next day`() {
-        val zone = ZoneId.systemDefault()
-        val date = LocalDate.of(2024, 6, 15)
-        val endOfDayMillis = date.atTime(LocalTime.of(23, 59, 59, 999_999_999))
-            .atZone(zone).toInstant().toEpochMilli()
-        val startOfNextDayMillis = date.plusDays(1).atStartOfDay(zone)
-            .toInstant().toEpochMilli()
-        assertFalse(TimeUtils.isSameDay(endOfDayMillis, startOfNextDayMillis))
+    fun formatTime_formatsHourMinuteSecondCorrectly() {
+        val utcZone = ZoneOffset.UTC
+        val timestamp = Instant.parse("2026-06-15T14:35:42Z").toEpochMilli()
+        val formatted = TimeUtils.formatTime(timestamp, utcZone)
+
+        assertEquals("14:35:42", formatted)
     }
 
     @Test
-    fun `isSameDay same epoch millisecond`() {
-        assertTrue(TimeUtils.isSameDay(0L, 0L))
-    }
+    fun formatTime_midnight_formatsAsZeros() {
+        val utcZone = ZoneOffset.UTC
+        val timestamp = Instant.parse("2026-01-01T00:00:00Z").toEpochMilli()
+        val formatted = TimeUtils.formatTime(timestamp, utcZone)
 
-    @Test
-    fun `isSameDay epoch boundary`() {
-        val zone = ZoneId.systemDefault()
-        val jan1Millis = LocalDate.of(1970, 1, 1).atStartOfDay(zone)
-            .toInstant().toEpochMilli()
-        val jan2Millis = LocalDate.of(1970, 1, 2).atStartOfDay(zone)
-            .toInstant().toEpochMilli()
-        assertFalse(TimeUtils.isSameDay(jan1Millis, jan2Millis))
-    }
-
-    @Test
-    fun `formatTime formats correct hours minutes seconds`() {
-        val utc = ZoneId.of("UTC")
-        val date = LocalDate.of(2024, 1, 1)
-        val millis = date.atTime(LocalTime.of(14, 30, 45)).atZone(utc).toInstant().toEpochMilli()
-        org.junit.Assert.assertEquals("14:30:45", TimeUtils.formatTime(millis, utc))
+        assertEquals("00:00:00", formatted)
     }
 }

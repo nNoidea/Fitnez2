@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -76,3 +77,35 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "*_Factory*",
+                    "*ComposableSingletons*",
+                    "*_Impl*",
+                    "*_Impl$*",
+                    "*.BuildConfig",
+                    "*Preview*"
+                )
+                packages(
+                    "com.nnoidea.fitnez2.ui.theme"
+                )
+            }
+        }
+        total {
+            html {
+                onCheck = false
+            }
+            xml {
+                onCheck = false
+            }
+            log {
+                onCheck = false
+            }
+        }
+    }
+}
+
