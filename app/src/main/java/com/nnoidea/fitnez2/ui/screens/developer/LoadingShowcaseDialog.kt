@@ -24,12 +24,14 @@ import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.nnoidea.fitnez2.ui.components.dialog.PredictiveModal
+import com.nnoidea.fitnez2.core.localization.globalLocalization
+import com.nnoidea.fitnez2.ui.components.dialog.PredictiveContentDialog
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -48,17 +50,19 @@ fun LoadingShowcaseDialog(
         label = "determinateProgress"
     )
 
-    PredictiveModal(show = show, onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp)
-        ) {
-            Text(com.nnoidea.fitnez2.core.localization.globalLocalization.devLoadingIndicatorsTitle, style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
-            Text("--- ${com.nnoidea.fitnez2.core.localization.globalLocalization.devExpressiveWavySection} ---", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(16.dp))
+    PredictiveContentDialog(
+        show = show,
+        onDismissRequest = onDismiss,
+        title = globalLocalization.devLoadingIndicatorsTitle,
+        scrollable = true,
+        buttons = {
+            TextButton(onClick = onDismiss) {
+                Text(globalLocalization.labelClose)
+            }
+        }
+    ) {
+        Text("--- ${globalLocalization.devExpressiveWavySection} ---", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(16.dp))
 
             // 1. LinearWavyProgressIndicator (indeterminate)
             Text("1. LinearWavyProgressIndicator (indeterminate)", style = MaterialTheme.typography.labelMedium)
@@ -142,6 +146,5 @@ fun LoadingShowcaseDialog(
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
-        }
     }
 }

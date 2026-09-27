@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
-import com.nnoidea.fitnez2.ui.components.dialog.PredictiveModal
+import com.nnoidea.fitnez2.ui.components.dialog.PredictiveContentDialog
 
 @Composable
 fun ColorPaletteDialog(
@@ -30,7 +28,6 @@ fun ColorPaletteDialog(
 ) {
     if (show) {
         val colorScheme = MaterialTheme.colorScheme
-        // List of all Material 3 colors
         val colors = listOf(
             "primary" to colorScheme.primary,
             "onPrimary" to colorScheme.onPrimary,
@@ -63,64 +60,46 @@ fun ColorPaletteDialog(
             "scrim" to colorScheme.scrim,
         )
 
-        PredictiveModal(
+        PredictiveContentDialog(
             show = show,
-            onDismissRequest = onDismissRequest
+            onDismissRequest = onDismissRequest,
+            title = globalLocalization.devColorPalette,
+            buttons = {
+                TextButton(onClick = onDismissRequest) {
+                    Text(globalLocalization.labelClose)
+                }
+            }
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = globalLocalization.devColorPalette,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    colors.forEach { (name, color) ->
-                        Row(
+                colors.forEach { (name, color) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Color Swatch
-                            Box(
-                                modifier = Modifier
-                                    .width(40.dp)
-                                    .height(40.dp)
-                                    .background(color, shape = MaterialTheme.shapes.small)
-                                    .padding(1.dp) // Optional border effect if needed
+                                .width(40.dp)
+                                .height(40.dp)
+                                .background(color, shape = MaterialTheme.shapes.small)
+                                .padding(1.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Column {
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-
-                            Spacer(modifier = Modifier.width(16.dp))
-
-                            Column {
-                                Text(
-                                    text = name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                // Optional: Display Hex code
-                                // Requires manual conversion or just show
-                            }
                         }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                TextButton(
-                    onClick = onDismissRequest,
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text(globalLocalization.labelClose)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
             }
         }

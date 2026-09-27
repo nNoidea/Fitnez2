@@ -1,39 +1,46 @@
 package com.nnoidea.fitnez2.ui.components.dialog
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import kotlinx.coroutines.launch
-
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 /**
- * A highly customizable Dialog with Predictive Back support and smooth animations.
+ * Foundation dialog shell (Level 1) providing:
+ * - Responsive window sizing clamped to [DialogDefaults.MaxWidth] with [DialogDefaults.ScreenMarginHorizontal]
+ * - Predictive Back gesture animation scaling
+ * - Material 3 container surface, tonal elevation, and expressive corner shape
+ * - Scrim dimming with customizable outside-click & back-press dismissal guards
+ * - Single-point content padding management (avoiding double-padding)
  */
 @Composable
 internal fun CorePredictiveDialog(
@@ -41,38 +48,56 @@ internal fun CorePredictiveDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     animateForIme: Boolean = true,
+    dismissOnClickOutside: Boolean = true,
+    dismissOnBackPress: Boolean = true,
+    contentPadding: Dp = DialogDefaults.ContentPadding,
+    maxHeightRatio: Float = DialogDefaults.MaxHeightRatio,
     content: @Composable () -> Unit
 ) {
     if (!show) return
 
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+    val screenHeight = remember(windowInfo, density) {
+        with(density) { windowInfo.containerSize.height.toDp() }
+    }
+    val maxHeight = screenHeight * maxHeightRatio
+
     Dialog(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = {
+            if (dismissOnClickOutside || dismissOnBackPress) {
+                onDismissRequest()
+            }
+        },
         properties = DialogProperties(
-            usePlatformDefaultWidth = false, // Allows us to use fillMaxWidth() correctly
-            decorFitsSystemWindows = false
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+            dismissOnBackPress = dismissOnBackPress,
+            dismissOnClickOutside = dismissOnClickOutside
         )
     ) {
-        val scope = rememberCoroutineScope()
         var predictiveProgress by remember { mutableFloatStateOf(0f) }
         val progressAnim = remember { Animatable(0f) }
 
         // Handle Predictive Back
-        PredictiveBackHandler(enabled = show) { progress ->
-            try {
-                progress.collect { backEvent ->
-                    progressAnim.snapTo(backEvent.progress)
-                    predictiveProgress = progressAnim.value
+        if (dismissOnBackPress) {
+            PredictiveBackHandler(enabled = show) { progress ->
+                try {
+                    progress.collect { backEvent ->
+                        progressAnim.snapTo(backEvent.progress)
+                        predictiveProgress = progressAnim.value
+                    }
+
+                    // Commit: Dismiss
+                    onDismissRequest()
+
+                    // Reset visual distortion
+                    progressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow)) {
+                        predictiveProgress = value
+                    }
+                } catch (e: Exception) {
+                    progressAnim.animateTo(0f) { predictiveProgress = value }
                 }
-                
-                // Commit: Dismiss
-                onDismissRequest()
-                
-                // Reset visual distortion
-                progressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow)) {
-                    predictiveProgress = value
-                }
-            } catch (e: Exception) {
-                progressAnim.animateTo(0f) { predictiveProgress = value }
             }
         }
 
@@ -83,59 +108,76 @@ internal fun CorePredictiveDialog(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)) // Dim background
+                    .background(DialogDefaults.ScrimColor)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onDismissRequest() } // Dismiss on outside click
+                        indication = null,
+                        enabled = dismissOnClickOutside
+                    ) {
+                        if (dismissOnClickOutside) {
+                            onDismissRequest()
+                        }
+                    }
             )
 
             // 2. Content Layout Layer (Sensitive to IME if enabled)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .then(if (animateForIme) Modifier.imePadding() else Modifier), // Resizes this layer to avoid keyboard
+                    .then(if (animateForIme) Modifier.imePadding() else Modifier),
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
                     modifier = modifier
-                        .padding(horizontal = 24.dp)
+                        .systemBarsPadding()
+                        .padding(
+                            horizontal = DialogDefaults.ScreenMarginHorizontal,
+                            vertical = DialogDefaults.ScreenMarginVertical
+                        )
                         .fillMaxWidth()
+                        .widthIn(max = DialogDefaults.MaxWidth)
+                        .heightIn(max = maxHeight)
                         .wrapContentHeight()
                         .graphicsLayer {
-                            // Apply visual scale-down during predictive back
-                            val scale = 1f - (predictiveProgress * 0.2f)
+                            val scale = 1f - (predictiveProgress * DialogDefaults.PredictiveScaleFactor)
                             scaleX = scale
                             scaleY = scale
                         }
-                        .clip(RoundedCornerShape(28.dp))
-                        .clickable(enabled = false) { } // Prevent clicks through to background box
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    tonalElevation = 6.dp
+                        .clip(DialogDefaults.Shape)
+                        .clickable(enabled = false) { }
+                        .background(DialogDefaults.ContainerColor),
+                    shape = DialogDefaults.Shape,
+                    color = DialogDefaults.ContainerColor,
+                    tonalElevation = DialogDefaults.Elevation
                 ) {
-                    Box(modifier = Modifier.padding(24.dp)) {
+                    Box(
+                        modifier = if (contentPadding > 0.dp) {
+                            Modifier.padding(contentPadding)
+                        } else {
+                            Modifier
+                        }
+                    ) {
                         content()
                     }
                 }
             }
-
         }
     }
 }
 
-
 /**
- * A generic container for custom dialog content that needs the predictive back animation.
- * Use this only when [PredictiveAlertDialog], [PredictiveInputDialog], or [PredictiveConfirmationDialog] do not fit your needs.
+ * A generic container for custom dialog content with predictive back animation.
  */
 @Composable
 fun PredictiveModal(
     show: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    animateForIme: Boolean = false, // Default to false for modals like ExercisePicker
+    animateForIme: Boolean = false,
+    dismissOnClickOutside: Boolean = true,
+    dismissOnBackPress: Boolean = true,
+    contentPadding: Dp = DialogDefaults.ContentPadding,
+    maxHeightRatio: Float = DialogDefaults.MaxHeightRatio,
     content: @Composable () -> Unit
 ) {
     CorePredictiveDialog(
@@ -143,12 +185,10 @@ fun PredictiveModal(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         animateForIme = animateForIme,
+        dismissOnClickOutside = dismissOnClickOutside,
+        dismissOnBackPress = dismissOnBackPress,
+        contentPadding = contentPadding,
+        maxHeightRatio = maxHeightRatio,
         content = content
     )
 }
-
-/**
- * A standardized Alert Dialog built on top of [CorePredictiveDialog].
- * Provides a consistent layout for Title, Text, Content, and Buttons.
- */
-// Moved to PredictiveAlertDialog.kt

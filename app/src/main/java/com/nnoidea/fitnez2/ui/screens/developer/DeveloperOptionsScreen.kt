@@ -37,6 +37,14 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
     var stressTestProgressValue by remember { mutableFloatStateOf(0f) }
     var showLoadingShowcase by remember { mutableStateOf(false) }
 
+    val colorScheme = MaterialTheme.colorScheme
+    val primaryContainer = colorScheme.primaryContainer
+    val onPrimaryContainer = colorScheme.onPrimaryContainer
+    val errorContainer = colorScheme.errorContainer
+    val onErrorContainer = colorScheme.onErrorContainer
+    val tertiaryContainer = colorScheme.tertiaryContainer
+    val onTertiaryContainer = colorScheme.onTertiaryContainer
+
     SettingsPageScaffold(
         title = globalLocalization.labelDeveloperOptions,
         onBack = onBack
@@ -47,6 +55,8 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
                 label = globalLocalization.devColorPalette,
                 value = globalLocalization.devViewColors,
                 icon = Icons.Default.Palette,
+                iconContainerColor = primaryContainer,
+                iconTint = onPrimaryContainer,
                 onClick = { showColorPalette = true }
             )
         }
@@ -64,12 +74,16 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
                 label = globalLocalization.devRunStressTest,
                 value = globalLocalization.devStressTestDescription,
                 icon = Icons.Default.Storage,
+                iconContainerColor = errorContainer,
+                iconTint = onErrorContainer,
                 onClick = { showStressTestDialog = true }
             )
             item(
                 label = globalLocalization.devLoadingIndicators,
                 value = globalLocalization.devLoadingIndicatorsDescription,
                 icon = Icons.Default.Star,
+                iconContainerColor = tertiaryContainer,
+                iconTint = onTertiaryContainer,
                 onClick = { showLoadingShowcase = true }
             )
         }

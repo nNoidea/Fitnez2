@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.ui.components.dialog.LoadingDialog
-import com.nnoidea.fitnez2.ui.components.dialog.RadioSelectionDialog
 import com.nnoidea.fitnez2.ui.components.SettingsPageScaffold
 import com.nnoidea.fitnez2.ui.components.SettingsGroup
 import androidx.compose.material.icons.Icons
@@ -68,11 +67,6 @@ fun SettingsScreen(
     val defaultReps by settingsService.defaultRepsFlow.collectAsState(initial = "10")
     val defaultWeight by settingsService.defaultWeightFlow.collectAsState(initial = "20")
 
-    var showLanguageDialog by remember { mutableStateOf(false) }
-    var showWeightUnitDialog by remember { mutableStateOf(false) }
-    var showRotationDialog by remember { mutableStateOf(false) }
-    var showFontDialog by remember { mutableStateOf(false) }
-    
     var showDefaultsDialog by remember { mutableStateOf(false) }
     var showImportConfirmation by remember { mutableStateOf(false) }
     var importUri by remember { mutableStateOf<android.net.Uri?>(null) }
@@ -106,6 +100,19 @@ fun SettingsScreen(
         }
     }
 
+    val colorScheme = MaterialTheme.colorScheme
+    val primaryContainer = colorScheme.primaryContainer
+    val onPrimaryContainer = colorScheme.onPrimaryContainer
+    val secondaryContainer = colorScheme.secondaryContainer
+    val onSecondaryContainer = colorScheme.onSecondaryContainer
+    val tertiaryContainer = colorScheme.tertiaryContainer
+    val onTertiaryContainer = colorScheme.onTertiaryContainer
+    val errorContainer = colorScheme.errorContainer
+    val onErrorContainer = colorScheme.onErrorContainer
+    val surfaceVariant = colorScheme.surfaceVariant
+    val onSurfaceVariant = colorScheme.onSurfaceVariant
+    val primary = colorScheme.primary
+
     SettingsPageScaffold(
         title = globalLocalization.labelSettings,
         onOpenDrawer = onOpenDrawer
@@ -113,11 +120,18 @@ fun SettingsScreen(
         // Group 1: General Preferences & Appearance
         SettingsGroup {
             // Language Setting
-            item(
+            val languageOptions = listOf<EnStrings?>(null) + supportedLanguages
+            radioItem(
                 label = globalLocalization.labelLanguage,
                 value = globalState.selectedLanguage?.languageName ?: globalLocalization.labelSystemLanguage,
                 icon = Icons.Default.Language,
-                onClick = { showLanguageDialog = true }
+                iconContainerColor = primaryContainer,
+                iconTint = onPrimaryContainer,
+                options = languageOptions,
+                selected = globalState.selectedLanguage,
+                onSelected = { globalState.switchLanguage(it) },
+                labelProvider = { it?.languageName ?: globalLocalization.labelSystemLanguage },
+                bodyText = globalLocalization.labelAiTranslationsDisclaimer
             )
 
             // Rotation Setting
@@ -128,19 +142,36 @@ fun SettingsScreen(
                 else -> globalLocalization.labelRotationSystem
             }
 
-            item(
+            radioItem(
                 label = globalLocalization.labelRotation,
                 value = rotationLabel,
                 icon = Icons.Default.ScreenRotation,
-                onClick = { showRotationDialog = true }
+                iconContainerColor = secondaryContainer,
+                iconTint = onSecondaryContainer,
+                options = RotationMode.ALL,
+                selected = globalState.rotationMode,
+                onSelected = { globalState.switchRotationMode(it) },
+                labelProvider = {
+                    when (it) {
+                        RotationMode.SYSTEM -> globalLocalization.labelRotationSystem
+                        RotationMode.ON -> globalLocalization.labelRotationOn
+                        RotationMode.OFF -> globalLocalization.labelRotationOff
+                        else -> ""
+                    }
+                }
             )
 
             // Weight Unit Setting
-            item(
+            radioItem(
                 label = globalLocalization.labelWeightUnit,
                 value = globalState.weightUnit,
                 icon = Icons.Default.FitnessCenter,
-                onClick = { showWeightUnitDialog = true }
+                iconContainerColor = tertiaryContainer,
+                iconTint = onTertiaryContainer,
+                options = listOf(globalLocalization.unitKg, globalLocalization.unitLb),
+                selected = globalState.weightUnit,
+                onSelected = { globalState.switchWeightUnit(it) },
+                labelProvider = { it }
             )
 
             // In-App Font Setting
@@ -150,11 +181,22 @@ fun SettingsScreen(
                 else -> globalLocalization.labelFontSystemDefault
             }
 
-            item(
+            radioItem(
                 label = globalLocalization.labelInAppFont,
                 value = fontLabel,
                 icon = Icons.Default.Edit,
-                onClick = { showFontDialog = true }
+                iconContainerColor = errorContainer.copy(alpha = 0.8f),
+                iconTint = onErrorContainer,
+                options = listOf("system", "rounded"),
+                selected = globalState.fontMode,
+                onSelected = { globalState.switchFontMode(it) },
+                labelProvider = {
+                    when (it) {
+                        "system" -> globalLocalization.labelFontSystemDefault
+                        "rounded" -> globalLocalization.labelFontGoogleSansFlexRounded
+                        else -> ""
+                    }
+                }
             )
 
             // Default Exercise Values Setting
@@ -162,6 +204,8 @@ fun SettingsScreen(
                 label = globalLocalization.labelDefaultExerciseValues,
                 value = "$defaultSets x $defaultReps @ $defaultWeight",
                 icon = Icons.Default.Star,
+                iconContainerColor = primaryContainer.copy(alpha = 0.6f),
+                iconTint = primary,
                 onClick = { showDefaultsDialog = true }
             )
         }
@@ -173,6 +217,8 @@ fun SettingsScreen(
                 label = globalLocalization.labelExportData,
                 value = "",
                 icon = Icons.Default.Share,
+                iconContainerColor = secondaryContainer,
+                iconTint = onSecondaryContainer,
                 onClick = {
                     val timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss", Locale.getDefault()).format(Instant.now().atZone(java.time.ZoneId.systemDefault()))
                     val fileName = "Fitnez2-$timeStamp.json"
@@ -185,6 +231,8 @@ fun SettingsScreen(
                 label = globalLocalization.labelImportData,
                 value = "",
                 icon = Icons.Default.ArrowDownward,
+                iconContainerColor = tertiaryContainer,
+                iconTint = onTertiaryContainer,
                 onClick = {
                     importLauncher.launch(arrayOf("application/json"))
                 }
@@ -198,6 +246,9 @@ fun SettingsScreen(
                 label = globalLocalization.labelDeveloperOptions,
                 value = "",
                 icon = Icons.Default.Build,
+                iconContainerColor = surfaceVariant,
+                iconTint = onSurfaceVariant,
+                showChevron = true,
                 onClick = {
                     if (onNavigateToDeveloper != null) {
                         onNavigateToDeveloper()
@@ -211,74 +262,6 @@ fun SettingsScreen(
             )
         }
     }
-
-    RadioSelectionDialog(
-        show = showWeightUnitDialog,
-        title = globalLocalization.labelWeightUnit,
-        options = listOf(globalLocalization.unitKg, globalLocalization.unitLb),
-        selectedValue = globalState.weightUnit,
-        onValueSelected = {
-            globalState.switchWeightUnit(it)
-            showWeightUnitDialog = false
-        },
-        onDismissRequest = { showWeightUnitDialog = false },
-        labelProvider = { it }
-    )
-
-    RadioSelectionDialog(
-        show = showRotationDialog,
-        title = globalLocalization.labelRotation,
-        options = RotationMode.ALL,
-        selectedValue = globalState.rotationMode,
-        onValueSelected = {
-            globalState.switchRotationMode(it)
-            showRotationDialog = false
-        },
-        onDismissRequest = { showRotationDialog = false },
-        labelProvider = {
-            when (it) {
-                RotationMode.SYSTEM -> globalLocalization.labelRotationSystem
-                RotationMode.ON -> globalLocalization.labelRotationOn
-                RotationMode.OFF -> globalLocalization.labelRotationOff
-                else -> ""
-            }
-        }
-    )
-
-    // Prepare language options with "System Default" (null) at the top
-    val languageOptions = listOf<EnStrings?>(null) + supportedLanguages
-    RadioSelectionDialog(
-        show = showLanguageDialog,
-        title = globalLocalization.labelLanguage,
-        options = languageOptions,
-        selectedValue = globalState.selectedLanguage,
-        onValueSelected = {
-            globalState.switchLanguage(it)
-            showLanguageDialog = false
-        },
-        onDismissRequest = { showLanguageDialog = false },
-        labelProvider = { it?.languageName ?: globalLocalization.labelSystemLanguage },
-        bodyText = globalLocalization.labelAiTranslationsDisclaimer
-    )
-
-    RadioSelectionDialog(
-        show = showFontDialog,
-        title = globalLocalization.labelInAppFont,
-        options = listOf("system", "rounded"),
-        selectedValue = globalState.fontMode,
-        onValueSelected = {
-            globalState.switchFontMode(it)
-            showFontDialog = false
-        },
-        onDismissRequest = { showFontDialog = false },
-        labelProvider = {
-            when (it) {
-                "system" -> globalLocalization.labelFontSystemDefault
-                "rounded" -> globalLocalization.labelFontGoogleSansFlexRounded
-                else -> ""
-            }
-        }
-    )
     
     DefaultValuesEditorDialog(
         show = showDefaultsDialog,

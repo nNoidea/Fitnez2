@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 /**
  * Standardized Material 3 Expressive scaffold for settings and options screens.
  *
- * Enforces standard edge padding (16dp), consistent spacing between groups (14dp),
+ * Enforces standard edge padding, consistent spacing between groups ([SettingsDefaults.GroupSpacing]),
  * and vertical scrolling, while integrating with [ScreenScaffold] for top bar navigation.
  */
 @Composable
@@ -26,7 +26,7 @@ fun SettingsPageScaffold(
     onBack: (() -> Unit)? = null,
     onOpenDrawer: (() -> Unit)? = null,
     actions: (@Composable RowScope.() -> Unit)? = null,
-    groupSpacing: Dp = 14.dp,
+    groupSpacing: Dp = SettingsDefaults.GroupSpacing,
     content: @Composable ColumnScope.() -> Unit
 ) {
     ScreenScaffold(
@@ -40,7 +40,10 @@ fun SettingsPageScaffold(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(
+                    horizontal = SettingsDefaults.ItemPaddingHorizontal,
+                    vertical = SettingsDefaults.ItemPaddingHorizontal
+                ),
             verticalArrangement = Arrangement.spacedBy(groupSpacing),
             content = content
         )

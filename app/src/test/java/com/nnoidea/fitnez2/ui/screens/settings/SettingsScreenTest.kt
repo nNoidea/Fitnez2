@@ -16,6 +16,7 @@ import com.nnoidea.fitnez2.ui.components.SettingsDivider
 import com.nnoidea.fitnez2.ui.components.SettingsGroup
 import com.nnoidea.fitnez2.ui.components.SettingsItem
 import com.nnoidea.fitnez2.ui.components.SettingsPageScaffold
+import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -24,9 +25,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SettingsScreenTest {
 
     @get:Rule
@@ -111,5 +114,74 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithText("Dark Mode Override").performClick()
         assertTrue(switchChecked)
+    }
+
+    @Test
+    fun testSettingsGroup_radioItem_opensDialogAndSelects() {
+        var selectedWeight by mutableStateOf("kg")
+
+        composeTestRule.setContent {
+            Fitnez2Theme {
+                SettingsGroup {
+                    radioItem(
+                        label = "Weight Unit",
+                        value = selectedWeight,
+                        options = listOf("kg", "lb"),
+                        selected = selectedWeight,
+                        onSelected = { selectedWeight = it }
+                    )
+                }
+            }
+        }
+
+        // Verify initial render
+        composeTestRule.onNodeWithText("Weight Unit").assertIsDisplayed()
+        composeTestRule.onNodeWithText("kg").assertIsDisplayed()
+
+        // Click to open dialog
+        composeTestRule.onNodeWithText("Weight Unit").performClick()
+
+        // Verify dialog options displayed
+        composeTestRule.onNodeWithText("lb").assertIsDisplayed()
+
+        // Select lb
+        composeTestRule.onNodeWithText("lb").performClick()
+        assertEquals("lb", selectedWeight)
+    }
+
+    @Test
+    fun testSettingsGroup_expressiveStyling_rendersAndFunctions() {
+        var clicked = false
+
+        composeTestRule.setContent {
+            Fitnez2Theme {
+                SettingsGroup(
+                    title = "Expressive Group"
+                ) {
+                    item(
+                        label = "Item One",
+                        value = "Value One",
+                        icon = Icons.Default.Language,
+                        iconContainerColor = androidx.compose.ui.graphics.Color.Cyan,
+                        onClick = { clicked = true }
+                    )
+                    item(
+                        label = "Item Two",
+                        value = "Value Two",
+                        showChevron = true,
+                        onClick = {}
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithText("Expressive Group").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Item One").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Value One").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Item Two").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Value Two").assertIsDisplayed()
+
+        composeTestRule.onNodeWithText("Item One").performClick()
+        assertTrue(clicked)
     }
 }

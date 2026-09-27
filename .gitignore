@@ -8,15 +8,17 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
-/build
+build/
 /captures
 .externalNativeBuild
 .cxx
 local.properties
 
 .idea/
-.agent/*
-!.agent/rules/
+.agent/
+.agents/
+GEMINI.md
+*.prompt
 /breezy-weather-main
 .kotlin/
 *.json

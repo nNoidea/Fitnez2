@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.components.dialog.PredictiveAlertDialog
+import com.nnoidea.fitnez2.ui.components.dialog.PredictiveConfirmationDialog
 
 data class Defaults(val sets: String, val reps: String, val weight: String)
 
@@ -105,21 +106,13 @@ fun ImportConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    PredictiveAlertDialog(
+    PredictiveConfirmationDialog(
         show = show,
         onDismissRequest = onDismiss,
         title = globalLocalization.titleImportWarning,
-        confirmButton = {
-            Button(onClick = onConfirm) {
-                Text(globalLocalization.labelConfirm)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(globalLocalization.labelCancel)
-            }
-        }
-    ) {
-        Text(globalLocalization.msgImportWarning)
-    }
+        message = globalLocalization.msgImportWarning,
+        confirmLabel = globalLocalization.labelConfirm,
+        cancelLabel = globalLocalization.labelCancel,
+        onConfirm = onConfirm
+    )
 }

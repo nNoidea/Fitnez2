@@ -1,13 +1,21 @@
 package com.nnoidea.fitnez2.ui.components.dialog
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
+import com.nnoidea.fitnez2.core.localization.globalLocalization
 
+/**
+ * Standard confirmation dialog (Level 3A).
+ *
+ * Implements standard confirm/cancel flows with localized defaults and haptic feedback.
+ */
 @Composable
 fun PredictiveConfirmationDialog(
     show: Boolean,
@@ -15,8 +23,11 @@ fun PredictiveConfirmationDialog(
     title: String,
     message: String,
     confirmLabel: String,
-    cancelLabel: String = "Cancel",
+    modifier: Modifier = Modifier,
+    cancelLabel: String = globalLocalization.labelCancel,
     isDestructive: Boolean = false,
+    dismissOnClickOutside: Boolean = true,
+    dismissOnBackPress: Boolean = true,
     onConfirm: () -> Unit
 ) {
     val view = LocalView.current
@@ -25,15 +36,19 @@ fun PredictiveConfirmationDialog(
         onDismissRequest = onDismissRequest,
         title = title,
         text = message,
+        modifier = modifier,
+        dismissOnClickOutside = dismissOnClickOutside,
+        dismissOnBackPress = dismissOnBackPress,
         confirmButton = {
             Button(
                 onClick = {
-                    view.performHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
+                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                     onConfirm()
                 },
                 colors = if (isDestructive) {
                     ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
                     )
                 } else {
                     ButtonDefaults.buttonColors()

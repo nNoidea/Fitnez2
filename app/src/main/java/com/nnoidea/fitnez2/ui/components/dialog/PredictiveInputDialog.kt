@@ -1,5 +1,6 @@
 package com.nnoidea.fitnez2.ui.components.dialog
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -14,17 +15,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import com.nnoidea.fitnez2.core.localization.globalLocalization
 
+/**
+ * Standard single-input dialog (Level 3B).
+ *
+ * Implements a single text field input dialog with IME handling, validation, and localized defaults.
+ */
 @Composable
 fun PredictiveInputDialog(
     show: Boolean,
     onDismissRequest: () -> Unit,
     title: String,
     label: String,
+    modifier: Modifier = Modifier,
     initialValue: String = "",
     placeholder: String? = null,
-    confirmLabel: String,
-    cancelLabel: String = "Cancel",
+    confirmLabel: String = globalLocalization.labelSave,
+    cancelLabel: String = globalLocalization.labelCancel,
+    dismissOnClickOutside: Boolean = true,
+    dismissOnBackPress: Boolean = true,
     onConfirm: (String) -> Unit
 ) {
     val view = LocalView.current
@@ -41,10 +51,13 @@ fun PredictiveInputDialog(
         show = show,
         onDismissRequest = onDismissRequest,
         title = title,
+        modifier = modifier,
+        dismissOnClickOutside = dismissOnClickOutside,
+        dismissOnBackPress = dismissOnBackPress,
         confirmButton = {
             Button(
                 onClick = {
-                    view.performHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
+                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
                     keyboardController?.hide()
                     if (text.isNotBlank()) {
                         onConfirm(text)
