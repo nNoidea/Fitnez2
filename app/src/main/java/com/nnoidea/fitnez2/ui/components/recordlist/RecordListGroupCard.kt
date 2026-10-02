@@ -3,6 +3,7 @@ package com.nnoidea.fitnez2.ui.components.recordlist
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -54,15 +55,16 @@ fun RecordListGroupCard(
         }
     }
 
+    val groupPadding = Modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 2.dp)
     if (isGroupCollapsible && !isGroupExpanded) {
         if (showSwipe) {
             SwipeToDeleteContainer(
                 onDelete = {
                     onDeleteGroupRequest?.invoke(groupRecords.map { it.record })
                 },
-                modifier = modifier
+                modifier = modifier.fillMaxWidth().then(groupPadding)
             ) {
-                Column {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     CollapsedGroupItems(
                         groupRecords, isLight, weightUnit,
                         showTopTimestamp, showLabelsForTop,
@@ -71,7 +73,7 @@ fun RecordListGroupCard(
                 }
             }
         } else {
-            Column(modifier = modifier) {
+            Column(modifier = modifier.fillMaxWidth().then(groupPadding)) {
                 CollapsedGroupItems(
                     groupRecords, isLight, weightUnit,
                     showTopTimestamp, showLabelsForTop,
@@ -86,12 +88,15 @@ fun RecordListGroupCard(
                 val prevIsSame = groupIndex > 0
                 val nextIsSame = groupIndex < groupRecords.lastIndex
                 val shape = recordCardShape(prevIsSame, nextIsSame)
+                val topPadding = if (prevIsSame) 1.dp else 2.dp
+                val bottomPadding = if (nextIsSame) 1.dp else 2.dp
+                val rowPadding = Modifier.padding(start = 16.dp, end = 16.dp, top = topPadding, bottom = bottomPadding)
                 val timestamp = remember(recordItem.record.date) {
                     com.nnoidea.fitnez2.core.TimeUtils.formatTime(recordItem.record.date)
                 }
 
                 key(recordId) {
-                    val cardContent: @Composable () -> Unit = {
+                    val cardContent: @Composable (Modifier) -> Unit = { cardModifier ->
                         RecordCard(
                             exerciseName = recordItem.exerciseName,
                             sets = recordItem.record.sets,
@@ -103,6 +108,7 @@ fun RecordListGroupCard(
                             showTitle = groupIndex == 0,
                             weightUnit = weightUnit,
                             shape = shape,
+                            modifier = cardModifier,
                             prevIsSame = prevIsSame,
                             nextIsSame = nextIsSame,
                             showLabels = showLabelsForTop && groupIndex == 0,
@@ -122,12 +128,12 @@ fun RecordListGroupCard(
                     if (showSwipe) {
                         SwipeToDeleteContainer(
                             onDelete = { onDeleteRequest?.invoke(recordItem.record) },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().then(rowPadding)
                         ) {
-                            cardContent()
+                            cardContent(Modifier.fillMaxWidth())
                         }
                     } else {
-                        cardContent()
+                        cardContent(Modifier.fillMaxWidth().then(rowPadding))
                     }
                 }
             }
@@ -164,6 +170,10 @@ private fun CollapsedGroupItems(
         key(recordId) {
             val lastIndex = groupRecords.lastIndex
             val showCollapsedCard = groupIndex >= kotlin.math.max(1, lastIndex - 1)
+            val topPadding = if (prevIsSame) 1.dp else 0.dp
+            val bottomPadding = if (nextIsSame) 1.dp else 0.dp
+            val itemModifier = Modifier.fillMaxWidth().padding(top = topPadding, bottom = bottomPadding)
+
             if (groupIndex == 0) {
                 RecordCard(
                     exerciseName = recordItem.exerciseName,
@@ -176,6 +186,7 @@ private fun CollapsedGroupItems(
                     showTitle = true,
                     weightUnit = weightUnit,
                     shape = shape,
+                    modifier = itemModifier,
                     prevIsSame = prevIsSame,
                     nextIsSame = nextIsSame,
                     showLabels = showLabelsForTop,
@@ -195,6 +206,7 @@ private fun CollapsedGroupItems(
                 RecordCardCollapsed(
                     isLight = isLight,
                     shape = shape,
+                    modifier = itemModifier,
                     prevIsSame = prevIsSame,
                     nextIsSame = nextIsSame,
                     onClick = {

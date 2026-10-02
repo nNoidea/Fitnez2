@@ -51,6 +51,7 @@ fun RecordCard(
     showTitle: Boolean,
     weightUnit: String,
     shape: androidx.compose.ui.graphics.Shape,
+    modifier: Modifier = Modifier,
     prevIsSame: Boolean = false,
     nextIsSame: Boolean = false,
     showLabels: Boolean = false,
@@ -62,13 +63,9 @@ fun RecordCard(
 
     val view = LocalView.current
 
-    val topPadding = if (prevIsSame) 1.5.dp else 2.dp
-    val bottomPadding = if (nextIsSame) 1.5.dp else 2.dp
-
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = topPadding, bottom = bottomPadding)
             .testTag("record_card_$exerciseName")
             .clip(shape)
             .clickable(enabled = onCardClick != null) { 
@@ -233,6 +230,7 @@ fun RecordCard(
 fun RecordCardCollapsed(
     isLight: Boolean,
     shape: androidx.compose.ui.graphics.Shape,
+    modifier: Modifier = Modifier,
     prevIsSame: Boolean = false,
     nextIsSame: Boolean = false,
     onClick: (() -> Unit)? = null
@@ -241,13 +239,9 @@ fun RecordCardCollapsed(
     val contentColor = if (isLight) ColorRecordNeutralContent else ColorRecordColoredContent
     val view = LocalView.current
 
-    val topPadding = if (prevIsSame) 1.5.dp else 2.dp
-    val bottomPadding = if (nextIsSame) 1.5.dp else 2.dp
-
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = topPadding, bottom = bottomPadding)
             .clip(shape)
             .height(10.dp)
             .clickable(enabled = onClick != null) {

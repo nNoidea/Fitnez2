@@ -110,39 +110,44 @@ class MainActivity : ComponentActivity() {
                         settingsService = settingsService,
                         state = globalUiState
                     ) {
-                        PredictiveNavigationDrawer(
-                            drawerState = drawerState,
-                            gesturesEnabled = currentDestination in listOf(
-                                AppPage.Timeline.route,
-                                AppPage.Monthly.route,
-                                AppPage.Graph.route,
-                                AppPage.Settings.route
-                            ),
-                            edgeOnly = currentDestination == AppPage.Monthly.route,
-                            drawerContent = {
-                                PredictiveSidePanel(
-                                    currentRoute = currentDestination,
-                                    predictiveProgress = drawerPredictiveProgress,
-                                    onItemClick = { clickedRoute ->
-                                        scope.launch {
-                                            drawerState.close()
-                                        }
-                                        if (clickedRoute != currentDestination) {
-                                            navController.navigate(clickedRoute) {
-                                                popUpTo(AppPage.Timeline.route) {
-                                                    saveState = true
-                                                }
-                                                launchSingleTop = true
-                                                restoreState = true
+                    val initialRoute = remember {
+                        val route = intent.getStringExtra(EXTRA_PAGE_ROUTE)
+                        if (route != null && AppPage.entries.any { it.route == route }) route else AppPage.Timeline.route
+                    }
+
+                    PredictiveNavigationDrawer(
+                        drawerState = drawerState,
+                        gesturesEnabled = currentDestination in listOf(
+                            AppPage.Timeline.route,
+                            AppPage.Monthly.route,
+                            AppPage.Graph.route,
+                            AppPage.Settings.route
+                        ),
+                        edgeOnly = currentDestination == AppPage.Monthly.route,
+                        drawerContent = {
+                            PredictiveSidePanel(
+                                currentRoute = currentDestination,
+                                predictiveProgress = drawerPredictiveProgress,
+                                onItemClick = { clickedRoute ->
+                                    scope.launch {
+                                        drawerState.close()
+                                    }
+                                    if (clickedRoute != currentDestination) {
+                                        navController.navigate(clickedRoute) {
+                                            popUpTo(AppPage.Timeline.route) {
+                                                saveState = true
                                             }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
                                     }
-                                )
-                            }
-                        ) {
-                            NavHost(
-                                navController = navController,
-                                startDestination = AppPage.Timeline.route,
+                                }
+                            )
+                        }
+                    ) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = initialRoute,
                                 enterTransition = { slideInHorizontally { it / 3 } + fadeIn() },
                                 exitTransition = { slideOutHorizontally { -it / 3 } + fadeOut() },
                                 popEnterTransition = { slideInHorizontally { -it / 3 } + fadeIn() },

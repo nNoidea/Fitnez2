@@ -73,3 +73,7 @@ val SurfaceContainerLowDark = Color(0xFF181C20)
 val SurfaceContainerDark = Color(0xFF1C2024)
 val SurfaceContainerHighDark = Color(0xFF272A2F)
 val SurfaceContainerHighestDark = Color(0xFF31353A)
+
+// Expressive Swipe-to-Delete Action Colors
+val SwipeDeleteContainer = Color(0xFFF97386)
+val OnSwipeDeleteContainer = Color(0xFF490013)

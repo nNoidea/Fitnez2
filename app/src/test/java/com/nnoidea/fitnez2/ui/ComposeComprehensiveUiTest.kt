@@ -129,6 +129,7 @@ class ComposeComprehensiveUiTest {
 
         // Verify Squat is restored and there is EXACTLY 1 instance (no duplicates!)
         composeRule.onAllNodes(timelineSquatMatcher).assertCountEquals(1)
+        composeRule.onNode(timelineSquatMatcher).assertIsDisplayed()
     }
 
     @Test
@@ -279,10 +280,9 @@ class ComposeComprehensiveUiTest {
         // Current month header should be displayed, and drawer should be closed
         assert(drawerState.isClosed)
 
-        // Perform swipe left from the center of the calendar grid (navigating to next month)
-        // Day "15" is located safely in the center of the monthly calendar grid
-        composeRule.onAllNodesWithText("15")[0].performTouchInput {
-            swipeLeft(startX = centerX, endX = centerX - 400f)
+        // Perform swipe left from non-edge (startX = right - 100f) across the calendar (navigating to next month)
+        composeRule.onRoot().performTouchInput {
+            swipeLeft(startX = right - 100f, endX = 100f)
         }
         composeRule.waitForIdle()
 
@@ -292,9 +292,9 @@ class ComposeComprehensiveUiTest {
         // Next month is now visible and "Today" action button appears
         composeRule.onNodeWithContentDescription(EnglishStrings.labelGoToCurrentMonth).assertIsDisplayed()
 
-        // Now swipe right from center of the calendar grid to return
-        composeRule.onAllNodesWithText("15")[0].performTouchInput {
-            swipeRight(startX = centerX, endX = centerX + 400f)
+        // Now swipe right from center of the screen (startX = 200f, safely away from 40dp edge) to return
+        composeRule.onRoot().performTouchInput {
+            swipeRight(startX = 200f, endX = right - 100f)
         }
         composeRule.waitForIdle()
 
@@ -624,6 +624,12 @@ class ComposeComprehensiveUiTest {
             }
         }
 
+        composeRule.waitForIdle()
+
+        val squat = runBlocking { exerciseService.getExerciseByName("Squat")!! }
+        composeRule.runOnUiThread {
+            sheetState.onExerciseSelected(squat, closeDialog = true)
+        }
         composeRule.waitForIdle()
 
         val bsSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("bottom_sheet_record_list"))

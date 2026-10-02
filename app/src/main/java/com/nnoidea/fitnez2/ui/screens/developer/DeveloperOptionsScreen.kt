@@ -61,10 +61,55 @@ fun DeveloperOptionsScreen(onBack: () -> Unit) {
             )
         }
 
-        // Haptics Group
+        // Swipe Haptics Studio Group
+        SettingsGroup(title = "Swipe Haptics Studio") {
+            radioItem(
+                label = "Threshold POP Vibration",
+                value = com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.popMode.displayName,
+                icon = Icons.Default.Star,
+                iconContainerColor = tertiaryContainer,
+                iconTint = onTertiaryContainer,
+                options = com.nnoidea.fitnez2.ui.components.PopHapticMode.entries,
+                selected = com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.popMode,
+                onSelected = { com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.popMode = it },
+                labelProvider = { it.displayName },
+                bodyText = "Select the sensation fired when swiping crosses the delete threshold."
+            )
+
+            radioItem(
+                label = "Drag Slider Ticks",
+                value = com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.sliderTickMode.displayName,
+                icon = Icons.Default.Palette,
+                iconContainerColor = primaryContainer,
+                iconTint = onPrimaryContainer,
+                options = com.nnoidea.fitnez2.ui.components.SliderTickMode.entries,
+                selected = com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.sliderTickMode,
+                onSelected = { com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.sliderTickMode = it },
+                labelProvider = { it.displayName },
+                bodyText = "Select the tactile vibration ticks felt continuously while dragging horizontally."
+            )
+
+            switchItem(
+                label = "Continuous Drag Ticks",
+                checked = com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.sliderTicksEnabled,
+                onCheckedChange = { com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.sliderTicksEnabled = it }
+            )
+
+            switchItem(
+                label = "Clock-Back Reset Haptic",
+                checked = com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.clockBackHapticsEnabled,
+                onCheckedChange = { com.nnoidea.fitnez2.ui.components.SwipeHapticsConfig.clockBackHapticsEnabled = it }
+            )
+
+            custom {
+                SwipeHapticsLabControls()
+            }
+        }
+
+        // Generic System Haptics Step Slider
         SettingsGroup(title = globalLocalization.devHapticsTest) {
             custom {
-                HapticsTestSection()
+                SystemHapticsStepSlider()
             }
         }
 

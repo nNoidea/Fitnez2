@@ -233,7 +233,7 @@ class RecordListStateImpl(
 
     override fun onDeleteRequest(record: Record) {
         scope.launch {
-            val recordSnapshot = recordService.getRecordById(record.id) ?: record
+            val recordSnapshot = recordService.getRecordById(record.id) ?: return@launch
             recordService.deleteRecord(record.id)
             removeRecordFromList(record.id)
             GlobalUiState.emitToAll(UiSignal.RecordDeleted(record.id))
