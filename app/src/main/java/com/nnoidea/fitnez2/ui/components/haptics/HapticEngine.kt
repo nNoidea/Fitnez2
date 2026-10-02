@@ -10,11 +10,17 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 
 /**
- * Modern Android Single Source of Truth (SSOT) Hardware Haptic Engine.
+ * Modern Android 12+ (API 31+) hardware actuator engine.
  *
- * Targets Android 12+ (minSdk 31) directly without legacy fallback bloat.
- * Uses native [VibratorManager], LRA [VibrationEffect.Composition] primitives,
- * and active DSP hardware braking.
+ * Directly interfaces with the device's [VibratorManager] and LRA motor using
+ * rich composition primitives:
+ * - [VibrationEffect.Composition.PRIMITIVE_LOW_TICK] (ultra-crisp slider detent)
+ * - [VibrationEffect.Composition.PRIMITIVE_CLICK] (discrete mechanical click)
+ * - [VibrationEffect.Composition.PRIMITIVE_QUICK_RISE] (spring-tension swell)
+ * - [VibrationEffect.Composition.PRIMITIVE_THUD] (deep physical thump)
+ * - [VibrationEffect.Composition.PRIMITIVE_SPIN] (rotational detent)
+ *
+ * Targets API 31+ directly with zero legacy Android 8–10 fallback ladders.
  */
 object HapticEngine {
 
@@ -28,9 +34,9 @@ object HapticEngine {
     }
 
     /**
-     * Vibrates a composition effect using [VibrationAttributes.USAGE_HARDWARE_FEEDBACK].
+     * Sends a rich [VibrationEffect] directly to the LRA actuator using hardware feedback usage.
      */
-    fun playEffect(context: Context, effect: VibrationEffect): Boolean {
+    fun vibrateEffect(context: Context, effect: VibrationEffect): Boolean {
         return try {
             val vibrator = getVibrator(context) ?: return false
             if (!vibrator.hasVibrator()) return false
@@ -50,85 +56,230 @@ object HapticEngine {
     }
 
     /**
-     * Plays a single modern hardware composition primitive (e.g. LOW_TICK, CLICK, SPIN, THUD).
+     * Plays a discrete LRA primitive at a scaled intensity.
      */
-    fun playPrimitive(context: Context, primitiveId: Int, scale: Float = 1.0f, delayMs: Int = 0): Boolean {
-        val clampedScale = scale.coerceIn(0.01f, 1.0f)
+    fun playPrimitive(context: Context, primitiveId: Int, scale: Float): Boolean {
+        val clampedScale = scale.coerceIn(0.1f, 1.0f)
         val effect = VibrationEffect.startComposition()
-            .addPrimitive(primitiveId, clampedScale, delayMs)
+            .addPrimitive(primitiveId, clampedScale)
             .compose()
-        return playEffect(context, effect)
+        return vibrateEffect(context, effect)
     }
 
     /**
-     * High-frequency micro-tick for continuous slider/sheet drags.
-     * Uses active-braked [VibrationEffect.Composition.PRIMITIVE_LOW_TICK].
+     * Plays a crisp, light hardware click for button/card taps.
      */
-    fun tick(context: Context, scale: Float = 0.20f) {
-        playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_LOW_TICK, scale)
-    }
-
-    /**
-     * Crisp, distinct hardware click for card / button / item selections.
-     * Uses [VibrationEffect.Composition.PRIMITIVE_CLICK].
-     */
-    fun click(context: Context, scale: Float = 0.60f) {
+    fun performClick(context: Context, scale: Float = 0.5f) {
         playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_CLICK, scale)
     }
 
+    fun click(context: Context, scale: Float = 0.5f) = performClick(context, scale)
+
     /**
-     * High-contrast mechanical threshold POP.
-     * Uses Quick Rise buildup followed immediately by a sharp Click.
+     * Plays a subtle hardware low-tick for slider / drag notch movements.
      */
-    fun springSnap(context: Context, scale: Float = 1.0f) {
+    fun performSliderTick(context: Context, scale: Float = HapticDefaults.SwipeTickScale) {
+        playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_LOW_TICK, scale)
+    }
+
+    fun tick(context: Context, scale: Float = HapticDefaults.SwipeTickScale) = performSliderTick(context, scale)
+
+    /**
+     * Plays a two-stage Spring Snap (quick rise swell + tactile click) for threshold crossings.
+     */
+    fun performSpringSnap(context: Context, scale: Float = HapticDefaults.PopScale) {
         val clampedScale = scale.coerceIn(0.1f, 1.0f)
         val effect = VibrationEffect.startComposition()
             .addPrimitive(VibrationEffect.Composition.PRIMITIVE_QUICK_RISE, (0.7f * clampedScale).coerceIn(0.1f, 1.0f))
             .addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, clampedScale, 16)
             .compose()
-        playEffect(context, effect)
+        vibrateEffect(context, effect)
     }
 
-    /**
-     * Subtle deactivation detent when dragging back under a threshold.
-     */
-    fun clockBack(context: Context, scale: Float = 0.20f) {
-        val clampedScale = (scale * 0.7f).coerceIn(0.05f, 1.0f)
-        playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_LOW_TICK, clampedScale)
-    }
+    fun springSnap(context: Context, scale: Float = HapticDefaults.PopScale) = performSpringSnap(context, scale)
 
     /**
-     * Affirmative confirmation feedback (e.g. dialog confirm, item added).
+     * Plays a subtle detent release when pulling back under a threshold.
      */
-    fun confirm(context: Context, view: View? = null) {
+    fun performClockBack(context: Context, scale: Float = HapticDefaults.SwipeTickScale) {
+        val clampedScale = scale.coerceIn(0.1f, 1.0f)
+        val effect = VibrationEffect.startComposition()
+            .addPrimitive(VibrationEffect.Composition.PRIMITIVE_LOW_TICK, (0.7f * clampedScale).coerceIn(0.1f, 1.0f))
+            .compose()
+        vibrateEffect(context, effect)
+    }
+
+    fun clockBack(context: Context, scale: Float = HapticDefaults.SwipeTickScale) = performClockBack(context, scale)
+
+    /**
+     * Standard view-based affirmative confirmation (e.g. dialog confirm, item commit).
+     */
+    fun performConfirm(view: View?) {
+        view?.let {
+            performViewHaptic(it, HapticFeedbackConstants.CONFIRM, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING)
+        }
+    }
+
+    fun confirm(context: Context? = null, view: View? = null) {
         if (view != null) {
-            performViewHaptic(view, HapticFeedbackConstants.CONFIRM)
-        } else {
-            click(context, 0.85f)
+            performConfirm(view)
+        } else if (context != null) {
+            performClick(context, 0.7f)
         }
     }
 
     /**
-     * Error or rejection feedback (e.g. invalid input, rejected action).
+     * Standard view-based error or reject feedback (e.g. validation error, illegal action).
      */
-    fun reject(context: Context, view: View? = null) {
+    fun performReject(view: View?) {
+        view?.let {
+            performViewHaptic(it, HapticFeedbackConstants.REJECT, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING)
+        }
+    }
+
+    fun reject(context: Context? = null, view: View? = null) {
         if (view != null) {
-            performViewHaptic(view, HapticFeedbackConstants.REJECT)
-        } else {
-            val effect = VibrationEffect.startComposition()
-                .addPrimitive(VibrationEffect.Composition.PRIMITIVE_LOW_TICK, 0.5f)
-                .addPrimitive(VibrationEffect.Composition.PRIMITIVE_LOW_TICK, 0.7f, 40)
-                .compose()
-            playEffect(context, effect)
+            performReject(view)
+        } else if (context != null) {
+            playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_THUD, 0.8f)
         }
     }
 
     /**
-     * Standard view-based haptic with FLAG_IGNORE_VIEW_SETTING for guaranteed delivery.
+     * Standard view-based gesture start / touch down feedback.
      */
-    fun performViewHaptic(view: View, feedbackConstant: Int) {
+    fun performGestureStart(view: View?) {
+        view?.let {
+            performViewHaptic(it, HapticFeedbackConstants.GESTURE_START, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING)
+        }
+    }
+
+    /**
+     * Full execution dispatcher for configured [PopHapticMode] threshold POPs.
+     */
+    fun executePopMode(
+        context: Context,
+        view: View?,
+        mode: PopHapticMode,
+        scale: Float,
+        durationMs: Long = 50L,
+        amplitude: Int = 255,
+        ignoreViewSetting: Boolean = true
+    ) {
+        val flags = if (ignoreViewSetting) HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING else 0
+        val clampedScale = scale.coerceIn(0.1f, 1.0f)
+
+        when (mode) {
+            PopHapticMode.SPRING_SNAP -> performSpringSnap(context, clampedScale)
+            PopHapticMode.PRIMITIVE_THUD -> playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_THUD, clampedScale)
+            PopHapticMode.LINEAGE_COMPOUND -> {
+                val effect = VibrationEffect.startComposition()
+                    .addPrimitive(VibrationEffect.Composition.PRIMITIVE_TICK, clampedScale)
+                    .addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, clampedScale, 52)
+                    .compose()
+                vibrateEffect(context, effect)
+            }
+            PopHapticMode.PRIMITIVE_CLICK -> playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_CLICK, clampedScale)
+            PopHapticMode.DOUBLE_PRIMITIVE_CLICK -> {
+                val effect = VibrationEffect.startComposition()
+                    .addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, clampedScale)
+                    .addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, clampedScale, 40)
+                    .compose()
+                vibrateEffect(context, effect)
+            }
+            PopHapticMode.EFFECT_HEAVY_CLICK -> {
+                val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK)
+                vibrateEffect(context, effect)
+            }
+            PopHapticMode.EFFECT_POP -> {
+                val effect = VibrationEffect.createPredefined(4 /* EFFECT_POP */)
+                vibrateEffect(context, effect)
+            }
+            PopHapticMode.STRONG_POP -> {
+                val amp = (amplitude * clampedScale).toInt().coerceIn(1, 255)
+                val effect = VibrationEffect.createOneShot(durationMs, amp)
+                vibrateEffect(context, effect)
+            }
+            PopHapticMode.DOUBLE_PULSE -> {
+                val amp = (amplitude * clampedScale).toInt().coerceIn(1, 255)
+                val timings = longArrayOf(0, 20, 25, 25)
+                val amplitudes = intArrayOf(0, amp, 0, amp)
+                val effect = VibrationEffect.createWaveform(timings, amplitudes, -1)
+                vibrateEffect(context, effect)
+            }
+            PopHapticMode.GESTURE_THRESHOLD -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && view != null) {
+                    performViewHaptic(view, HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE, flags)
+                } else if (view != null) {
+                    performViewHaptic(view, 23, flags)
+                }
+            }
+            PopHapticMode.CONFIRM -> {
+                if (view != null) performViewHaptic(view, HapticFeedbackConstants.CONFIRM, flags)
+            }
+            PopHapticMode.REJECT -> {
+                if (view != null) performViewHaptic(view, HapticFeedbackConstants.REJECT, flags)
+            }
+            PopHapticMode.LONG_PRESS -> {
+                if (view != null) performViewHaptic(view, HapticFeedbackConstants.LONG_PRESS, flags)
+            }
+            PopHapticMode.NONE -> { /* Silent */ }
+        }
+    }
+
+    /**
+     * Full execution dispatcher for configured [SliderTickMode] continuous ticks.
+     */
+    fun executeSliderTickMode(
+        context: Context,
+        view: View?,
+        mode: SliderTickMode,
+        scale: Float,
+        ignoreViewSetting: Boolean = true
+    ) {
+        val flags = if (ignoreViewSetting) HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING else 0
+        val clampedScale = scale.coerceIn(0.1f, 1.0f)
+
+        when (mode) {
+            SliderTickMode.PRIMITIVE_LOW_TICK -> playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_LOW_TICK, clampedScale)
+            SliderTickMode.PRIMITIVE_TICK -> playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_TICK, clampedScale)
+            SliderTickMode.LINEAGE_SLIDER_TICK -> {
+                if (view != null) performViewHaptic(view, 23, flags)
+            }
+            SliderTickMode.PRIMITIVE_SPIN -> playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_SPIN, clampedScale)
+            SliderTickMode.SEGMENT_TICK -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && view != null) {
+                    performViewHaptic(view, HapticFeedbackConstants.SEGMENT_TICK, flags)
+                } else if (view != null) {
+                    performViewHaptic(view, HapticFeedbackConstants.CLOCK_TICK, flags)
+                }
+            }
+            SliderTickMode.SEGMENT_FREQUENT_TICK -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && view != null) {
+                    performViewHaptic(view, HapticFeedbackConstants.SEGMENT_FREQUENT_TICK, flags)
+                } else if (view != null) {
+                    performViewHaptic(view, HapticFeedbackConstants.CLOCK_TICK, flags)
+                }
+            }
+            SliderTickMode.EFFECT_TICK -> {
+                val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
+                vibrateEffect(context, effect)
+            }
+            SliderTickMode.MICRO_PULSE -> {
+                val amp = (120 * clampedScale).toInt().coerceIn(10, 255)
+                val effect = VibrationEffect.createOneShot(10L, amp)
+                vibrateEffect(context, effect)
+            }
+            SliderTickMode.CLOCK_TICK -> {
+                if (view != null) performViewHaptic(view, HapticFeedbackConstants.CLOCK_TICK, flags)
+            }
+            SliderTickMode.NONE -> { /* Silent */ }
+        }
+    }
+
+    private fun performViewHaptic(view: View, feedbackConstant: Int, flags: Int) {
         try {
-            view.performHapticFeedback(feedbackConstant, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING)
+            view.performHapticFeedback(feedbackConstant, flags)
         } catch (_: Throwable) {
             try {
                 view.performHapticFeedback(feedbackConstant)

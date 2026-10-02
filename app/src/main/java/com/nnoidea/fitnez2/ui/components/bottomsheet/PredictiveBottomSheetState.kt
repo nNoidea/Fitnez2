@@ -195,15 +195,50 @@ abstract class PredictiveBottomSheetState(
         keyboardController?.hide()
     }
 
-    // ── Sheet Physics ────────────────────────────────────────────────────
+    // ── Sheet Physics & Haptic Drag Tracking ────────────────────────────
+
+    private var lastNotch: Int = 0
+    private var lastTickTimeMs: Long = 0L
+    private var wasAboveMidpoint: Boolean = false
+
+    fun onDragDelta(delta: Float, view: android.view.View? = null) {
+        if (delta == 0f) return
+        val newOffset = (offsetY.value + delta).coerceIn(minOffset, maxOffset)
+        scope.launch {
+            offsetY.snapTo(newOffset)
+        }
+
+        val densityFactor = context.resources.displayMetrics.density
+        val tickIntervalPx = BottomSheetHapticsConfig.tickIntervalDp.value * densityFactor
+        if (tickIntervalPx > 0f) {
+            val currentNotch = (newOffset / tickIntervalPx).toInt()
+            val now = android.os.SystemClock.uptimeMillis()
+            if (currentNotch != lastNotch && now - lastTickTimeMs >= com.nnoidea.fitnez2.ui.components.haptics.HapticDefaults.MinimumTickIntervalMs) {
+                BottomSheetHapticsConfig.performDragTick(context, view)
+                lastTickTimeMs = now
+                lastNotch = currentNotch
+            }
+        }
+
+        val midpoint = (minOffset + maxOffset) / 2f
+        val isAboveMidpoint = newOffset < midpoint
+        if (isAboveMidpoint != wasAboveMidpoint) {
+            if (isAboveMidpoint) {
+                // Moving UP past midpoint towards expanded state
+                BottomSheetHapticsConfig.performMidpointPop(context, view)
+            } else {
+                // Moving DOWN past midpoint towards collapsed state (clocking back)
+                BottomSheetHapticsConfig.performClockBack(context, view)
+            }
+            wasAboveMidpoint = isAboveMidpoint
+        }
+    }
 
     suspend fun settleSpring(velocity: Float) {
-        val targetOffset = if (velocity > 1000f || (velocity >= 0 && offsetY.value > maxOffset / 2)) {
-            maxOffset // Collapse
-        } else {
-            onHapticFeedback(android.view.HapticFeedbackConstants.GESTURE_START)
-            minOffset // Expand
-        }
+        val willCollapse = velocity > 1000f || (velocity >= 0 && offsetY.value > (maxOffset + minOffset) / 2f)
+        val targetOffset = if (willCollapse) maxOffset else minOffset
+        wasAboveMidpoint = targetOffset < (maxOffset + minOffset) / 2f
+        BottomSheetHapticsConfig.performSettle(context, null)
         offsetY.animateTo(
             targetValue = targetOffset,
             animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)
@@ -217,10 +252,7 @@ abstract class PredictiveBottomSheetState(
         ): androidx.compose.ui.geometry.Offset {
             val delta = available.y
             if (delta < 0 && offsetY.value > minOffset + 1f) {
-                scope.launch {
-                    val newOffset = (offsetY.value + delta).coerceIn(minOffset, maxOffset)
-                    offsetY.snapTo(newOffset)
-                }
+                onDragDelta(delta)
                 return available
             }
             return androidx.compose.ui.geometry.Offset.Zero
@@ -233,10 +265,7 @@ abstract class PredictiveBottomSheetState(
         ): androidx.compose.ui.geometry.Offset {
             val delta = available.y
             if (delta > 0 && source == NestedScrollSource.UserInput) {
-                scope.launch {
-                    val newOffset = (offsetY.value + delta).coerceIn(minOffset, maxOffset)
-                    offsetY.snapTo(newOffset)
-                }
+                onDragDelta(delta)
                 return available
             }
             return androidx.compose.ui.geometry.Offset.Zero

@@ -1,5 +1,8 @@
 package com.nnoidea.fitnez2.ui.components.dialog
 
+import android.content.Context
+import android.os.VibrationEffect
+import android.view.View
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -8,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.nnoidea.fitnez2.ui.components.haptics.HapticEngine
 
 /**
  * Single source of truth (SSOT) tokens for the Fitnez2 dialog subsystem.
@@ -62,4 +66,45 @@ object DialogDefaults {
 
     /** Scale reduction factor during predictive back gesture. */
     const val PredictiveScaleFactor: Float = 0.20f
+
+    // ── Haptic Feedback Tokens ──────────────────────────────────────────
+
+    /** Haptic feedback on dialog affirmative/confirm action. */
+    fun performConfirmHaptic(view: View? = null) {
+        HapticEngine.performConfirm(view)
+    }
+
+    fun onConfirmHaptic(context: Context? = null, view: View? = null) {
+        if (view != null) {
+            HapticEngine.performConfirm(view)
+        } else if (context != null) {
+            HapticEngine.performClick(context, scale = 0.7f)
+        }
+    }
+
+    /** Haptic feedback on dialog cancel/dismiss action. */
+    fun performDismissHaptic(view: View? = null) {
+        view?.let { HapticEngine.performClick(it.context, scale = 0.35f) }
+    }
+
+    fun onDismissHaptic(context: Context? = null, view: View? = null) {
+        val ctx = view?.context ?: context
+        ctx?.let { HapticEngine.performClick(it, scale = 0.35f) }
+    }
+
+    /** Haptic feedback on dialog item/chip selection. */
+    fun performItemClickHaptic(view: View? = null) {
+        view?.let { HapticEngine.performClick(it.context, scale = 0.5f) }
+    }
+
+    fun onItemSelectHaptic(context: Context? = null, view: View? = null) {
+        val ctx = view?.context ?: context
+        ctx?.let { HapticEngine.performClick(it, scale = 0.5f) }
+    }
+
+    /** Haptic feedback on destructive dialog action. */
+    fun onDestructiveHaptic(context: Context? = null, view: View? = null) {
+        val ctx = view?.context ?: context
+        ctx?.let { HapticEngine.playPrimitive(it, VibrationEffect.Composition.PRIMITIVE_THUD, 0.8f) }
+    }
 }

@@ -125,16 +125,13 @@ fun PredictiveBottomSheet(
         val overshootBuffer = 150.dp
         val sheetTotalHeight = expandedHeight + overshootBuffer
 
+        val view = androidx.compose.ui.platform.LocalView.current
         val sheetDraggableState = rememberDraggableState { delta ->
             if (!isOverlayOpen) {
-                scope.launch {
-                    if (globalUiState.isBottomSheetHidden) {
-                        globalUiState.isBottomSheetHidden = false
-                    }
-                    val newOffset = (state.offsetY.value + delta)
-                        .coerceIn(state.minOffset, state.maxOffset)
-                    state.offsetY.snapTo(newOffset)
+                if (globalUiState.isBottomSheetHidden) {
+                    globalUiState.isBottomSheetHidden = false
                 }
+                state.onDragDelta(delta, view)
             }
         }
 

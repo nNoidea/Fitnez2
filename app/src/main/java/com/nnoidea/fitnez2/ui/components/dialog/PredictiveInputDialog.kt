@@ -57,7 +57,7 @@ fun PredictiveInputDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                    DialogDefaults.performConfirmHaptic(view)
                     keyboardController?.hide()
                     if (text.isNotBlank()) {
                         onConfirm(text)
@@ -69,7 +69,12 @@ fun PredictiveInputDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) {
+            TextButton(
+                onClick = {
+                    DialogDefaults.performDismissHaptic(view)
+                    onDismissRequest()
+                }
+            ) {
                 Text(cancelLabel)
             }
         }

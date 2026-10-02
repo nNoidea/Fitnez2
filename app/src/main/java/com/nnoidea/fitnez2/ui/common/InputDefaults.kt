@@ -8,35 +8,65 @@ import androidx.compose.runtime.setValue
 import com.nnoidea.fitnez2.ui.components.haptics.HapticEngine
 
 /**
- * Single Source of Truth (SSOT) tokens and haptics for text and number input fields.
- *
- * Controls tactile response when gaining focus, validating input, or rejecting invalid values.
+ * Single source of truth (SSOT) defaults and haptic tokens for input fields across Fitnez2.
  */
 object InputDefaults {
 
     var hapticsEnabled by mutableStateOf(true)
 
     /**
-     * Subtle tactile tick when an input field gains focus.
+     * Tactile feedback when an input field gains focus upon user tap.
      */
-    fun onFocusHaptic(context: Context, view: View? = null) {
+    fun performFocusHaptic(view: View? = null) {
         if (!hapticsEnabled) return
-        HapticEngine.tick(context, scale = 0.25f)
+        view?.let { HapticEngine.performClick(it.context, scale = 0.35f) }
+    }
+
+    fun onFocusHaptic(context: Context? = null, view: View? = null) {
+        if (!hapticsEnabled) return
+        val ctx = view?.context ?: context
+        ctx?.let { HapticEngine.performClick(it, scale = 0.35f) }
     }
 
     /**
-     * Subtle affirmative click when a valid value is successfully committed.
+     * Tactile feedback when an input field successfully commits a valid number.
      */
-    fun onCommitHaptic(context: Context, view: View? = null) {
+    fun performCommitHaptic(view: View? = null) {
         if (!hapticsEnabled) return
-        HapticEngine.click(context, scale = 0.50f)
+        HapticEngine.performConfirm(view)
+    }
+
+    fun onCommitHaptic(context: Context? = null, view: View? = null) {
+        if (!hapticsEnabled) return
+        if (view != null) {
+            HapticEngine.performConfirm(view)
+        } else if (context != null) {
+            HapticEngine.performClick(context, scale = 0.7f)
+        }
     }
 
     /**
-     * Haptic feedback when entered input fails validation or gets reverted.
+     * Tactile feedback when an input value fails validation or is rejected.
      */
-    fun onErrorHaptic(context: Context, view: View? = null) {
+    fun performErrorHaptic(view: View? = null) {
         if (!hapticsEnabled) return
-        HapticEngine.reject(context, view)
+        HapticEngine.performReject(view)
+    }
+
+    fun onErrorHaptic(context: Context? = null, view: View? = null) {
+        if (!hapticsEnabled) return
+        if (view != null) {
+            HapticEngine.performReject(view)
+        } else if (context != null) {
+            HapticEngine.reject(context)
+        }
+    }
+
+    /**
+     * Tactile feedback when clearing an input field.
+     */
+    fun performClearHaptic(view: View? = null) {
+        if (!hapticsEnabled) return
+        view?.let { HapticEngine.performClick(it.context, scale = 0.25f) }
     }
 }

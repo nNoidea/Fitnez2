@@ -42,7 +42,7 @@ fun PredictiveConfirmationDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                    DialogDefaults.performConfirmHaptic(view)
                     onConfirm()
                 },
                 colors = if (isDestructive) {
@@ -58,7 +58,12 @@ fun PredictiveConfirmationDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) {
+            TextButton(
+                onClick = {
+                    DialogDefaults.performDismissHaptic(view)
+                    onDismissRequest()
+                }
+            ) {
                 Text(cancelLabel)
             }
         }

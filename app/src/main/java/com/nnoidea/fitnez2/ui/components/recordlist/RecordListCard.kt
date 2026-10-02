@@ -69,7 +69,7 @@ fun RecordCard(
             .testTag("record_card_$exerciseName")
             .clip(shape)
             .clickable(enabled = onCardClick != null) { 
-                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                com.nnoidea.fitnez2.ui.components.haptics.HapticEngine.performClick(view.context, scale = 0.4f)
                 onCardClick?.invoke()
             },
         shape = shape,
@@ -245,7 +245,7 @@ fun RecordCardCollapsed(
             .clip(shape)
             .height(10.dp)
             .clickable(enabled = onClick != null) {
-                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                com.nnoidea.fitnez2.ui.components.haptics.HapticEngine.performClick(view.context, scale = 0.3f)
                 onClick?.invoke()
             },
         shape = shape,

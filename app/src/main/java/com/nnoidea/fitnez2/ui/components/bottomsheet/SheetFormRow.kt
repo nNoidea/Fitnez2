@@ -45,7 +45,7 @@ internal fun SheetFormRow(
         ) {
             FilledTonalButton(
                 onClick = {
-                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                    com.nnoidea.fitnez2.ui.components.haptics.HapticEngine.performClick(view.context)
                     state.toggleExerciseSelection(true)
                 },
                 modifier = Modifier

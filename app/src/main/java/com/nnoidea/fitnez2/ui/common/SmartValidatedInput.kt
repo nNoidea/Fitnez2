@@ -68,7 +68,7 @@ internal fun <T> SmartValidatedInput(
     LaunchedEffect(isFocused) {
         if (isFocused) {
             // Focus gained - save and clear
-            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+            InputDefaults.performFocusHaptic(view)
             savedValue = internalValue
             internalValue = ""
             wasFocused = true
@@ -98,10 +98,12 @@ internal fun <T> SmartValidatedInput(
                 // Valid -> commit
                 internalValue = effectiveValue
                 if (effectiveValue != value) {
+                    InputDefaults.performCommitHaptic(view)
                     onValidChange(validated)
                 }
             } else {
                 // Invalid -> revert (tooltip already shown by ValidateAndCorrect)
+                InputDefaults.performErrorHaptic(view)
                 internalValue = savedValue
             }
         }

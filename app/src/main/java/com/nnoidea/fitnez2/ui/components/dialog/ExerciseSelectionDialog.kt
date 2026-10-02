@@ -102,7 +102,7 @@ fun ExerciseSelectionDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { 
-                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                        DialogDefaults.performItemClickHaptic(view)
                         onDismissRequest()
                         if (onNavigateToWorkout != null) {
                             onNavigateToWorkout()
@@ -136,7 +136,7 @@ fun ExerciseSelectionDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { 
-                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                    DialogDefaults.performItemClickHaptic(view)
                     showCreateDialog = true 
                 }
                 .padding(vertical = 12.dp, horizontal = 8.dp),
@@ -192,7 +192,7 @@ fun ExerciseSelectionDialog(
                         .background(containerColor, RoundedCornerShape(12.dp))
                         .clip(RoundedCornerShape(12.dp))
                         .clickable {
-                            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                            DialogDefaults.performItemClickHaptic(view)
                             onWorkoutSelected(workout)
                         }
                         .padding(vertical = 12.dp, horizontal = 12.dp),
@@ -210,7 +210,7 @@ fun ExerciseSelectionDialog(
                     if (workoutService != null) {
                         IconButton(
                             onClick = { 
-                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                                DialogDefaults.performItemClickHaptic(view)
                                 onWorkoutEdit(workout)
                             },
                         ) {
@@ -223,7 +223,7 @@ fun ExerciseSelectionDialog(
                         
                         IconButton(
                             onClick = { 
-                                view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                                DialogDefaults.performItemClickHaptic(view)
                                 workoutToDelete = workout 
                             },
                         ) {
@@ -276,7 +276,7 @@ fun ExerciseSelectionDialog(
                     .clip(RoundedCornerShape(12.dp))
                     .testTag("exercise_option_${exercise.name}")
                     .clickable {
-                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                        DialogDefaults.performItemClickHaptic(view)
                         onExerciseSelected(exercise)
                     }
                     .padding(vertical = 12.dp, horizontal = 12.dp),
@@ -293,7 +293,7 @@ fun ExerciseSelectionDialog(
                 
                 IconButton(
                     onClick = { 
-                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                        DialogDefaults.performItemClickHaptic(view)
                         exerciseToEdit = exercise
                     },
                 ) {
@@ -306,7 +306,7 @@ fun ExerciseSelectionDialog(
                 
                 IconButton(
                     onClick = { 
-                        view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                        DialogDefaults.performItemClickHaptic(view)
                         exerciseToDelete = exercise 
                     },
                 ) {
