@@ -159,7 +159,7 @@ fun PredictiveBottomSheet(
                     orientation = Orientation.Vertical,
                     onDragStarted = { },
                     onDragStopped = { velocity ->
-                        scope.launch { state.settleSpring(velocity) }
+                        scope.launch { state.settleSpring(velocity, view) }
                     }
                 )
                 .nestedScroll(state.nestedScrollConnection)

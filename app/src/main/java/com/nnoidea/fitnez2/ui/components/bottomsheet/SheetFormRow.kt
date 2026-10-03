@@ -16,9 +16,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
-import com.nnoidea.fitnez2.ui.components.BottomSheetRepsField
-import com.nnoidea.fitnez2.ui.components.BottomSheetSetsField
-import com.nnoidea.fitnez2.ui.components.BottomSheetWeightField
+import com.nnoidea.fitnez2.ui.components.input.SetsRepsWeightGroup
 
 /**
  * Shared form row: exercise selector button + add button + sets/reps/weight fields.
@@ -90,49 +88,19 @@ internal fun SheetFormRow(
 
         // Row: Sets, Reps, Weight (Hide if workout is selected)
         if (showInputs) {
-            ConnectedInputGroup(
-                spacing = 4.dp,
-                outerCornerRadius = 24.dp,
-                innerCornerRadius = 8.dp,
-                items = listOf(
-                    { ts, te, bs, be ->
-                        BottomSheetSetsField(
-                            value = state.committedSets,
-                            onValidChange = { state.onCommittedSetsChange(it) },
-                            onRawValueChange = { state.pendingSets = it },
-                            modifier = Modifier.weight(1f).height(buttonHeight),
-                            topStartRadius = ts,
-                            topEndRadius = te,
-                            bottomStartRadius = bs,
-                            bottomEndRadius = be
-                        )
-                    },
-                    { ts, te, bs, be ->
-                        BottomSheetRepsField(
-                            value = state.committedReps,
-                            onValidChange = { state.onCommittedRepsChange(it) },
-                            onRawValueChange = { state.pendingReps = it },
-                            modifier = Modifier.weight(1f).height(buttonHeight),
-                            topStartRadius = ts,
-                            topEndRadius = te,
-                            bottomStartRadius = bs,
-                            bottomEndRadius = be
-                        )
-                    },
-                    { ts, te, bs, be ->
-                        BottomSheetWeightField(
-                            value = state.committedWeight.toDoubleOrNull() ?: 0.0,
-                            label = state.weightUnit,
-                            onValidChange = { state.onCommittedWeightChange(it) },
-                            onRawValueChange = { state.pendingWeight = it },
-                            modifier = Modifier.weight(1f).height(buttonHeight),
-                            topStartRadius = ts,
-                            topEndRadius = te,
-                            bottomStartRadius = bs,
-                            bottomEndRadius = be
-                        )
-                    }
-                )
+            SetsRepsWeightGroup(
+                sets = state.committedSets,
+                reps = state.committedReps,
+                weight = state.committedWeight,
+                weightUnit = state.weightUnit,
+                showLabels = true,
+                height = buttonHeight,
+                onSetsChange = { state.onCommittedSetsChange(it.toString()) },
+                onRepsChange = { state.onCommittedRepsChange(it.toString()) },
+                onWeightChange = { state.onCommittedWeightChange(it.toString()) },
+                onPendingSetsChange = { state.pendingSets = it },
+                onPendingRepsChange = { state.pendingReps = it },
+                onPendingWeightChange = { state.pendingWeight = it }
             )
         } else {
             Spacer(modifier = Modifier.fillMaxWidth().height(buttonHeight))

@@ -16,9 +16,11 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.unit.Velocity
+import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.service.ExerciseService
+import com.nnoidea.fitnez2.service.RecordService
 import com.nnoidea.fitnez2.service.SettingsService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -195,11 +197,37 @@ abstract class PredictiveBottomSheetState(
         keyboardController?.hide()
     }
 
-    // ── Sheet Physics & Haptic Drag Tracking ────────────────────────────
+    data class ValidatedInputs(val sets: Int, val reps: Int, val weight: Double)
 
-    private var lastNotch: Int = 0
-    private var lastTickTimeMs: Long = 0L
-    private var wasAboveMidpoint: Boolean = false
+    /**
+     * Validates current inputs against bounds, dismisses the keyboard/focus,
+     * or returns null if any validation check fails.
+     */
+    protected fun validateAndDismissInput(): ValidatedInputs? {
+        val sets = ValidateAndCorrect.sets(resolveSets()) ?: return null
+        val reps = ValidateAndCorrect.reps(resolveReps()) ?: return null
+        val weight = ValidateAndCorrect.weight(resolveWeight()) ?: return null
+        dismissInput()
+        return ValidatedInputs(sets, reps, weight)
+    }
+
+    /**
+     * Initializes the bottom sheet session with the latest record from [recordService].
+     */
+    protected suspend fun initializeLatestSession(recordService: RecordService) {
+        val latest = recordService.getLatestRecord()
+        if (latest != null) {
+            selectedExerciseName = latest.exerciseName
+            selectedExerciseId = latest.record.exerciseId
+            loadInputsForExercise(latest.record.exerciseId, recordService::getLatestRecordByExerciseId)
+        } else {
+            committedSets = defaultSets
+            committedReps = defaultReps
+            committedWeight = defaultWeight
+        }
+    }
+
+    // ── Sheet Physics ───────────────────────────────────────────────────
 
     fun onDragDelta(delta: Float, view: android.view.View? = null) {
         if (delta == 0f) return
@@ -207,38 +235,14 @@ abstract class PredictiveBottomSheetState(
         scope.launch {
             offsetY.snapTo(newOffset)
         }
-
-        val densityFactor = context.resources.displayMetrics.density
-        val tickIntervalPx = BottomSheetHapticsConfig.tickIntervalDp.value * densityFactor
-        if (tickIntervalPx > 0f) {
-            val currentNotch = (newOffset / tickIntervalPx).toInt()
-            val now = android.os.SystemClock.uptimeMillis()
-            if (currentNotch != lastNotch && now - lastTickTimeMs >= com.nnoidea.fitnez2.ui.components.haptics.HapticDefaults.MinimumTickIntervalMs) {
-                BottomSheetHapticsConfig.performDragTick(context, view)
-                lastTickTimeMs = now
-                lastNotch = currentNotch
-            }
-        }
-
-        val midpoint = (minOffset + maxOffset) / 2f
-        val isAboveMidpoint = newOffset < midpoint
-        if (isAboveMidpoint != wasAboveMidpoint) {
-            if (isAboveMidpoint) {
-                // Moving UP past midpoint towards expanded state
-                BottomSheetHapticsConfig.performMidpointPop(context, view)
-            } else {
-                // Moving DOWN past midpoint towards collapsed state (clocking back)
-                BottomSheetHapticsConfig.performClockBack(context, view)
-            }
-            wasAboveMidpoint = isAboveMidpoint
-        }
     }
 
-    suspend fun settleSpring(velocity: Float) {
+    suspend fun settleSpring(velocity: Float, view: android.view.View? = null) {
         val willCollapse = velocity > 1000f || (velocity >= 0 && offsetY.value > (maxOffset + minOffset) / 2f)
         val targetOffset = if (willCollapse) maxOffset else minOffset
-        wasAboveMidpoint = targetOffset < (maxOffset + minOffset) / 2f
-        BottomSheetHapticsConfig.performSettle(context, null)
+        if (kotlin.math.abs(offsetY.value - targetOffset) > 1f) {
+            BottomSheetHapticsConfig.performSettle(context, view)
+        }
         offsetY.animateTo(
             targetValue = targetOffset,
             animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)

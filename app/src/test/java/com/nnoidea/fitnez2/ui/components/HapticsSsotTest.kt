@@ -37,17 +37,20 @@ class HapticsSsotTest {
         assertEquals(0.20f, BottomSheetDefaults.dragTickScale, 0.001f)
         assertEquals(1.0f, BottomSheetDefaults.popScale, 0.001f)
         assertTrue(BottomSheetDefaults.hapticsEnabled)
-        assertTrue(BottomSheetDefaults.dragTicksEnabled)
-        assertTrue(BottomSheetDefaults.midpointPopEnabled)
-        assertTrue(BottomSheetDefaults.clockBackEnabled)
+        org.junit.Assert.assertFalse(BottomSheetDefaults.dragTicksEnabled)
+        org.junit.Assert.assertFalse(BottomSheetDefaults.midpointPopEnabled)
+        org.junit.Assert.assertFalse(BottomSheetDefaults.clockBackEnabled)
+        assertTrue(BottomSheetDefaults.settleHapticEnabled)
 
         // Modify and test reset
         BottomSheetDefaults.tickIntervalDp = 5.dp
         BottomSheetDefaults.dragTickScale = 0.5f
+        BottomSheetDefaults.dragTicksEnabled = true
         BottomSheetDefaults.resetToDefaults()
 
         assertEquals(2.dp, BottomSheetDefaults.tickIntervalDp)
         assertEquals(0.20f, BottomSheetDefaults.dragTickScale, 0.001f)
+        org.junit.Assert.assertFalse(BottomSheetDefaults.dragTicksEnabled)
     }
 
     @Test

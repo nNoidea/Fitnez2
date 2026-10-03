@@ -68,24 +68,11 @@ class WorkoutBottomSheetState(
                     selectedExerciseName = latestRecord.exerciseName
                     loadInputsForExercise(latestRecord.workoutRecord.exerciseId, recordService::getLatestRecordByExerciseId)
                 } else {
-                    initializeSession()
+                    initializeLatestSession(recordService)
                 }
             } else {
-                initializeSession()
+                initializeLatestSession(recordService)
             }
-        }
-    }
-
-    private suspend fun initializeSession() {
-        val latest = recordService.getLatestRecord()
-        if (latest != null) {
-            selectedExerciseName = latest.exerciseName
-            selectedExerciseId = latest.record.exerciseId
-            loadInputsForExercise(latest.record.exerciseId, recordService::getLatestRecordByExerciseId)
-        } else {
-            committedSets = defaultSets
-            committedReps = defaultReps
-            committedWeight = defaultWeight
         }
     }
 
@@ -105,19 +92,15 @@ class WorkoutBottomSheetState(
                     return@launch
                 }
 
-                val validatedSets = ValidateAndCorrect.sets(resolveSets()) ?: return@launch
-                val validatedReps = ValidateAndCorrect.reps(resolveReps()) ?: return@launch
-                val validatedWeight = ValidateAndCorrect.weight(resolveWeight()) ?: return@launch
-
-                dismissInput()
+                val inputs = validateAndDismissInput() ?: return@launch
 
                 val record = WorkoutRecordWithExercise(
                     workoutRecord = WorkoutRecord(
                         workoutId = "", // Placeholder
                         exerciseId = exerciseId,
-                        sets = validatedSets,
-                        reps = validatedReps,
-                        weight = validatedWeight
+                        sets = inputs.sets,
+                        reps = inputs.reps,
+                        weight = inputs.weight
                     ),
                     exerciseName = exerciseName
                 )

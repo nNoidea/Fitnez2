@@ -24,13 +24,13 @@ object BottomSheetHapticsConfig {
     var hapticsEnabled by mutableStateOf(true)
 
     /** Toggle for continuous micro-ticks while dragging the sheet up and down */
-    var dragTicksEnabled by mutableStateOf(true)
+    var dragTicksEnabled by mutableStateOf(false)
 
     /** Toggle for tactile POP detent when crossing the expand/collapse midpoint */
-    var midpointPopEnabled by mutableStateOf(true)
+    var midpointPopEnabled by mutableStateOf(false)
 
     /** Toggle for subtle haptic click when dragging back across the midpoint */
-    var clockBackEnabled by mutableStateOf(true)
+    var clockBackEnabled by mutableStateOf(false)
 
     /** Toggle for gentle landing click when sheet settles into expanded/collapsed position */
     var settleHapticEnabled by mutableStateOf(true)
@@ -55,9 +55,9 @@ object BottomSheetHapticsConfig {
      */
     fun resetToDefaults() {
         hapticsEnabled = true
-        dragTicksEnabled = true
-        midpointPopEnabled = true
-        clockBackEnabled = true
+        dragTicksEnabled = false
+        midpointPopEnabled = false
+        clockBackEnabled = false
         settleHapticEnabled = true
         tickIntervalDp = HapticDefaults.TickIntervalDp
         dragTickScale = HapticDefaults.SwipeTickScale
@@ -93,8 +93,8 @@ object BottomSheetHapticsConfig {
     /**
      * Emits a light physical landing click when sheet springs to rest.
      */
-    fun performSettle(context: Context, view: View?) {
+    fun performSettle(context: Context, view: View? = null) {
         if (!hapticsEnabled || !settleHapticEnabled) return
-        HapticEngine.performClick(context, 0.4f)
+        HapticEngine.performClick(context, 0.5f)
     }
 }

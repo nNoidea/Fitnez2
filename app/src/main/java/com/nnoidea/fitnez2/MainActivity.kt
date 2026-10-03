@@ -154,29 +154,6 @@ class MainActivity : ComponentActivity() {
                                 popExitTransition = { slideOutHorizontally { it / 3 } + fadeOut() }
                             ) {
                                 composable(
-                                    route = AppPage.Timeline.route,
-                                    arguments = listOf(
-                                        navArgument("targetDate") {
-                                            type = NavType.LongType
-                                            defaultValue = -1L
-                                        }
-                                    )
-                                ) { backStackEntry ->
-                                    val targetDate = backStackEntry.arguments?.getLong("targetDate")?.takeIf { it != -1L }
-                                    TimelineScreen(
-                                        targetDate = targetDate,
-                                        onOpenDrawer = { scope.launch { drawerState.open() } },
-                                        onNavigateToWorkout = { workoutId ->
-                                            if (workoutId != null) {
-                                                navController.navigate("workout?workoutId=$workoutId")
-                                            } else {
-                                                navController.navigate(AppPage.Workout.route)
-                                            }
-                                        }
-                                    )
-                                }
-
-                                composable(
                                     route = "${AppPage.Timeline.route}?targetDate={targetDate}",
                                     arguments = listOf(
                                         navArgument("targetDate") {

@@ -26,11 +26,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.nnoidea.fitnez2.ui.components.HistoryRepsField
-import com.nnoidea.fitnez2.ui.components.HistorySetsField
-import com.nnoidea.fitnez2.ui.components.HistoryWeightField
-import com.nnoidea.fitnez2.ui.components.bottomsheet.ConnectedInputGroup
+import com.nnoidea.fitnez2.ui.components.input.SetsRepsWeightGroup
 import com.nnoidea.fitnez2.core.localization.globalLocalization
+import com.nnoidea.fitnez2.data.entities.Record
+import com.nnoidea.fitnez2.data.models.RecordWithExercise
 
 internal val ColorRecordNeutralContainer @Composable get() = MaterialTheme.colorScheme.primary
 internal val ColorRecordNeutralContent @Composable get() = MaterialTheme.colorScheme.onPrimary
@@ -41,10 +40,7 @@ internal val ColorRecordColoredContent @Composable get() = MaterialTheme.colorSc
 
 @Composable
 fun RecordCard(
-    exerciseName: String,
-    sets: Int,
-    reps: Int,
-    weight: Double,
+    recordItem: RecordWithExercise,
     timestamp: String?,
     showTimestamp: Boolean = false,
     isLight: Boolean,
@@ -52,12 +48,12 @@ fun RecordCard(
     weightUnit: String,
     shape: androidx.compose.ui.graphics.Shape,
     modifier: Modifier = Modifier,
-    prevIsSame: Boolean = false,
-    nextIsSame: Boolean = false,
     showLabels: Boolean = false,
     onCardClick: (() -> Unit)? = null,
-    onUpdate: (sets: Int, reps: Int, weight: Double) -> Unit
+    onUpdateRequest: ((Record) -> Unit)? = null
 ) {
+    val record = recordItem.record
+    val exerciseName = recordItem.exerciseName
     val containerColor = if (isLight) ColorRecordNeutralContainer else ColorRecordColoredContainer
     val contentColor = if (isLight) ColorRecordNeutralContent else ColorRecordColoredContent
 
@@ -176,49 +172,20 @@ fun RecordCard(
                     }
                 }
                 
-                ConnectedInputGroup(
+                SetsRepsWeightGroup(
+                    sets = record.sets.toString(),
+                    reps = record.reps.toString(),
+                    weight = record.weight.toString(),
+                    weightUnit = weightUnit,
+                    showLabels = false,
+                    unfocusedContainerColor = contentColor.copy(alpha = 0.12f),
+                    unfocusedContentColor = contentColor,
+                    focusedContainerColor = contentColor,
+                    focusedContentColor = containerColor,
                     modifier = Modifier.weight(3f),
-                    spacing = 2.dp,
-                    outerCornerRadius = 24.dp,
-                    innerCornerRadius = 8.dp,
-                    items = listOf(
-                        { ts, te, bs, be ->
-                            HistorySetsField(
-                                value = sets,
-                                contentColor = contentColor,
-                                onValidChange = { onUpdate(it, reps, weight) },
-                                modifier = Modifier.weight(1f),
-                                topStartRadius = ts,
-                                topEndRadius = te,
-                                bottomStartRadius = bs,
-                                bottomEndRadius = be
-                            )
-                        },
-                        { ts, te, bs, be ->
-                            HistoryRepsField(
-                                value = reps,
-                                contentColor = contentColor,
-                                onValidChange = { onUpdate(sets, it, weight) },
-                                modifier = Modifier.weight(1f),
-                                topStartRadius = ts,
-                                topEndRadius = te,
-                                bottomStartRadius = bs,
-                                bottomEndRadius = be
-                            )
-                        },
-                        { ts, te, bs, be ->
-                            HistoryWeightField(
-                                value = weight,
-                                contentColor = contentColor,
-                                onValidChange = { onUpdate(sets, reps, it) },
-                                modifier = Modifier.weight(1f),
-                                topStartRadius = ts,
-                                topEndRadius = te,
-                                bottomStartRadius = bs,
-                                bottomEndRadius = be
-                            )
-                        }
-                    )
+                    onSetsChange = { onUpdateRequest?.invoke(record.copy(sets = it)) },
+                    onRepsChange = { onUpdateRequest?.invoke(record.copy(reps = it)) },
+                    onWeightChange = { onUpdateRequest?.invoke(record.copy(weight = it)) }
                 )
             }
             
@@ -231,8 +198,6 @@ fun RecordCardCollapsed(
     isLight: Boolean,
     shape: androidx.compose.ui.graphics.Shape,
     modifier: Modifier = Modifier,
-    prevIsSame: Boolean = false,
-    nextIsSame: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
     val containerColor = if (isLight) ColorRecordNeutralContainer else ColorRecordColoredContainer

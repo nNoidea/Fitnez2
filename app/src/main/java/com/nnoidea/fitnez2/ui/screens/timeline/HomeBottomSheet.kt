@@ -28,9 +28,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.localization.globalLocalization
-import com.nnoidea.fitnez2.ui.components.BottomSheetRepsField
-import com.nnoidea.fitnez2.ui.components.BottomSheetSetsField
-import com.nnoidea.fitnez2.ui.components.BottomSheetWeightField
 import com.nnoidea.fitnez2.ui.components.bottomsheet.BUTTONHEIGHT
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PredictiveBottomSheet
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PredictiveBottomSheetState

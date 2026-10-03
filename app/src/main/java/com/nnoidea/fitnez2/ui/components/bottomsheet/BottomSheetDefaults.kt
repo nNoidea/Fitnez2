@@ -40,6 +40,10 @@ object BottomSheetDefaults {
         get() = BottomSheetHapticsConfig.clockBackEnabled
         set(value) { BottomSheetHapticsConfig.clockBackEnabled = value }
 
+    var settleHapticEnabled: Boolean
+        get() = BottomSheetHapticsConfig.settleHapticEnabled
+        set(value) { BottomSheetHapticsConfig.settleHapticEnabled = value }
+
     var tickIntervalDp: Dp
         get() = BottomSheetHapticsConfig.tickIntervalDp
         set(value) { BottomSheetHapticsConfig.tickIntervalDp = value }

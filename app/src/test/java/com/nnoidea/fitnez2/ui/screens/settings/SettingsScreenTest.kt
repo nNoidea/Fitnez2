@@ -11,8 +11,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.nnoidea.fitnez2.ui.components.SettingsCardGroup
-import com.nnoidea.fitnez2.ui.components.SettingsDivider
 import com.nnoidea.fitnez2.ui.components.SettingsGroup
 import com.nnoidea.fitnez2.ui.components.SettingsItem
 import com.nnoidea.fitnez2.ui.components.SettingsPageScaffold
@@ -36,20 +34,19 @@ class SettingsScreenTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun testSettingsCardGroup_andSettingsItem_renderAndClick() {
+    fun testSettingsItem_renderAndClick() {
         var clicked = false
 
         composeTestRule.setContent {
             Fitnez2Theme {
-                SettingsCardGroup {
-                    SettingsItem(
+                SettingsGroup {
+                    item(
                         label = "Language",
                         value = "English",
                         icon = Icons.Default.Language,
                         onClick = { clicked = true }
                     )
-                    SettingsDivider()
-                    SettingsItem(
+                    item(
                         label = "Auto-rotate",
                         value = "Off",
                         onClick = {}

@@ -66,25 +66,16 @@ class HomeBottomSheetState(
         }
 
     init {
-        scope.launch { initializeSession() }
+        scope.launch { initializeLatestSession(recordService) }
         scope.launch { 
             workoutService.getAllWorkoutsFlow().collect { currentWorkouts -> 
                 workouts = currentWorkouts 
-                    if (selectedWorkout != null && currentWorkouts.none { it.id == selectedWorkout?.id }) {
+                if (selectedWorkout != null && currentWorkouts.none { it.id == selectedWorkout?.id }) {
                     selectedWorkout = null
                     selectedWorkoutRecords = emptyList()
                     overrideExerciseName = null
                 }
             } 
-        }
-    }
-
-    private suspend fun initializeSession() {
-        val latest = recordService.getLatestRecord()
-        if (latest != null) {
-            selectedExerciseName = latest.exerciseName
-            selectedExerciseId = latest.record.exerciseId
-            loadInputsForExercise(latest.record.exerciseId, recordService::getLatestRecordByExerciseId)
         }
     }
 
@@ -146,17 +137,13 @@ class HomeBottomSheetState(
                     return@launch
                 }
 
-                val validatedSets = ValidateAndCorrect.sets(resolveSets()) ?: return@launch
-                val validatedReps = ValidateAndCorrect.reps(resolveReps()) ?: return@launch
-                val validatedWeight = ValidateAndCorrect.weight(resolveWeight()) ?: return@launch
-
-                dismissInput()
+                val inputs = validateAndDismissInput() ?: return@launch
 
                 val newRecord = recordService.createRecord(
                     exerciseId = exerciseId,
-                    sets = validatedSets,
-                    reps = validatedReps,
-                    weight = validatedWeight,
+                    sets = inputs.sets,
+                    reps = inputs.reps,
+                    weight = inputs.weight,
                     date = System.currentTimeMillis()
                 )
                 GlobalUiState.emitToAll(UiSignal.RecordInserted(newRecord.id))
