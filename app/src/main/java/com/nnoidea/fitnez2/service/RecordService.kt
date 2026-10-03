@@ -61,6 +61,12 @@ class RecordService(private val database: AppDatabase) {
     suspend fun getRecordsAroundDate(fromDate: Long, toDate: Long): List<Record> =
         dao.getRecordsAroundDate(fromDate, toDate)
 
+    suspend fun getRecordsOnOrBeforeDate(date: Long, limit: Int = 100): List<Record> =
+        dao.getRecordsOnOrBeforeDate(date, limit)
+
+    suspend fun getRecordsAfterDate(date: Long, limit: Int = 50): List<Record> =
+        dao.getRecordsAfterDate(date, limit)
+
     fun getRecordCountFlow(): Flow<Int> = dao.getRecordCountFlow()
 
     suspend fun createRecord(exerciseId: String, sets: Int, reps: Int, weight: Double, date: Long): Record {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -17,6 +18,7 @@ import com.nnoidea.fitnez2.ui.components.recordlist.RecordList
 import com.nnoidea.fitnez2.ui.components.HamburgerMenu
 import com.nnoidea.fitnez2.ui.components.ScreenScaffold
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -27,6 +29,7 @@ fun TimelineScreen(
     bottomSheetState: HomeBottomSheetState = rememberHomeBottomSheetState()
 ) {
     val globalUiState = LocalGlobalUiState.current
+    val scope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
         ScreenScaffold(
@@ -39,6 +42,7 @@ fun TimelineScreen(
                 items = recordListState.uiItems,
                 weightUnit = recordListState.weightUnit,
                 listState = recordListState.listState,
+                hasNewer = recordListState.hasNewer,
                 expandedRecordIds = recordListState.expandedRecordIds,
                 timestampTokens = recordListState.timestampTokens,
                 onShowTimestamp = { recordListState.showTimestampFor(it) },
@@ -47,6 +51,9 @@ fun TimelineScreen(
                     .testTag("main_timeline_record_list"),
                 extraBottomPadding = PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP.dp + navBarPadding,
                 enableAutoHide = true,
+                onScrollToTopClick = {
+                    scope.launch { recordListState.scrollToTop(null) }
+                },
                 onUpdateRequest = { recordListState.onUpdateRequest(it) },
                 onDeleteRequest = { recordListState.onDeleteRequest(it) },
                 onDeleteGroupRequest = { recordListState.onDeleteGroupRequest(it) }

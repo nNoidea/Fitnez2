@@ -98,6 +98,12 @@ interface RecordDao {
     @Query("SELECT * FROM record WHERE date >= :fromDate AND date <= :toDate ORDER BY date DESC, orderNumber DESC, id DESC LIMIT 500")
     suspend fun getRecordsAroundDate(fromDate: Long, toDate: Long): List<Record>
 
+    @Query("SELECT * FROM record WHERE date <= :date ORDER BY date DESC, orderNumber DESC, id DESC LIMIT :limit")
+    suspend fun getRecordsOnOrBeforeDate(date: Long, limit: Int = 100): List<Record>
+
+    @Query("SELECT * FROM record WHERE date > :date ORDER BY date ASC, orderNumber ASC, id ASC LIMIT :limit")
+    suspend fun getRecordsAfterDate(date: Long, limit: Int = 50): List<Record>
+
     @Query("DELETE FROM record")
     suspend fun deleteAllRecords()
 

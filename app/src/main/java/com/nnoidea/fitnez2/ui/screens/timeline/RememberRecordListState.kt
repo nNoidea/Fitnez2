@@ -5,22 +5,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import com.nnoidea.fitnez2.core.TimeUtils
 import com.nnoidea.fitnez2.service.LocalExerciseService
 import com.nnoidea.fitnez2.service.LocalRecordService
 import com.nnoidea.fitnez2.service.LocalSettingsService
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.common.UiSignal
-import com.nnoidea.fitnez2.ui.components.recordlist.RecordDisplayItem
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
 
 @Composable
 fun rememberRecordListState(
@@ -54,9 +48,20 @@ fun rememberRecordListState(
         )
     }
 
-    LaunchedEffect(state, exerciseMap) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+    val effectiveTargetDate = targetDate ?: activity?.intent?.getLongExtra("extra_target_date", -1L)?.takeIf { it != -1L }
+
+    LaunchedEffect(state, exerciseMap, effectiveTargetDate) {
         state.updateExerciseMap(exerciseMap)
-        if (exerciseMap.isNotEmpty()) state.loadInitial()
+        if (exerciseMap.isNotEmpty()) {
+            if (effectiveTargetDate != null) {
+                state.loadUntilDate(effectiveTargetDate)
+                activity?.intent?.removeExtra("extra_target_date")
+            } else if (!state.initialLoadDone) {
+                state.loadInitial()
+            }
+        }
     }
 
     LaunchedEffect(state, weightUnit) { (state as RecordListStateImpl).updateWeightUnit(weightUnit) }
@@ -76,30 +81,6 @@ fun rememberRecordListState(
                 if (lastVisible >= total - 5) impl.loadMore()
             }
         }
-    }
-
-    val context = LocalContext.current
-    val activity = context as? Activity
-    var intentHandled by remember { mutableStateOf(false) }
-    val effectiveTargetDate = targetDate ?: activity?.intent?.getLongExtra("extra_target_date", -1L)?.takeIf { it != -1L }
-
-    LaunchedEffect(state.initialLoadDone, effectiveTargetDate) {
-        if (!state.initialLoadDone || effectiveTargetDate == null || intentHandled) return@LaunchedEffect
-        state.loadUntilDate(effectiveTargetDate)
-        withTimeoutOrNull(5000) {
-            snapshotFlow { state.uiItems }
-                .first { items ->
-                    items.any { it is RecordDisplayItem.DateHeader &&
-                        TimeUtils.isSameDay(it.date, effectiveTargetDate) }
-                }
-        }
-        val items = state.uiItems
-        val targetIndex = items.indexOfFirst {
-            it is RecordDisplayItem.DateHeader && TimeUtils.isSameDay(it.date, effectiveTargetDate)
-        }
-        if (targetIndex >= 0) state.listState.scrollToItem(targetIndex)
-        activity?.intent?.removeExtra("extra_target_date")
-        intentHandled = true
     }
 
     LaunchedEffect(state, globalUiState) {

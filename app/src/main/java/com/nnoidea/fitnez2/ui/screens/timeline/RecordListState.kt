@@ -31,6 +31,7 @@ import kotlinx.coroutines.withTimeoutOrNull
     val uiItems: List<RecordDisplayItem>
     val weightUnit: String
     val initialLoadDone: Boolean
+    val hasNewer: Boolean
     val expandedRecordIds: SnapshotStateMap<String, Boolean>
     val timestampTokens: SnapshotStateMap<String, Long>
     fun onUpdateRequest(record: Record)
@@ -64,7 +65,7 @@ class RecordListStateImpl(
 
     private var loadedRecords by mutableStateOf<List<Record>>(emptyList())
     private var hasMore by mutableStateOf(true)
-    private var hasNewer by mutableStateOf(false)
+    override var hasNewer by mutableStateOf(false)
     private var isLoading by mutableStateOf(false)
 
     var exerciseMap by mutableStateOf<Map<String, String>>(emptyMap())
@@ -103,6 +104,7 @@ class RecordListStateImpl(
             }
             rebuildItems()
             initialLoadDone = true
+            listState.scrollToItem(0)
         }
     }
 
@@ -172,40 +174,34 @@ class RecordListStateImpl(
 
     override suspend fun loadUntilDate(targetDate: Long) {
         try {
-            val dayRecords = recordService.getRecordsAroundDate(
-                targetDate - 86400000L, targetDate + 86400000L
-            ).filter { com.nnoidea.fitnez2.core.TimeUtils.isSameDay(it.date, targetDate) }
+            val endOfDay = targetDate + 86400000L - 1L
+            val onOrBefore = recordService.getRecordsOnOrBeforeDate(endOfDay, limit = 100)
+            val newer = recordService.getRecordsAfterDate(endOfDay, limit = 50)
 
-            if (dayRecords.isEmpty()) {
-                val nearby = recordService.getRecordsAroundDate(targetDate - 86400000L, targetDate + 86400000L)
-                if (nearby.isEmpty()) return
-                loadedRecords = nearby.take(WINDOW_SIZE)
-            } else {
-                val latest = dayRecords.first()
-                val earliest = dayRecords.last()
-                var result = dayRecords.toMutableList()
-                // 125 newer records above the target day
-                try {
-                    val newer = recordService.getNewerRecordsBefore(latest.date, latest.orderNumber, latest.id, 125)
-                    if (newer.isNotEmpty()) result = (newer.reversed() + result).toMutableList()
-                } catch (_: Exception) { }
-                // 125 older records below the target day
-                try {
-                    val older = recordService.getOlderRecordsAfter(earliest.date, earliest.orderNumber, earliest.id, 125)
-                    if (older.isNotEmpty()) result = (result + older).toMutableList()
-                } catch (_: Exception) { }
-                // Center the window with the target day ~50 records from the top
-                val targetIdx = result.indexOfFirst { it.id == latest.id }
-                val start = (targetIdx - 50).coerceAtLeast(0)
-                val end = (start + WINDOW_SIZE).coerceAtMost(result.size)
-                loadedRecords = result.subList(start, end).toList()
-            }
-            hasMore = true
-            hasNewer = true
+            loadedRecords = newer.reversed() + onOrBefore
+            hasNewer = newer.size >= 50
+            hasMore = onOrBefore.size >= 100
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) { }
+        } catch (_: Exception) {
+            loadedRecords = emptyList()
+            hasMore = false
+            hasNewer = false
+        }
         rebuildItems()
+        initialLoadDone = true
+
+        val targetIndex = uiItems.indexOfFirst {
+            it is RecordDisplayItem.DateHeader && com.nnoidea.fitnez2.core.TimeUtils.isSameDay(it.date, targetDate)
+        }.takeIf { it >= 0 } ?: uiItems.indexOfFirst {
+            it is RecordDisplayItem.DateHeader && it.date < targetDate
+        }.takeIf { it >= 0 }
+
+        if (targetIndex != null) {
+            listState.scrollToItem(targetIndex + 1)
+        } else {
+            listState.scrollToItem(0)
+        }
     }
 
     private fun rebuildItems() {
@@ -336,8 +332,15 @@ class RecordListStateImpl(
     }
 
     override suspend fun scrollToTop(recordId: String?) {
-        if (recordId == null) { listState.scrollToItem(0); return }
-        withTimeoutOrNull(5000) {
+        if (recordId == null) {
+            if (hasNewer) {
+                loadInitial()
+            } else {
+                listState.animateScrollToItem(0)
+            }
+            return
+        }
+        withTimeoutOrNull(2000) {
             snapshotFlow { uiItems }.first { items ->
                 items.any { it is RecordDisplayItem.RecordGroup && it.records.any { r -> r.record.id == recordId } }
             }

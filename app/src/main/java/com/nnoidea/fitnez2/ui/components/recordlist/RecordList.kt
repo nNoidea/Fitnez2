@@ -58,6 +58,7 @@ fun RecordList(
     showCollapse: Boolean = true,
     showSwipe: Boolean = true,
     showTimestamps: Boolean = true,
+    hasNewer: Boolean = false,
     expandedRecordIds: SnapshotStateMap<String, Boolean> = remember { mutableStateMapOf() },
     timestampTokens: SnapshotStateMap<String, Long> = remember { mutableStateMapOf() },
     onShowTimestamp: (String) -> Unit = { _ -> },
@@ -105,6 +106,7 @@ fun RecordList(
 
         ScrollToTopButton(
             listState = listState,
+            hasNewer = hasNewer,
             onClick = {
                 scope.launch {
                     onScrollToTopClick?.invoke() ?: listState.scrollToItem(0)
@@ -121,14 +123,15 @@ fun RecordList(
 @Composable
 private fun ScrollToTopButton(
     listState: LazyListState,
+    hasNewer: Boolean,
     onClick: () -> Unit,
     extraBottomPadding: Dp,
     modifier: Modifier = Modifier
 ) {
     val globalUiState = LocalGlobalUiState.current
     val view = LocalView.current
-    val showButton by remember {
-        derivedStateOf { listState.firstVisibleItemIndex > 3 }
+    val showButton by remember(hasNewer) {
+        derivedStateOf { hasNewer || listState.firstVisibleItemIndex > 3 }
     }
 
     LaunchedEffect(showButton) {
