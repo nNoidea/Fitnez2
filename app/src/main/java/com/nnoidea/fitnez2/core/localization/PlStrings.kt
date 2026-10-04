@@ -142,6 +142,9 @@ object PlStrings : EnStrings(
     override val labelCurrentWeight = "Ostatni Ciężar"
     override val labelProgress = "Postęp"
     override val labelNoExercises = "Nie znaleziono ćwiczeń. Najpierw utwórz ćwiczenie!"
+    override val labelCompareBy = "Porównaj według"
+    override val labelGraphMaxWeight = "Ciężar"
+    override val labelGraphVolume = "Objętość"
 
     // Unsaved Work Dialog
     override val titleNoName = "Brak Nazwy"

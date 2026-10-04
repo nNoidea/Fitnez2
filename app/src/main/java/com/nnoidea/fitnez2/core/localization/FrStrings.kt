@@ -137,6 +137,9 @@ object FrStrings : EnStrings(
     override val labelCurrentWeight = "Dernier Poids"
     override val labelProgress = "Progression"
     override val labelNoExercises = "Aucun exercice trouvé. Créez d'abord un exercice !"
+    override val labelCompareBy = "Comparer par"
+    override val labelGraphMaxWeight = "Poids"
+    override val labelGraphVolume = "Volume"
 
     // Unsaved Work Dialog
     override val titleNoName = "Sans Nom"

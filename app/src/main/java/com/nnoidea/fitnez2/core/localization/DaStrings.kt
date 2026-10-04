@@ -137,6 +137,9 @@ object DaStrings : EnStrings(
     override val labelCurrentWeight = "Seneste Vægt"
     override val labelProgress = "Fremskridt"
     override val labelNoExercises = "Ingen øvelser fundet. Opret en øvelse først!"
+    override val labelCompareBy = "Sammenlign efter"
+    override val labelGraphMaxWeight = "Vægt"
+    override val labelGraphVolume = "Volumen"
 
     // Unsaved Work Dialog
     override val titleNoName = "Intet Navn"

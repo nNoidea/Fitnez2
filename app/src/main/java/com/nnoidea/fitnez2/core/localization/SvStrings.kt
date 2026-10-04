@@ -137,6 +137,9 @@ object SvStrings : EnStrings(
     override val labelCurrentWeight = "Senaste Vikt"
     override val labelProgress = "Framsteg"
     override val labelNoExercises = "Inga övningar hittades. Skapa en övning först!"
+    override val labelCompareBy = "Jämför efter"
+    override val labelGraphMaxWeight = "Vikt"
+    override val labelGraphVolume = "Volym"
 
     // Unsaved Work Dialog
     override val titleNoName = "Inget Namn"

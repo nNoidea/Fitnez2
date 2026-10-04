@@ -143,6 +143,9 @@ object UkStrings : EnStrings(
     override val labelCurrentWeight = "Остання Вага"
     override val labelProgress = "Прогрес"
     override val labelNoExercises = "Вправи не знайдені. Спочатку створіть вправу!"
+    override val labelCompareBy = "Порівняти за"
+    override val labelGraphMaxWeight = "Вага"
+    override val labelGraphVolume = "Об'єм"
 
     // Unsaved Work Dialog
     override val titleNoName = "Без Назви"

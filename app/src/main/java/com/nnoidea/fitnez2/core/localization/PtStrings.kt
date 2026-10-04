@@ -137,6 +137,9 @@ object PtStrings : EnStrings(
     override val labelCurrentWeight = "Último Peso"
     override val labelProgress = "Progresso"
     override val labelNoExercises = "Nenhum exercício encontrado. Crie um exercício primeiro!"
+    override val labelCompareBy = "Comparar por"
+    override val labelGraphMaxWeight = "Peso"
+    override val labelGraphVolume = "Volume"
 
     // Unsaved Work Dialog
     override val titleNoName = "Sem Nome"

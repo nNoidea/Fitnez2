@@ -17,6 +17,7 @@ local.properties
 .idea/
 .agent/
 .agents/
+AGENTS.md
 GEMINI.md
 *.prompt
 /breezy-weather-main

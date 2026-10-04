@@ -62,4 +62,16 @@ class SettingsServiceTest {
         settingsService.setFontMode("LARGE")
         assertEquals("LARGE", settingsService.fontModeFlow.first())
     }
+
+    @Test
+    fun setAndGetGraphRangeAndMetric() = runBlocking {
+        assertEquals("ALL", settingsService.graphRangeFlow.first())
+        assertEquals("MAX_WEIGHT", settingsService.graphMetricFlow.first())
+
+        settingsService.setGraphRange("THIRTY")
+        assertEquals("THIRTY", settingsService.graphRangeFlow.first())
+
+        settingsService.setGraphMetric("VOLUME")
+        assertEquals("VOLUME", settingsService.graphMetricFlow.first())
+    }
 }

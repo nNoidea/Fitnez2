@@ -137,6 +137,9 @@ object NlStrings : EnStrings(
     override val labelCurrentWeight = "Laatste Gewicht"
     override val labelProgress = "Voortgang"
     override val labelNoExercises = "Geen oefeningen gevonden. Maak eerst een oefening!"
+    override val labelCompareBy = "Vergelijken op"
+    override val labelGraphMaxWeight = "Gewicht"
+    override val labelGraphVolume = "Volume"
 
     // Unsaved Work Dialog
     override val titleNoName = "Geen Naam"

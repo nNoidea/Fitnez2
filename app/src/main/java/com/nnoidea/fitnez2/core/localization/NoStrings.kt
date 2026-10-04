@@ -137,6 +137,9 @@ object NoStrings : EnStrings(
     override val labelCurrentWeight = "Siste Vekt"
     override val labelProgress = "Fremgang"
     override val labelNoExercises = "Ingen øvelser funnet. Opprett en øvelse først!"
+    override val labelCompareBy = "Sammenlign etter"
+    override val labelGraphMaxWeight = "Vekt"
+    override val labelGraphVolume = "Volum"
 
     // Unsaved Work Dialog
     override val titleNoName = "Uten Navn"

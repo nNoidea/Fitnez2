@@ -84,4 +84,22 @@ class SettingsRepository(private val context: Context) {
     suspend fun setFontMode(mode: String) {
         context.dataStore.edit { it[FONT_MODE_KEY] = mode }
     }
+
+    private val GRAPH_RANGE_KEY = stringPreferencesKey("graph_range")
+
+    val graphRangeFlow: Flow<String> = context.dataStore.data
+        .map { preferences -> preferences[GRAPH_RANGE_KEY] ?: "ALL" }
+
+    suspend fun setGraphRange(range: String) {
+        context.dataStore.edit { it[GRAPH_RANGE_KEY] = range }
+    }
+
+    private val GRAPH_METRIC_KEY = stringPreferencesKey("graph_metric")
+
+    val graphMetricFlow: Flow<String> = context.dataStore.data
+        .map { preferences -> preferences[GRAPH_METRIC_KEY] ?: "MAX_WEIGHT" }
+
+    suspend fun setGraphMetric(metric: String) {
+        context.dataStore.edit { it[GRAPH_METRIC_KEY] = metric }
+    }
 }

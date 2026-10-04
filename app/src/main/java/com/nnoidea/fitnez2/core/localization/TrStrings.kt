@@ -139,6 +139,9 @@ object TrStrings : EnStrings(
     override val labelCurrentWeight = "Son Ağırlık"
     override val labelProgress = "İlerleme"
     override val labelNoExercises = "Egzersiz bulunamadı. Önce bir egzersiz oluşturun!"
+    override val labelCompareBy = "Karşılaştırma ölçütü"
+    override val labelGraphMaxWeight = "Ağırlık"
+    override val labelGraphVolume = "Hacim"
 
     // Unsaved Work Dialog
     override val titleNoName = "İsim Yok"

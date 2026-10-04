@@ -137,6 +137,9 @@ object ItStrings : EnStrings(
     override val labelCurrentWeight = "Ultimo Peso"
     override val labelProgress = "Progresso"
     override val labelNoExercises = "Nessun esercizio trovato. Crea prima un esercizio!"
+    override val labelCompareBy = "Confronta per"
+    override val labelGraphMaxWeight = "Peso"
+    override val labelGraphVolume = "Volume"
 
     // Unsaved Work Dialog
     override val titleNoName = "Senza Nome"

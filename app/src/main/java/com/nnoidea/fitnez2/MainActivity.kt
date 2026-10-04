@@ -114,6 +114,7 @@ class MainActivity : ComponentActivity() {
                         val route = intent.getStringExtra(EXTRA_PAGE_ROUTE)
                         if (route != null && AppPage.entries.any { it.route == route }) route else AppPage.Timeline.route
                     }
+                    val homeBottomSheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
 
                     PredictiveNavigationDrawer(
                         drawerState = drawerState,
@@ -133,6 +134,7 @@ class MainActivity : ComponentActivity() {
                                         drawerState.close()
                                     }
                                     if (clickedRoute != currentDestination) {
+                                        homeBottomSheetState.collapse()
                                         navController.navigate(clickedRoute) {
                                             popUpTo(AppPage.Timeline.route) {
                                                 saveState = true
@@ -172,7 +174,8 @@ class MainActivity : ComponentActivity() {
                                             } else {
                                                 navController.navigate(AppPage.Workout.route)
                                             }
-                                        }
+                                        },
+                                        bottomSheetState = homeBottomSheetState
                                     )
                                 }
 
@@ -187,7 +190,15 @@ class MainActivity : ComponentActivity() {
 
                                 composable(AppPage.Graph.route) {
                                     GraphScreen(
-                                        onOpenDrawer = { scope.launch { drawerState.open() } }
+                                        onOpenDrawer = { scope.launch { drawerState.open() } },
+                                        onNavigateToWorkout = { workoutId ->
+                                            if (workoutId != null) {
+                                                navController.navigate("workout?workoutId=$workoutId")
+                                            } else {
+                                                navController.navigate(AppPage.Workout.route)
+                                            }
+                                        },
+                                        bottomSheetState = homeBottomSheetState
                                     )
                                 }
 

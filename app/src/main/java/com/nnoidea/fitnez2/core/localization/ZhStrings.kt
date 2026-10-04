@@ -137,6 +137,9 @@ object ZhStrings : EnStrings(
     override val labelCurrentWeight = "最新重量"
     override val labelProgress = "进度"
     override val labelNoExercises = "未找到动作。请先创建一个动作！"
+    override val labelCompareBy = "比较依据"
+    override val labelGraphMaxWeight = "重量"
+    override val labelGraphVolume = "训练量"
 
     // Unsaved Work Dialog
     override val titleNoName = "未命名"

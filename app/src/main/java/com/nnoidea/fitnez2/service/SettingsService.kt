@@ -22,6 +22,10 @@ class SettingsService(context: Context) {
 
     val fontModeFlow: Flow<String> = repository.fontModeFlow
 
+    val graphRangeFlow: Flow<String> = repository.graphRangeFlow
+
+    val graphMetricFlow: Flow<String> = repository.graphMetricFlow
+
     suspend fun setLanguageCode(code: String?) {
         repository.setLanguageCode(code)
     }
@@ -48,5 +52,13 @@ class SettingsService(context: Context) {
 
     suspend fun setFontMode(mode: String) {
         repository.setFontMode(mode)
+    }
+
+    suspend fun setGraphRange(range: String) {
+        repository.setGraphRange(range)
+    }
+
+    suspend fun setGraphMetric(metric: String) {
+        repository.setGraphMetric(metric)
     }
 }

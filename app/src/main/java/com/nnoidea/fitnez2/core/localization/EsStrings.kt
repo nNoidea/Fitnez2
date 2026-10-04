@@ -137,6 +137,9 @@ object EsStrings : EnStrings(
     override val labelCurrentWeight = "Último peso"
     override val labelProgress = "Progreso"
     override val labelNoExercises = "No se encontraron ejercicios. ¡Crea un ejercicio primero!"
+    override val labelCompareBy = "Comparar por"
+    override val labelGraphMaxWeight = "Peso"
+    override val labelGraphVolume = "Volumen"
 
     // Unsaved Work Dialog
     override val titleNoName = "Sin nombre"

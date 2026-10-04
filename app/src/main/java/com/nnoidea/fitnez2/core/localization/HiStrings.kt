@@ -137,6 +137,9 @@ object HiStrings : EnStrings(
     override val labelCurrentWeight = "नवीनतम वजन"
     override val labelProgress = "प्रगति"
     override val labelNoExercises = "कोई व्यायाम नहीं मिला। पहले एक व्यायाम बनाएं!"
+    override val labelCompareBy = "तुलना करें"
+    override val labelGraphMaxWeight = "वजन"
+    override val labelGraphVolume = "वॉल्यूम"
 
     // Unsaved Work Dialog
     override val titleNoName = "कोई नाम नहीं"

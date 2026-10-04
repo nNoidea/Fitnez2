@@ -18,8 +18,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import com.nnoidea.fitnez2.ui.components.recordlist.RecordDisplayItem
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -133,5 +135,32 @@ class RecordListStateTest {
         assertEquals(5, fetched?.sets)
         assertEquals(15, fetched?.reps)
         assertEquals(110.0, fetched?.weight ?: 0.0, 0.001)
+    }
+
+    @Test
+    fun updateExerciseMap_whenExerciseDeleted_immediatelyRemovesItsRecords() = runBlocking {
+        val squat = exerciseService.createExercise("Squat")
+        val bench = exerciseService.createExercise("Bench")
+        recordService.createRecord(squat.id, sets = 3, reps = 10, weight = 100.0, date = 1000L)
+        recordService.createRecord(bench.id, sets = 3, reps = 10, weight = 80.0, date = 2000L)
+
+        val state = createRecordListState()
+        state.updateExerciseMap(mapOf(squat.id to squat.name, bench.id to bench.name))
+        state.loadInitial()
+
+        withTimeout(3000) {
+            while (state.uiItems.size < 3) {
+                delay(20)
+            }
+        }
+
+        // Delete squat: database cascades deletion, and exerciseMap updates without squat
+        exerciseService.deleteExercise(squat.id)
+        state.updateExerciseMap(mapOf(bench.id to bench.name))
+
+        // uiItems must immediately exclude squat records without reloading/restarting
+        val recordGroups = state.uiItems.filterIsInstance<RecordDisplayItem.RecordGroup>()
+        val hasSquat = recordGroups.any { group -> group.records.any { it.record.exerciseId == squat.id } }
+        assertFalse("uiItems must immediately exclude deleted exercise records", hasSquat)
     }
 }

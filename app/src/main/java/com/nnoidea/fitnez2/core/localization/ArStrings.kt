@@ -143,6 +143,9 @@ object ArStrings : EnStrings(
     override val labelCurrentWeight = "الوزن الأخير"
     override val labelProgress = "التقدم"
     override val labelNoExercises = "لم يتم العثور على تمارين. أنشئ تمرينًا أولاً!"
+    override val labelCompareBy = "قارن حسب"
+    override val labelGraphMaxWeight = "الوزن"
+    override val labelGraphVolume = "الحجم"
 
     // Unsaved Work Dialog
     override val titleNoName = "بدون اسم"

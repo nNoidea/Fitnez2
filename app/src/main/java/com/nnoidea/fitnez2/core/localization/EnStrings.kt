@@ -163,6 +163,9 @@ sealed class EnStrings(
     open val labelCurrentWeight: String = "Latest Weight"
     open val labelProgress: String = "Progress"
     open val labelNoExercises: String = "No exercises found. Create an exercise first!"
+    open val labelCompareBy: String = "Compare by"
+    open val labelGraphMaxWeight: String = "Weight"
+    open val labelGraphVolume: String = "Volume"
 
     // Unsaved Work Dialog
     open val titleNoName: String = "No Name"

@@ -1,19 +1,27 @@
 package com.nnoidea.fitnez2.ui.screens.graph
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -24,263 +32,318 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.nnoidea.fitnez2.data.entities.Record
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.abs
+
+data class SessionPoint(
+    val date: Long,
+    val maxWeight: Double,
+    val totalSets: Int,
+    val totalReps: Int,
+    val volume: Double = 0.0,
+    val isPr: Boolean = false,
+    val isLatest: Boolean = false,
+    val leftValue: Double = maxWeight,
+    val rightValue: Double = maxWeight
+)
+
+/**
+ * Rounded-corner polygon: every vertex is trimmed along both adjacent edges and
+ * rejoined with a quadratic, so all corners share one consistent radius.
+ * Pure math over [Offset]s so it stays unit-testable; the Canvas just replays it.
+ */
+data class CornerOp(val lineTo: Offset, val control: Offset, val end: Offset)
+data class RoundedPolygon(val start: Offset, val ops: List<CornerOp>)
+
+fun roundedPolygon(points: List<Offset>, radius: Float): RoundedPolygon {
+    data class Trim(val a: Offset, val p: Offset, val b: Offset)
+    val trims = points.mapIndexed { i, p ->
+        val prev = points[(i - 1 + points.size) % points.size]
+        val next = points[(i + 1) % points.size]
+        val ePrev = p - prev
+        val eNext = next - p
+        val lenPrev = ePrev.getDistance()
+        val lenNext = eNext.getDistance()
+        val r = minOf(radius, lenPrev / 2f, lenNext / 2f).coerceAtLeast(0f)
+        val a = if (lenPrev > 0f && r > 0f) p - ePrev / lenPrev * r else p
+        val b = if (lenNext > 0f && r > 0f) p + eNext / lenNext * r else p
+        Trim(a, p, b)
+    }
+    val ordered = trims.drop(1) + trims.take(1)
+    return RoundedPolygon(
+        start = trims[0].b,
+        ops = ordered.map { CornerOp(it.a, it.p, it.b) }
+    )
+}
+
+/**
+ * One height label per bar: distinct values each get their own gridline, while
+ * equal (or unreadably close, under ~one label height apart) values share one.
+ */
+fun heightLabelValues(values: List<Double>, minGapFraction: Float = 0.055f): List<Double> {
+    if (values.isEmpty()) return emptyList()
+    val min = values.min()
+    val max = values.max()
+    if (max <= min) return listOf(values.first())
+    val gap = (max - min) * minGapFraction
+    // ponytail: sorted() is O(n log n) on at most 8 in-memory values; nothing to win here.
+    return values.sorted().fold(emptyList()) { kept, v ->
+        if (kept.isEmpty() || v - kept.last() >= gap) kept + v else kept
+    }
+}
+
+/**
+ * Silhouette corner heights in data units: the first bar's top-left plus every
+ * bar's top-right. Labels drawn from these always sit exactly on the drawn silhouette.
+ */
+fun silhouetteCornerValues(bars: List<SessionPoint>): List<Double> {
+    if (bars.isEmpty()) return emptyList()
+    return listOf(bars.first().leftValue) + bars.map { it.rightValue }
+}
 
 @Composable
-fun InteractiveBezierChart(
-    records: List<Record>,
+fun BatteryStyleChart(
+    sessions: List<SessionPoint>,
     weightUnit: String,
+    plotValue: (SessionPoint) -> Double = { it.rightValue },
     primaryColor: Color,
     gridColor: Color,
-    textColor: Color
+    textColor: Color,
+    barTonalColor: Color,
+    prColor: Color = adaptiveGold(MaterialTheme.colorScheme.surfaceContainerHigh),
+    modifier: Modifier = Modifier
 ) {
-    // Interactive drag/hover state
-    var selectedPointIndex by remember { mutableStateOf<Int?>(null) }
+    val view = LocalView.current
+    var selectedIndex by remember { mutableStateOf<Int?>(null) }
     var touchX by remember { mutableFloatStateOf(0f) }
 
-    val formatter = remember { DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault()) }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("d MMM", Locale.getDefault()) }
+    val fullDateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val totalWidth = maxWidth
+        val totalWidthPx = with(LocalDensity.current) { totalWidth.toPx() }
+
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(records) {
+                .pointerInput(sessions) {
                     detectTapGestures(
-                        onPress = { selectedPointIndex = null }
+                        onPress = { selectedIndex = null }
                     )
                 }
-                .pointerInput(records) {
+                .pointerInput(sessions) {
                     detectDragGesturesAfterLongPress(
-                        onDragStart = { offset ->
-                            touchX = offset.x
-                        },
+                        onDragStart = { offset -> touchX = offset.x },
                         onDrag = { change, _ ->
                             change.consume()
                             touchX = change.position.x
                         },
-                        onDragEnd = { selectedPointIndex = null },
-                        onDragCancel = { selectedPointIndex = null }
+                        onDragEnd = { selectedIndex = null },
+                        onDragCancel = { selectedIndex = null }
                     )
                 }
         ) {
             val width = size.width
             val height = size.height
 
-            if (records.isEmpty()) return@Canvas
+            if (sessions.isEmpty()) return@Canvas
 
-            val minWeight = records.minOf { it.weight }
-            val maxWeight = records.maxOf { it.weight }
-            val weightDelta = (maxWeight - minWeight).coerceAtLeast(1.0)
+            val corners = silhouetteCornerValues(sessions)
+            val minWeight = corners.min()
+            val maxWeight = corners.max()
 
-            // Padding boundaries
-            val paddingLeft = 40.dp.toPx()
-            val paddingRight = 16.dp.toPx()
-            val paddingTop = 24.dp.toPx()
-            val paddingBottom = 24.dp.toPx()
+            val paddingLeft = 8.dp.toPx()
+            val paddingRight = 42.dp.toPx()
+            val paddingTop = 28.dp.toPx()
+            val paddingBottom = 32.dp.toPx()
 
             val chartWidth = width - paddingLeft - paddingRight
             val chartHeight = height - paddingTop - paddingBottom
+            val barBottom = paddingTop + chartHeight
+            val stubHeight = 10.dp.toPx()
 
-            // Draw Y-Axis Horizontal Grid Lines
-            val gridSteps = 4
-            for (i in 0..gridSteps) {
-                val fraction = i.toFloat() / gridSteps
-                val y = paddingTop + chartHeight * (1f - fraction)
+            fun yForFraction(fraction: Float): Float =
+                barBottom - (stubHeight + fraction * (chartHeight - stubHeight))
 
-                // Draw dashed grid lines
+            fun fractionForValue(value: Double): Float =
+                if (maxWeight <= minWeight) 1f
+                else ((value - minWeight) / (maxWeight - minWeight)).toFloat()
+
+            // Battery-style solid gridlines: one per silhouette corner at its own
+            // height (first left edge + every right edge), sharing a line when corners sit at the same level.
+            val labelVals = heightLabelValues(corners)
+            val maxLabelVal = labelVals.maxOrNull()
+
+            labelVals.forEach { value ->
+                val fraction = fractionForValue(value)
+                val y = yForFraction(fraction)
+
                 drawLine(
                     color = gridColor,
                     start = Offset(paddingLeft, y),
                     end = Offset(width - paddingRight, y),
-                    strokeWidth = 1.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                    strokeWidth = 1.dp.toPx()
                 )
 
-                // Label
-                val labelValue = minWeight + fraction * weightDelta
+                val text = formatMaxTwoDecimals(value)
+                val isMax = (value == maxLabelVal)
+
+                val paint = android.graphics.Paint().apply {
+                    color = if (isMax) Color(0xFF1C1B1F).hashCode() else textColor.hashCode()
+                    textSize = 10.sp.toPx()
+                    textAlign = android.graphics.Paint.Align.RIGHT
+                    typeface = if (isMax) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
+                }
+
+                if (isMax) {
+                    val textWidth = paint.measureText(text)
+                    val fontMetrics = paint.fontMetrics
+                    val pillPaddingH = 5.dp.toPx()
+                    val pillPaddingV = 2.dp.toPx()
+                    val textBaselineY = y + 4.dp.toPx()
+                    val pillRight = width - 8.dp.toPx() + pillPaddingH
+                    val pillLeft = pillRight - textWidth - 2 * pillPaddingH
+                    val pillTop = textBaselineY + fontMetrics.ascent - pillPaddingV
+                    val pillBottom = textBaselineY + fontMetrics.descent + pillPaddingV
+                    val pillH = pillBottom - pillTop
+
+                    drawRoundRect(
+                        color = prColor,
+                        topLeft = Offset(pillLeft, pillTop),
+                        size = Size(pillRight - pillLeft, pillH),
+                        cornerRadius = CornerRadius(pillH / 2f, pillH / 2f)
+                    )
+                }
+
                 drawContext.canvas.nativeCanvas.drawText(
-                    String.format(Locale.getDefault(), "%.1f", labelValue),
-                    8.dp.toPx(),
+                    text,
+                    width - 8.dp.toPx(),
                     y + 4.dp.toPx(),
-                    android.graphics.Paint().apply {
-                        color = textColor.hashCode()
-                        textSize = 10.sp.toPx()
-                    }
+                    paint
                 )
             }
 
-            // Map data to coordinates
-            val points = records.mapIndexed { index, record ->
-                val xFraction = if (records.size > 1) index.toFloat() / (records.size - 1) else 0.5f
-                val yFraction =
-                    if (weightDelta > 0) (record.weight - minWeight) / weightDelta else 0.5
-                Offset(
-                    x = paddingLeft + xFraction * chartWidth,
-                    y = paddingTop + chartHeight * (1f - yFraction.toFloat())
+            val slotWidth = chartWidth / sessions.size
+            val gap = (4.dp.toPx()).coerceAtMost(slotWidth * 0.16f)
+            val cornerRadius = 6.dp.toPx()
+
+            // Find closest index if touch active
+            if (touchX >= paddingLeft && touchX <= width - paddingRight) {
+                val hovered = ((touchX - paddingLeft) / slotWidth).toInt().coerceIn(0, sessions.lastIndex)
+                if (selectedIndex != hovered) {
+                    selectedIndex = hovered
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                }
+            }
+
+            // Draw grounded segments with rounded top corners following the slant
+            sessions.forEachIndexed { index, session ->
+                val x0 = paddingLeft + index * slotWidth + gap / 2f
+                val x1 = paddingLeft + (index + 1) * slotWidth - gap / 2f
+                val yL = yForFraction(fractionForValue(session.leftValue))
+                val yR = yForFraction(fractionForValue(session.rightValue))
+
+                val isHovered = (index == selectedIndex)
+                val barColor = when {
+                    isHovered -> primaryColor
+                    session.isLatest -> primaryColor
+                    else -> barTonalColor
+                }
+
+                // Consistently rounded on all 4 edges; sharp slants and short stubs just clamp smaller
+                val poly = roundedPolygon(
+                    listOf(Offset(x0, barBottom), Offset(x0, yL), Offset(x1, yR), Offset(x1, barBottom)),
+                    cornerRadius
                 )
-            }
-
-            // Calculate closest point during user interaction
-            if ((touchX >= paddingLeft) && (touchX <= width - paddingRight)) {
-                var closestIndex = 0
-                var minDistance = Float.MAX_VALUE
-                points.forEachIndexed { index, offset ->
-                    val distance = abs(offset.x - touchX)
-                    if (distance < minDistance) {
-                        minDistance = distance
-                        closestIndex = index
+                val segment = Path().apply {
+                    moveTo(poly.start.x, poly.start.y)
+                    poly.ops.forEach { op ->
+                        lineTo(op.lineTo.x, op.lineTo.y)
+                        quadraticTo(op.control.x, op.control.y, op.end.x, op.end.y)
                     }
-                }
-                selectedPointIndex = closestIndex
-            }
-
-            // Draw Bezier Line Path
-            if (points.size > 1) {
-                val strokePath = Path().apply {
-                    moveTo(points.first().x, points.first().y)
-                    for (i in 0 until points.size - 1) {
-                        val p0 = points[i]
-                        val p1 = points[i + 1]
-                        val controlX = (p0.x + p1.x) / 2f
-                        cubicTo(
-                            x1 = controlX, y1 = p0.y,
-                            x2 = controlX, y2 = p1.y,
-                            x3 = p1.x, y3 = p1.y
-                        )
-                    }
-                }
-
-                // Draw flowing background gradient under the curve
-                val fillPath = Path().apply {
-                    addPath(strokePath)
-                    lineTo(points.last().x, paddingTop + chartHeight)
-                    lineTo(points.first().x, paddingTop + chartHeight)
                     close()
                 }
+                drawPath(segment, barColor)
 
-                drawPath(
-                    path = fillPath,
-                    brush = Brush.verticalGradient(
-                        colors = listOf(primaryColor.copy(alpha = 0.35f), Color.Transparent),
-                        startY = paddingTop,
-                        endY = paddingTop + chartHeight
-                    )
-                )
-
-                drawPath(
-                    path = strokePath,
-                    color = primaryColor,
-                    style = Stroke(
-                        width = 3.dp.toPx(),
-                        pathEffect = null
-                    )
-                )
-            } else if (points.size == 1) {
-                // If only 1 point, draw a solid point in the center
-                drawCircle(
-                    color = primaryColor,
-                    radius = 6.dp.toPx(),
-                    center = points.first()
-                )
-            }
-
-            // Draw normal node points
-            points.forEachIndexed { index, offset ->
-                if (index != selectedPointIndex) {
-                    drawCircle(
-                        color = primaryColor,
-                        radius = 4.dp.toPx(),
-                        center = offset
-                    )
-                }
-            }
-
-            // Draw highlighted selected point
-            selectedPointIndex?.let { index ->
-                val selectedOffset = points[index]
-
-                // Draw vertical highlight guide line
+                // Baseline tick + date label per segment (at most 7 bars, so label them all)
+                val xCenter = (x0 + x1) / 2f
                 drawLine(
-                    color = primaryColor.copy(alpha = 0.5f),
-                    start = Offset(selectedOffset.x, paddingTop),
-                    end = Offset(selectedOffset.x, paddingTop + chartHeight),
-                    strokeWidth = 1.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                    color = textColor.copy(alpha = 0.4f),
+                    start = Offset(xCenter, barBottom),
+                    end = Offset(xCenter, barBottom + 5.dp.toPx()),
+                    strokeWidth = 1.dp.toPx()
                 )
-
-                // Draw glowing node
-                drawCircle(
-                    color = primaryColor.copy(alpha = 0.3f),
-                    radius = 10.dp.toPx(),
-                    center = selectedOffset
-                )
-                drawCircle(
-                    color = primaryColor,
-                    radius = 6.dp.toPx(),
-                    center = selectedOffset
+                drawContext.canvas.nativeCanvas.drawText(
+                    dateFormatter.format(Instant.ofEpochMilli(session.date).atZone(ZoneId.systemDefault())),
+                    xCenter,
+                    height - 6.dp.toPx(),
+                    android.graphics.Paint().apply {
+                        color = textColor.copy(alpha = 0.65f).hashCode()
+                        textSize = 10.sp.toPx()
+                        textAlign = android.graphics.Paint.Align.CENTER
+                    }
                 )
             }
         }
 
-        // Float interactive Tooltip composable cleanly over the canvas
-        selectedPointIndex?.let { index ->
-            val record = records[index]
-            val dateStr = formatter.format(Instant.ofEpochMilli(record.date).atZone(ZoneId.systemDefault()))
+        // Floating Scrub Tooltip
+        selectedIndex?.takeIf { it in sessions.indices }?.let { index ->
+            val session = sessions[index]
+            val dateStr = fullDateFormatter.format(Instant.ofEpochMilli(session.date).atZone(ZoneId.systemDefault()))
 
-            val paddingLeftPx = 40.dp
-            val paddingRightPx = 16.dp
-            val chartWidth = 300.dp - paddingLeftPx - paddingRightPx
+            val paddingLeft = 8.dp
+            val paddingRight = 42.dp
+            val chartWidthDp = totalWidth - paddingLeft - paddingRight
+            val slotWidthDp = chartWidthDp / sessions.size
 
-            val xFraction = if (records.size > 1) index.toFloat() / (records.size - 1) else 0.5f
-            val alignOffsetDp = paddingLeftPx + (chartWidth * xFraction) - 60.dp
+            val tooltipWidth = 145.dp
+            val targetX = paddingLeft + (slotWidthDp * (index + 0.5f)) - (tooltipWidth / 2)
+            val clampedX = targetX.coerceIn(8.dp, (totalWidth - tooltipWidth - 8.dp).coerceAtLeast(8.dp))
 
             Card(
                 modifier = Modifier
-                    .padding(start = alignOffsetDp.coerceAtLeast(0.dp), top = 8.dp)
-                    .width(135.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .padding(start = clampedX, top = 2.dp)
+                    .width(tooltipWidth)
+                    .clip(RoundedCornerShape(16.dp)),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
                         text = dateStr,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
                     )
+                    val plotted = plotValue(session)
+                    val weightFormatted = formatMaxTwoDecimals(plotted)
                     Text(
-                        text = "${record.weight} $weightUnit",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "$weightFormatted $weightUnit",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "${record.sets} sets x ${record.reps} reps",
+                        text = "${session.totalSets} sets • ${session.totalReps} reps",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                        fontSize = 10.sp
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
                 }
             }

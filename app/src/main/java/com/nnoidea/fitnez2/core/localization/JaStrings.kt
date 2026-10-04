@@ -137,6 +137,9 @@ object JaStrings : EnStrings(
     override val labelCurrentWeight = "最新の重量"
     override val labelProgress = "進捗"
     override val labelNoExercises = "種目が見つかりません。まず種目を作成してください！"
+    override val labelCompareBy = "比較基準"
+    override val labelGraphMaxWeight = "重量"
+    override val labelGraphVolume = "ボリューム"
 
     // Unsaved Work Dialog
     override val titleNoName = "名前なし"

@@ -143,6 +143,9 @@ object RuStrings : EnStrings(
     override val labelCurrentWeight = "Последний Вес"
     override val labelProgress = "Прогресс"
     override val labelNoExercises = "Упражнения не найдены. Сначала создайте упражнение!"
+    override val labelCompareBy = "Сравнить по"
+    override val labelGraphMaxWeight = "Вес"
+    override val labelGraphVolume = "Объём"
 
     // Unsaved Work Dialog
     override val titleNoName = "Без Названия"

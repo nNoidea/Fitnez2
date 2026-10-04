@@ -249,6 +249,17 @@ abstract class PredictiveBottomSheetState(
         )
     }
 
+    fun collapse() {
+        if (isExpanded) {
+            scope.launch {
+                offsetY.animateTo(
+                    targetValue = maxOffset,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)
+                )
+            }
+        }
+    }
+
     val nestedScrollConnection = object : NestedScrollConnection {
         override fun onPreScroll(
             available: androidx.compose.ui.geometry.Offset,

@@ -348,7 +348,21 @@ class RecordListStateImpl(
         listState.scrollToItem(0)
     }
 
-    override fun updateExerciseMap(map: Map<String, String>) { this.exerciseMap = map }
+    override fun updateExerciseMap(map: Map<String, String>) {
+        val prevMap = this.exerciseMap
+        this.exerciseMap = map
+        if (loadedRecords.isNotEmpty() && prevMap != map) {
+            val filtered = loadedRecords.filter { it.exerciseId in map.keys }
+            if (filtered.size != loadedRecords.size) {
+                loadedRecords = filtered
+            }
+            uiItems = prepareRecordDisplayItems(
+                records = loadedRecords,
+                exerciseMap = map,
+                useAlternatingColors = useAlternatingColors
+            )
+        }
+    }
 
     fun updateWeightUnit(unit: String) { this.weightUnit = unit }
 }

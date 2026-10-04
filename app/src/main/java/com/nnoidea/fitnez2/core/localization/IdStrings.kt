@@ -137,6 +137,9 @@ object IdStrings : EnStrings(
     override val labelCurrentWeight = "Beban Terakhir"
     override val labelProgress = "Kemajuan"
     override val labelNoExercises = "Tidak ada latihan yang ditemukan. Buat latihan terlebih dahulu!"
+    override val labelCompareBy = "Bandingkan berdasarkan"
+    override val labelGraphMaxWeight = "Berat"
+    override val labelGraphVolume = "Volume"
 
     // Unsaved Work Dialog
     override val titleNoName = "Tanpa Nama"

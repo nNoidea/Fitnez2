@@ -902,4 +902,85 @@ class ComposeComprehensiveUiTest {
         composeRule.onNodeWithTag("exercise_selector_button").assertExists()
         composeRule.onNodeWithTag("add_record_button").assertExists()
     }
+
+    @Test
+    fun testSharedBottomSheetState_syncsExerciseAcrossTimelineAndGraph() {
+        runBlocking {
+            exerciseService.createExercise("Pull up")
+        }
+
+        lateinit var navController: androidx.navigation.NavHostController
+        lateinit var sharedSheetState: com.nnoidea.fitnez2.ui.screens.timeline.HomeBottomSheetState
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+            Fitnez2Theme {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    navController = rememberNavController()
+                    sharedSheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = AppPage.Timeline.route
+                    ) {
+                        composable(AppPage.Timeline.route) {
+                            TimelineScreen(
+                                onOpenDrawer = {},
+                                bottomSheetState = sharedSheetState
+                            )
+                        }
+                        composable(AppPage.Graph.route) {
+                            com.nnoidea.fitnez2.ui.screens.graph.GraphScreen(
+                                onOpenDrawer = {},
+                                bottomSheetState = sharedSheetState
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        val pullUp = runBlocking { exerciseService.getExerciseByName("Pull up")!! }
+        val squat = runBlocking { exerciseService.getExerciseByName("Squat")!! }
+
+        // 1. In TimelineScreen, select "Pull up"
+        composeRule.runOnUiThread {
+            sharedSheetState.onExerciseSelected(pullUp, closeDialog = true)
+        }
+        composeRule.waitForIdle()
+
+        org.junit.Assert.assertEquals("Pull up", sharedSheetState.selectedExerciseName)
+
+        // 2. Navigate to GraphScreen
+        composeRule.runOnUiThread {
+            navController.navigate(AppPage.Graph.route)
+        }
+        composeRule.waitForIdle()
+
+        // Verify GraphScreen's bottomsheet displays "Pull up" and does not clobber it
+        org.junit.Assert.assertEquals("Pull up", sharedSheetState.selectedExerciseName)
+
+        // 3. In GraphScreen, change exercise to "Squat"
+        composeRule.runOnUiThread {
+            sharedSheetState.onExerciseSelected(squat, closeDialog = true)
+        }
+        composeRule.waitForIdle()
+
+        org.junit.Assert.assertEquals("Squat", sharedSheetState.selectedExerciseName)
+
+        // 4. Navigate back to TimelineScreen
+        composeRule.runOnUiThread {
+            navController.popBackStack()
+        }
+        composeRule.waitForIdle()
+
+        // Verify TimelineScreen's bottomsheet preserves "Squat"
+        org.junit.Assert.assertEquals("Squat", sharedSheetState.selectedExerciseName)
+    }
 }

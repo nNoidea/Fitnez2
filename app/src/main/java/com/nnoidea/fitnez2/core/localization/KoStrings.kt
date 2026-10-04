@@ -137,6 +137,9 @@ object KoStrings : EnStrings(
     override val labelCurrentWeight = "최근 무게"
     override val labelProgress = "진행 상황"
     override val labelNoExercises = "운동을 찾을 수 없습니다. 먼저 운동을 생성하세요!"
+    override val labelCompareBy = "비교 기준"
+    override val labelGraphMaxWeight = "무게"
+    override val labelGraphVolume = "볼륨"
 
     // Unsaved Work Dialog
     override val titleNoName = "이름 없음"
