@@ -1,7 +1,9 @@
 package com.nnoidea.fitnez2.service
 
 import android.content.Context
+import androidx.datastore.preferences.core.edit
 import androidx.test.core.app.ApplicationProvider
+import com.nnoidea.fitnez2.data.dataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -19,8 +21,9 @@ class SettingsServiceTest {
     private lateinit var settingsService: SettingsService
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlocking {
         context = ApplicationProvider.getApplicationContext()
+        context.dataStore.edit { it.clear() }
         settingsService = SettingsService(context)
     }
 
@@ -73,5 +76,16 @@ class SettingsServiceTest {
 
         settingsService.setGraphMetric("VOLUME")
         assertEquals("VOLUME", settingsService.graphMetricFlow.first())
+    }
+
+    @Test
+    fun setAndGetNightModeHour() = runBlocking {
+        assertEquals(0, settingsService.nightModeHourFlow.first())
+
+        settingsService.setNightModeHour(4)
+        assertEquals(4, settingsService.nightModeHourFlow.first())
+
+        settingsService.setNightModeHour(12)
+        assertEquals(12, settingsService.nightModeHourFlow.first())
     }
 }

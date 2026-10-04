@@ -2,11 +2,21 @@ package com.nnoidea.fitnez2.ui.screens.graph
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import com.nnoidea.fitnez2.ui.theme.AdaptiveGoldDark
+import com.nnoidea.fitnez2.ui.theme.AdaptiveGoldLight
+import com.nnoidea.fitnez2.ui.theme.AdaptiveGreenDark
+import com.nnoidea.fitnez2.ui.theme.AdaptiveGreenLight
+import com.nnoidea.fitnez2.ui.theme.AdaptiveRedDark
+import com.nnoidea.fitnez2.ui.theme.AdaptiveRedLight
+import com.nnoidea.fitnez2.ui.theme.adaptiveGold
+import com.nnoidea.fitnez2.ui.theme.adaptiveGreen
+import com.nnoidea.fitnez2.ui.theme.adaptiveRed
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.Record
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -199,6 +209,23 @@ class GraphBucketingTest {
     }
 
     @Test
+    fun compareSessions_supportsSingleTransitionBarConnectingTwoDays() {
+        val transitionBar = SessionPoint(
+            date = 2000L,
+            maxWeight = 133.33,
+            totalSets = 1,
+            totalReps = 2,
+            leftValue = 131.75,
+            rightValue = 133.33
+        )
+        val c = compareSessions(listOf(transitionBar))!!
+        assertEquals(131.75, c.initial, 0.01)
+        assertEquals(133.33, c.latest, 0.01)
+        assertEquals(1.58, c.delta, 0.01)
+        assertEquals(1.20, c.percent!!, 0.01)
+    }
+
+    @Test
     fun compareSessions_nullPercentWhenBaselineZero() {
         val c = compareSessions(
             listOf(point(1L, weight = 0.0), point(2L, weight = 50.0)),
@@ -262,16 +289,54 @@ class GraphBucketingTest {
     }
 
     @Test
-    fun heightLabels_mergeUnreadablyCloseValues() {
-        // 1.0 and 2.0 sit within one label height of 0.0 on a 0..100 scale: single line
-        assertEquals(listOf(0.0, 100.0), heightLabelValues(listOf(0.0, 1.0, 2.0, 100.0)))
-    }
-
-    @Test
     fun heightLabels_handleEdgeCases() {
         assertEquals(emptyList<Double>(), heightLabelValues(emptyList()))
         assertEquals(listOf(7.0), heightLabelValues(listOf(7.0)))
         assertEquals(listOf(50.0), heightLabelValues(listOf(50.0, 50.0, 50.0)))
+    }
+
+    @Test
+    fun heightLabels_preservesAllDistinctValuesWithoutDroppingClosePeak() {
+        // User scenario: 1.03, 131.75, 133.33
+        // All distinct values must be preserved so every label is shown
+        val values = listOf(1.03, 1.03, 131.75, 133.33)
+        val labels = heightLabelValues(values)
+        assertEquals(listOf(1.03, 131.75, 133.33), labels)
+    }
+
+    @Test
+    fun heightLabels_preservesDistinctCloseValues() {
+        // Close values are preserved so each gets its own horizontal line and label
+        assertEquals(listOf(0.0, 1.0, 2.0, 100.0), heightLabelValues(listOf(0.0, 1.0, 2.0, 100.0)))
+    }
+
+    @Test
+    fun heightLabels_collapsesValuesSharingSameFormattedDisplayString() {
+        // 8.4375 and 8.4417 both round to "8.44" -> should collapse to single gridline to avoid duplicate identical Y-axis labels
+        val values = listOf(8.4375, 8.4417)
+        val labels = heightLabelValues(values)
+        assertEquals(listOf(8.4417), labels)
+    }
+
+    @Test
+    fun resolveCanonicalValue_mapsValuesSharingFormattedDisplayToSameLabel() {
+        val labelValues = listOf(8.4417, 10.0)
+        assertEquals(8.4417, resolveCanonicalValue(8.4375, labelValues), 0.0001)
+        assertEquals(8.4417, resolveCanonicalValue(8.4417, labelValues), 0.0001)
+        assertEquals(10.0, resolveCanonicalValue(10.0, labelValues), 0.0001)
+    }
+
+    @Test
+    fun computeNonOverlappingY_enforcesMinimumGapBetweenCloseValues() {
+        val values = listOf(1.03, 131.75, 133.33)
+        val minGap = 20f
+        val yMap = computeNonOverlappingY(values, yTop = 28f, yBottom = 200f, minGapPx = minGap)
+        val y133 = yMap[133.33]!!
+        val y131 = yMap[131.75]!!
+        val y1 = yMap[1.03]!!
+        assertEquals(28f, y133, 0.01f)
+        assertTrue("Gap between 133.33 and 131.75 must be >= $minGap, was ${y131 - y133}", (y131 - y133) >= minGap - 0.01f)
+        assertTrue("Gap between 131.75 and 1.03 must be >= $minGap, was ${y1 - y131}", (y1 - y131) >= minGap - 0.01f)
     }
 
     @Test
@@ -326,6 +391,31 @@ class GraphBucketingTest {
         val day2 = days[1]
         assertEquals(25.0, day2.maxWeight, 0.0)
         assertEquals(2 * 8 * 25.0, day2.volume, 0.0)
+    }
+
+    @Test
+    fun groupRecordsByDay_withRolloverHour_groupsLateNightIntoSameDay() {
+        val zone = ZoneId.of("UTC")
+        // Monday 23:30 (e.g. 2026-10-05 23:30:00 UTC)
+        val mondayLate = java.time.LocalDate.of(2026, 10, 5).atTime(23, 30).atZone(zone).toInstant().toEpochMilli()
+        // Tuesday 01:30 (2026-10-06 01:30:00 UTC)
+        val tuesdayEarly = java.time.LocalDate.of(2026, 10, 6).atTime(1, 30).atZone(zone).toInstant().toEpochMilli()
+
+        val records = listOf(
+            Record(exerciseId = "bench", sets = 3, reps = 10, weight = 100.0, date = mondayLate),
+            Record(exerciseId = "bench", sets = 2, reps = 8, weight = 110.0, date = tuesdayEarly)
+        )
+
+        // With rolloverHour = 0 (standard midnight), they split into 2 sessions
+        val splitDays = groupRecordsByDay(records, zone, rolloverHour = 0)
+        assertEquals(2, splitDays.size)
+
+        // With rolloverHour = 4, both belong to the Monday session
+        val joinedDays = groupRecordsByDay(records, zone, rolloverHour = 4)
+        assertEquals(1, joinedDays.size)
+        assertEquals(110.0, joinedDays[0].maxWeight, 0.0)
+        assertEquals(5, joinedDays[0].totalSets)
+        assertEquals(30 + 16, joinedDays[0].totalReps)
     }
 
     @Test
@@ -412,6 +502,23 @@ class GraphBucketingTest {
     }
 
     @Test
+    fun buildChartBars_twoRange_takesLastTwoDaysToComparePreviousWithCurrent() {
+        val days = listOf(
+            DaySession(date = 1000L, maxWeight = 40.0, volume = 400.0, totalSets = 3, totalReps = 30),
+            DaySession(date = 2000L, maxWeight = 50.0, volume = 500.0, totalSets = 3, totalReps = 30),
+            DaySession(date = 3000L, maxWeight = 60.0, volume = 600.0, totalSets = 3, totalReps = 30)
+        )
+        val bars = buildChartBars(days, SessionRange.TWO, CompareMetric.MAX_WEIGHT)
+        // Must take last 2 days (day 2000L and day 3000L) -> produces 1 transition bar from 50.0 to 60.0
+        assertEquals(1, bars.size)
+        assertEquals(50.0, bars[0].leftValue, 0.0)
+        assertEquals(60.0, bars[0].rightValue, 0.0)
+        assertEquals(2000L, bars[0].startDate)
+        assertEquals(3000L, bars[0].date)
+        assertTrue(bars[0].isLatest)
+    }
+
+    @Test
     fun resolveDefaultExerciseId_emptyExercises_returnsNull() {
         assertNull(resolveDefaultExerciseId(exercises = emptyList(), latestRecordExerciseId = null))
         assertNull(resolveDefaultExerciseId(exercises = emptyList(), latestRecordExerciseId = "ex2"))
@@ -474,15 +581,19 @@ class GraphBucketingTest {
 
     @Test
     fun adaptiveColors_adaptToBackgroundLuminance() {
-        // Dark background (luminance < 0.45): vibrant, energetic, never washed out
-        assertEquals(Color(0xFFFF5252), adaptiveRed(Color(0xFF1E1B16)))
-        assertEquals(Color(0xFFFFC107), adaptiveGold(Color(0xFF1E1B16)))
-        assertEquals(Color(0xFF4CAF50), adaptiveGreen(Color(0xFF1E1B16)))
+        // Dark background: selects dark variants
+        assertEquals(AdaptiveRedDark, adaptiveRed(Color(0xFF1E1B16)))
+        assertEquals(AdaptiveGoldDark, adaptiveGold(Color(0xFF1E1B16)))
+        assertEquals(AdaptiveGreenDark, adaptiveGreen(Color(0xFF1E1B16)))
 
-        // Light background (luminance > 0.45): rich, high contrast, never muddy brown (#00504b)
-        assertEquals(Color(0xFFE53935), adaptiveRed(Color(0xFFFBF8F2)))
-        assertEquals(Color(0xFFD97706), adaptiveGold(Color(0xFFFBF8F2)))
-        assertEquals(Color(0xFF00504B), adaptiveGreen(Color(0xFFFBF8F2)))
+        // Light background: selects light variants
+        assertEquals(AdaptiveRedLight, adaptiveRed(Color(0xFFFBF8F2)))
+        assertEquals(AdaptiveGoldLight, adaptiveGold(Color(0xFFFBF8F2)))
+        assertEquals(AdaptiveGreenLight, adaptiveGreen(Color(0xFFFBF8F2)))
+
+        // Mid-tone Material You gray (#A0A0A0): must select high-contrast light variants
+        assertEquals(AdaptiveRedLight, adaptiveRed(Color(0xFFA0A0A0)))
+        assertEquals(AdaptiveGreenLight, adaptiveGreen(Color(0xFFA0A0A0)))
     }
 
     @Test
@@ -491,6 +602,231 @@ class GraphBucketingTest {
         assertEquals(ArrowDirection.DOWN, calculateArrowDirection(-2.5))
         assertEquals(ArrowDirection.NEUTRAL, calculateArrowDirection(0.0))
         assertEquals(ArrowDirection.NEUTRAL, calculateArrowDirection(null))
+        // Values that round away to 0 (< 0.005) must evaluate to NEUTRAL
+        assertEquals(ArrowDirection.NEUTRAL, calculateArrowDirection(0.0033))
+        assertEquals(ArrowDirection.NEUTRAL, calculateArrowDirection(-0.0033))
+        assertEquals(ArrowDirection.UP, calculateArrowDirection(0.01))
+        assertEquals(ArrowDirection.DOWN, calculateArrowDirection(-0.01))
+    }
+
+    @Test
+    fun roundToTwoDecimals_roundsHalfUpCorrectly() {
+        assertEquals(0.61, roundToTwoDecimals(0.6067), 0.0001)
+        assertEquals(0.61, roundToTwoDecimals(0.6100), 0.0001)
+        assertEquals(8.75, roundToTwoDecimals(8.7500), 0.0001)
+        assertEquals(8.79, roundToTwoDecimals(8.7917), 0.0001)
+    }
+
+    @Test
+    fun groupRecordsByDay_roundsSessionsToTwoDecimals_producesIdenticalOneRmForCloseSubGramDeltas() {
+        val zone = ZoneId.of("UTC")
+        val day1Records = listOf(
+            Record(exerciseId = "rev_fly", sets = 1, reps = 5, weight = 0.5, date = 1000L),
+            Record(exerciseId = "rev_fly", sets = 1, reps = 5, weight = 0.5, date = 1001L),
+            Record(exerciseId = "rev_fly", sets = 1, reps = 2, weight = 0.5, date = 1002L)
+        )
+        val day2Records = listOf(
+            Record(exerciseId = "rev_fly", sets = 1, reps = 5, weight = 0.5, date = 2000L),
+            Record(exerciseId = "rev_fly", sets = 1, reps = 5, weight = 0.5, date = 2001L),
+            Record(exerciseId = "rev_fly", sets = 1, reps = 3, weight = 0.5, date = 2002L)
+        )
+        val day1 = groupRecordsByDay(day1Records, zone).first()
+        val day2 = groupRecordsByDay(day2Records, zone).first()
+
+        assertEquals(0.61, day1.oneRm, 0.0001)
+        assertEquals(0.61, day2.oneRm, 0.0001)
+    }
+
+    @Test
+    fun calculateDayOneRm_weightedPeakAlgorithm_computesExpectedScore() {
+        // User example:
+        // Row 1: Sets: 2, Reps: 8, Weight: 50 -> Base = 50 * (1 + 8/30) = 63.333..., repWork = 50 * (8/30) = 13.333...
+        // Row 2: Sets: 1, Reps: 5, Weight: 50 -> Base = 50 * (1 + 5/30) = 58.333..., repWork = 50 * (5/30) = 8.333...
+        // Peak = 63.333...
+        // Total repWork = 2 * 13.333... + 1 * 8.333... = 35.0
+        // Extra repWork beyond peak set = 35.0 - 13.333... = 21.666...
+        // Volume Bonus = 0.20 * 21.666... = 4.3333...
+        // Total = 63.333... + 4.3333... = 67.6667...
+        val records = listOf(
+            Record(exerciseId = "bench", sets = 2, reps = 8, weight = 50.0, date = 1000L),
+            Record(exerciseId = "bench", sets = 1, reps = 5, weight = 50.0, date = 1001L)
+        )
+        val score = calculateDayOneRm(records)
+        assertEquals(67.6667, score, 0.001)
+    }
+
+    @Test
+    fun calculateDayOneRm_handlesEmptyAndZeroWeight() {
+        assertEquals(0.0, calculateDayOneRm(emptyList()), 0.0)
+        val zeroWeight = listOf(
+            Record(exerciseId = "pullup", sets = 3, reps = 10, weight = 0.0, date = 1000L)
+        )
+        assertEquals(0.0, calculateDayOneRm(zeroWeight), 0.0)
+    }
+
+    @Test
+    fun calculateDayOneRm_singleSetAlwaysEqualsExactEpleyDirectly() {
+        // Any exercise with 1 set, X reps, X weight must equal Epley directly: weight * (1 + reps / 30)
+        val testCases = listOf(
+            Triple(10.0, 2, 10.0 * (1.0 + 2.0 / 30.0)),
+            Triple(100.0, 5, 100.0 * (1.0 + 5.0 / 30.0)),
+            Triple(22.5, 12, 22.5 * (1.0 + 12.0 / 30.0)),
+            Triple(6.25, 9, 6.25 * (1.0 + 9.0 / 30.0))
+        )
+        for ((weight, reps, expectedEpley) in testCases) {
+            val singleSet = listOf(
+                Record(exerciseId = "ex", sets = 1, reps = reps, weight = weight, date = 1000L)
+            )
+            assertEquals(expectedEpley, calculateDayOneRm(singleSet), 0.0001)
+        }
+    }
+
+    @Test
+    fun calculateDayOneRm_oneSetTwoRepsIsGreaterThanTwoSetsOneRep() {
+        // 1x2x1kg needs to be bigger than 2x1x1kg (reps are harder than sets)
+        val oneSetTwoReps = listOf(
+            Record(exerciseId = "ex", sets = 1, reps = 2, weight = 1.0, date = 1000L)
+        )
+        val twoSetsOneRep = listOf(
+            Record(exerciseId = "ex", sets = 2, reps = 1, weight = 1.0, date = 1000L)
+        )
+        val scoreOneSetTwoReps = calculateDayOneRm(oneSetTwoReps)
+        val scoreTwoSetsOneRep = calculateDayOneRm(twoSetsOneRep)
+        assertTrue(
+            "1x2x1kg ($scoreOneSetTwoReps) must be greater than 2x1x1kg ($scoreTwoSetsOneRep)",
+            scoreOneSetTwoReps > scoreTwoSetsOneRep
+        )
+    }
+
+    @Test
+    fun calculateDayOneRm_nineNineSixVsNineNineSevenAtSixPointTwentyFive_showsSignificantIncreaseInLastTwoDigits() {
+        // 9x9x6 vs 9x9x7 at 6.25kg needs to show significant increase at at least last 2 digits
+        val session996 = listOf(
+            Record(exerciseId = "cable_raise", sets = 2, reps = 9, weight = 6.25, date = 1000L),
+            Record(exerciseId = "cable_raise", sets = 1, reps = 6, weight = 6.25, date = 1001L)
+        )
+        val session997 = listOf(
+            Record(exerciseId = "cable_raise", sets = 2, reps = 9, weight = 6.25, date = 2000L),
+            Record(exerciseId = "cable_raise", sets = 1, reps = 7, weight = 6.25, date = 2001L)
+        )
+
+        val score996 = calculateDayOneRm(session996)
+        val score997 = calculateDayOneRm(session997)
+
+        val formatted996 = formatMaxTwoDecimals(score996, java.util.Locale.US)
+        val formatted997 = formatMaxTwoDecimals(score997, java.util.Locale.US)
+
+        assertTrue(
+            "Expected score difference to be at least 0.02, but was ${score997 - score996}",
+            score997 - score996 >= 0.02
+        )
+        assertNotEquals(
+            "Formatted strings must be distinct, but both were '$formatted996'",
+            formatted996,
+            formatted997
+        )
+    }
+
+    @Test
+    fun compareMetric_supportsOneRm() {
+        val p = SessionPoint(
+            date = 1L,
+            maxWeight = 50.0,
+            totalSets = 3,
+            totalReps = 21,
+            volume = 1050.0,
+            oneRm = 81.83
+        )
+        val d = DaySession(
+            date = 1L,
+            maxWeight = 50.0,
+            volume = 1050.0,
+            totalSets = 3,
+            totalReps = 21,
+            oneRm = 81.83
+        )
+        assertEquals(81.83, CompareMetric.ONE_RM.select(p), 0.001)
+        assertEquals(81.83, CompareMetric.ONE_RM.select(d), 0.001)
+        assertEquals("1RM", CompareMetric.ONE_RM.label())
+    }
+
+    @Test
+    fun groupRecordsByDay_calculatesOneRmScore() {
+        val zone = ZoneId.of("UTC")
+        val records = listOf(
+            Record(exerciseId = "bench", sets = 2, reps = 8, weight = 50.0, date = 1000L),
+            Record(exerciseId = "bench", sets = 1, reps = 5, weight = 50.0, date = 1001L)
+        )
+        val days = groupRecordsByDay(records, zone)
+        assertEquals(1, days.size)
+        assertEquals(67.67, days[0].oneRm, 0.001)
+    }
+
+    @Test
+    fun buildChartBars_supportsOneRmMetric() {
+        val d1 = DaySession(date = 1000L, maxWeight = 50.0, volume = 500.0, totalSets = 2, totalReps = 16, oneRm = 70.0)
+        val d2 = DaySession(date = 2000L, maxWeight = 60.0, volume = 600.0, totalSets = 2, totalReps = 16, oneRm = 85.0)
+
+        val bars = buildChartBars(listOf(d1, d2), SessionRange.SEVEN, CompareMetric.ONE_RM)
+        assertEquals(1, bars.size)
+        assertEquals(70.0, bars[0].leftValue, 0.001)
+        assertEquals(85.0, bars[0].rightValue, 0.001)
+        assertEquals(85.0, bars[0].oneRm, 0.001)
+    }
+
+    @Test
+    fun calculateDayOneRm_capsVolumeBonusToPreventJunkVolumeExploit() {
+        // 1 set of 100 reps @ 10kg collapses strictly to Epley: 10 * (1 + 100/30) = 43.333
+        val repUser = listOf(
+            Record(exerciseId = "dips", sets = 1, reps = 100, weight = 10.0, date = 1000L)
+        )
+        // 100 sets of 1 rep @ 10kg
+        val setSpammer = listOf(
+            Record(exerciseId = "dips", sets = 100, reps = 1, weight = 10.0, date = 2000L)
+        )
+
+        val repScore = calculateDayOneRm(repUser)
+        val setScore = calculateDayOneRm(setSpammer)
+
+        // 100 reps must beat 100 sets of 1 rep
+        assertTrue("100 reps ($repScore) must be higher than 100 sets ($setScore)", repScore > setScore)
+        assertEquals(43.333, repScore, 0.01)
+        // Set spammer is capped at Peak (10.333) + 30% Peak (3.10) = 13.433
+        assertEquals(13.433, setScore, 0.01)
+    }
+
+    @Test
+    fun calculateDayOneRm_rewardsExtraRepOnWorkingSets() {
+        val day1 = listOf(
+            Record(exerciseId = "bench", sets = 2, reps = 8, weight = 50.0, date = 1000L),
+            Record(exerciseId = "bench", sets = 1, reps = 5, weight = 50.0, date = 1001L)
+        )
+        val day2 = listOf(
+            Record(exerciseId = "bench", sets = 2, reps = 8, weight = 50.0, date = 2000L),
+            Record(exerciseId = "bench", sets = 1, reps = 6, weight = 50.0, date = 2001L)
+        )
+        val score1 = calculateDayOneRm(day1)
+        val score2 = calculateDayOneRm(day2)
+        assertEquals(67.667, score1, 0.01)
+        assertEquals(68.000, score2, 0.01)
+        assertTrue(score2 > score1)
+    }
+
+    @Test
+    fun calculateDayOneRm_repsBeatSetsForEqualTonnage() {
+        // 1 set of 2 reps @ 1kg (2 total reps, 2kg tonnage) -> collapses to exact Epley: 1 * (1 + 2/30) = 1.0667
+        val twoReps = listOf(
+            Record(exerciseId = "row", sets = 1, reps = 2, weight = 1.0, date = 1000L)
+        )
+        // 2 sets of 1 rep @ 1kg (2 total reps, 2kg tonnage) -> 1.040
+        val twoSets = listOf(
+            Record(exerciseId = "row", sets = 2, reps = 1, weight = 1.0, date = 2000L)
+        )
+        val scoreReps = calculateDayOneRm(twoReps)
+        val scoreSets = calculateDayOneRm(twoSets)
+        assertTrue("1 set of 2 reps ($scoreReps) must beat 2 sets of 1 rep ($scoreSets)", scoreReps > scoreSets)
+        assertEquals(1.0667, scoreReps, 0.001)
+        assertEquals(1.040, scoreSets, 0.001)
     }
 }
 

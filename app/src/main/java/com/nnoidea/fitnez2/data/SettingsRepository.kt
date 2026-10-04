@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -101,5 +102,14 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setGraphMetric(metric: String) {
         context.dataStore.edit { it[GRAPH_METRIC_KEY] = metric }
+    }
+
+    private val NIGHT_MODE_HOUR_KEY = intPreferencesKey("night_mode_rollover_hour")
+
+    val nightModeHourFlow: Flow<Int> = context.dataStore.data
+        .map { preferences -> preferences[NIGHT_MODE_HOUR_KEY] ?: 0 }
+
+    suspend fun setNightModeHour(hour: Int) {
+        context.dataStore.edit { it[NIGHT_MODE_HOUR_KEY] = hour }
     }
 }

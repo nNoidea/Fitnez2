@@ -30,13 +30,10 @@ import com.nnoidea.fitnez2.ui.components.input.SetsRepsWeightGroup
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
-
-internal val ColorRecordNeutralContainer @Composable get() = MaterialTheme.colorScheme.primary
-internal val ColorRecordNeutralContent @Composable get() = MaterialTheme.colorScheme.onPrimary
-
-internal val ColorRecordColoredContainer @Composable get() = MaterialTheme.colorScheme.secondaryContainer
-internal val ColorRecordColoredContent @Composable get() = MaterialTheme.colorScheme.onSecondaryContainer
-
+import com.nnoidea.fitnez2.ui.theme.ColorRecordColoredContainer
+import com.nnoidea.fitnez2.ui.theme.ColorRecordColoredContent
+import com.nnoidea.fitnez2.ui.theme.ColorRecordNeutralContainer
+import com.nnoidea.fitnez2.ui.theme.ColorRecordNeutralContent
 
 @Composable
 fun RecordCard(

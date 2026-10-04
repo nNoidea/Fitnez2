@@ -45,6 +45,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import com.nnoidea.fitnez2.ui.theme.adaptiveGold
 
 data class SessionPoint(
     val date: Long,
@@ -52,10 +53,12 @@ data class SessionPoint(
     val totalSets: Int,
     val totalReps: Int,
     val volume: Double = 0.0,
+    val oneRm: Double = 0.0,
     val isPr: Boolean = false,
     val isLatest: Boolean = false,
     val leftValue: Double = maxWeight,
-    val rightValue: Double = maxWeight
+    val rightValue: Double = maxWeight,
+    val startDate: Long = date
 )
 
 /**
@@ -88,19 +91,89 @@ fun roundedPolygon(points: List<Offset>, radius: Float): RoundedPolygon {
 }
 
 /**
- * One height label per bar: distinct values each get their own gridline, while
- * equal (or unreadably close, under ~one label height apart) values share one.
+ * Height labels in data units: preserves all distinct values (one per distinct height),
+ * sorted ascending. Equal values collapse to share a single line.
  */
-fun heightLabelValues(values: List<Double>, minGapFraction: Float = 0.055f): List<Double> {
+fun heightLabelValues(values: List<Double>): List<Double> {
     if (values.isEmpty()) return emptyList()
-    val min = values.min()
-    val max = values.max()
-    if (max <= min) return listOf(values.first())
-    val gap = (max - min) * minGapFraction
-    // ponytail: sorted() is O(n log n) on at most 8 in-memory values; nothing to win here.
-    return values.sorted().fold(emptyList()) { kept, v ->
-        if (kept.isEmpty() || v - kept.last() >= gap) kept + v else kept
+    // Deduplicate by formatted 2-decimal string so the Y-axis never renders two lines with the exact same display label.
+    // If multiple values share the same formatted label, keep the max value to preserve upper bounds / PR pill.
+    return values.sorted()
+        .groupBy { formatMaxTwoDecimals(it) }
+        .map { (_, group) -> group.max() }
+        .sorted()
+}
+
+/**
+ * Resolves a raw data value to its canonical height label value.
+ * If multiple values round to the same display string, they resolve to the same canonical label
+ * so they are graphed at the exact same height on their shared gridline.
+ */
+fun resolveCanonicalValue(value: Double, labelValues: List<Double>): Double {
+    return labelValues.firstOrNull { formatMaxTwoDecimals(it) == formatMaxTwoDecimals(value) } ?: value
+}
+
+/**
+ * Computes non-overlapping Y pixel coordinates for distinct chart values.
+ * Anchors the max value at [yTop] and min value at [yBottom].
+ * If any adjacent values would sit closer than [minGapPx], enforces at least [minGapPx]
+ * between their horizontal lines so they are neatly stacked under each other without overlapping.
+ */
+fun computeNonOverlappingY(
+    distinctValues: List<Double>,
+    yTop: Float,
+    yBottom: Float,
+    minGapPx: Float
+): Map<Double, Float> {
+    if (distinctValues.isEmpty()) return emptyMap()
+    if (distinctValues.size == 1) return mapOf(distinctValues.first() to yTop)
+
+    val n = distinctValues.size
+    val minVal = distinctValues.first()
+    val maxVal = distinctValues.last()
+    val valRange = maxVal - minVal
+
+    // Proportional ideal positions: highest value (index n-1) at yTop, lowest at yBottom
+    val idealY = FloatArray(n) { i ->
+        if (valRange <= 0.0) yTop
+        else {
+            val fraction = ((distinctValues[i] - minVal) / valRange).toFloat()
+            yBottom - fraction * (yBottom - yTop)
+        }
     }
+
+    val effectiveMinGap = minOf(minGapPx, (yBottom - yTop) / (n - 1).coerceAtLeast(1))
+    val y = idealY.clone()
+
+    // Anchor bounds
+    y[n - 1] = yTop
+    y[0] = yBottom
+
+    // Top-down pass: ensure each lower value has at least effectiveMinGap distance below the higher value
+    for (i in (n - 2) downTo 1) {
+        val minAllowedY = y[i + 1] + effectiveMinGap
+        if (y[i] < minAllowedY) {
+            y[i] = minAllowedY
+        }
+    }
+
+    // Bottom-up pass: if pushed too close to bottom or next lower value, push back up
+    for (i in 1 until (n - 1)) {
+        val maxAllowedY = y[i - 1] - effectiveMinGap
+        if (y[i] > maxAllowedY) {
+            y[i] = maxAllowedY
+        }
+    }
+
+    // Secondary top-down pass to resolve any residual compression
+    for (i in (n - 2) downTo 1) {
+        val minAllowedY = y[i + 1] + effectiveMinGap
+        if (y[i] < minAllowedY) {
+            y[i] = minAllowedY
+        }
+    }
+
+    return distinctValues.indices.associate { i -> distinctValues[i] to y[i] }
 }
 
 /**
@@ -128,7 +201,7 @@ fun BatteryStyleChart(
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
     var touchX by remember { mutableFloatStateOf(0f) }
 
-    val dateFormatter = remember { DateTimeFormatter.ofPattern("d MMM", Locale.getDefault()) }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("d/M", Locale.getDefault()) }
     val fullDateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()) }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -174,21 +247,20 @@ fun BatteryStyleChart(
             val barBottom = paddingTop + chartHeight
             val stubHeight = 10.dp.toPx()
 
-            fun yForFraction(fraction: Float): Float =
-                barBottom - (stubHeight + fraction * (chartHeight - stubHeight))
-
-            fun fractionForValue(value: Double): Float =
-                if (maxWeight <= minWeight) 1f
-                else ((value - minWeight) / (maxWeight - minWeight)).toFloat()
-
-            // Battery-style solid gridlines: one per silhouette corner at its own
-            // height (first left edge + every right edge), sharing a line when corners sit at the same level.
             val labelVals = heightLabelValues(corners)
             val maxLabelVal = labelVals.maxOrNull()
 
+            val yMap = computeNonOverlappingY(
+                distinctValues = labelVals,
+                yTop = paddingTop,
+                yBottom = barBottom - stubHeight,
+                minGapPx = 18.dp.toPx()
+            )
+
+            // Battery-style solid gridlines: one per distinct silhouette corner,
+            // with guaranteed minimum gap so close values cleanly stack under each other without overlap.
             labelVals.forEach { value ->
-                val fraction = fractionForValue(value)
-                val y = yForFraction(fraction)
+                val y = yMap[value] ?: (barBottom - stubHeight)
 
                 drawLine(
                     color = gridColor,
@@ -198,7 +270,8 @@ fun BatteryStyleChart(
                 )
 
                 val text = formatMaxTwoDecimals(value)
-                val isMax = (value == maxLabelVal)
+                val hasDistinctPeak = (maxLabelVal != null && corners.min() < corners.max())
+                val isMax = hasDistinctPeak && (value == maxLabelVal)
 
                 val paint = android.graphics.Paint().apply {
                     color = if (isMax) Color(0xFF1C1B1F).hashCode() else textColor.hashCode()
@@ -252,8 +325,8 @@ fun BatteryStyleChart(
             sessions.forEachIndexed { index, session ->
                 val x0 = paddingLeft + index * slotWidth + gap / 2f
                 val x1 = paddingLeft + (index + 1) * slotWidth - gap / 2f
-                val yL = yForFraction(fractionForValue(session.leftValue))
-                val yR = yForFraction(fractionForValue(session.rightValue))
+                val yL = yMap[resolveCanonicalValue(session.leftValue, labelVals)] ?: (barBottom - stubHeight)
+                val yR = yMap[resolveCanonicalValue(session.rightValue, labelVals)] ?: (barBottom - stubHeight)
 
                 val isHovered = (index == selectedIndex)
                 val barColor = when {
@@ -276,23 +349,64 @@ fun BatteryStyleChart(
                     close()
                 }
                 drawPath(segment, barColor)
+            }
 
-                // Baseline tick + date label per segment (at most 7 bars, so label them all)
-                val xCenter = (x0 + x1) / 2f
+            // Baseline ticks + date labels at bar corners and junctions
+            data class DatePoint(val x: Float, val timestamp: Long, val align: android.graphics.Paint.Align)
+            val datePoints = if (sessions.size == 1 && sessions[0].startDate == sessions[0].date) {
+                listOf(
+                    DatePoint(
+                        x = paddingLeft + slotWidth / 2f,
+                        timestamp = sessions[0].date,
+                        align = android.graphics.Paint.Align.CENTER
+                    )
+                )
+            } else {
+                buildList {
+                    // Leftmost corner of first bar
+                    add(
+                        DatePoint(
+                            x = paddingLeft + gap / 2f,
+                            timestamp = sessions.first().startDate,
+                            align = android.graphics.Paint.Align.LEFT
+                        )
+                    )
+                    // Junctions between adjacent bars
+                    for (i in 1 until sessions.size) {
+                        add(
+                            DatePoint(
+                                x = paddingLeft + i * slotWidth,
+                                timestamp = sessions[i].startDate,
+                                align = android.graphics.Paint.Align.CENTER
+                            )
+                        )
+                    }
+                    // Rightmost corner of last bar
+                    add(
+                        DatePoint(
+                            x = paddingLeft + sessions.size * slotWidth - gap / 2f,
+                            timestamp = sessions.last().date,
+                            align = android.graphics.Paint.Align.RIGHT
+                        )
+                    )
+                }
+            }
+
+            datePoints.forEach { pt ->
                 drawLine(
                     color = textColor.copy(alpha = 0.4f),
-                    start = Offset(xCenter, barBottom),
-                    end = Offset(xCenter, barBottom + 5.dp.toPx()),
+                    start = Offset(pt.x, barBottom),
+                    end = Offset(pt.x, barBottom + 5.dp.toPx()),
                     strokeWidth = 1.dp.toPx()
                 )
                 drawContext.canvas.nativeCanvas.drawText(
-                    dateFormatter.format(Instant.ofEpochMilli(session.date).atZone(ZoneId.systemDefault())),
-                    xCenter,
+                    dateFormatter.format(Instant.ofEpochMilli(pt.timestamp).atZone(ZoneId.systemDefault())),
+                    pt.x,
                     height - 6.dp.toPx(),
                     android.graphics.Paint().apply {
                         color = textColor.copy(alpha = 0.65f).hashCode()
                         textSize = 10.sp.toPx()
-                        textAlign = android.graphics.Paint.Align.CENTER
+                        textAlign = pt.align
                     }
                 )
             }

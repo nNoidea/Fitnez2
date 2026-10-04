@@ -1,6 +1,10 @@
 package com.nnoidea.fitnez2.ui.screens.graph
 
 import android.view.HapticFeedbackConstants
+import com.nnoidea.fitnez2.core.TimeUtils
+import com.nnoidea.fitnez2.ui.theme.adaptiveGold
+import com.nnoidea.fitnez2.ui.theme.adaptiveGreen
+import com.nnoidea.fitnez2.ui.theme.adaptiveRed
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -51,6 +55,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -91,35 +96,18 @@ fun formatMaxTwoDecimals(value: Double, locale: Locale = Locale.getDefault()): S
     return df.format(v)
 }
 
-/**
- * Adapts vibrant red for high contrast against [background] without becoming washed-out or muddy brown.
- */
-fun adaptiveRed(background: Color): Color {
-    val isLight = background.luminance() > 0.45f
-    return if (isLight) Color(0xFFE53935) else Color(0xFFFF5252)
-}
-
-/**
- * Adapts celebratory yellow/gold for PR against [background] without washing out on white or turning brown.
- */
-fun adaptiveGold(background: Color): Color {
-    val isLight = background.luminance() > 0.45f
-    return if (isLight) Color(0xFFD97706) else Color(0xFFFFC107)
-}
-
-/**
- * Adapts vibrant green for high contrast against [background] without washing out on bright white.
- */
-fun adaptiveGreen(background: Color): Color {
-    val isLight = background.luminance() > 0.45f
-    return if (isLight) Color(0xFF00504B) else Color(0xFF4CAF50)
+/** Rounds a numeric value to 2 decimal places using HALF_UP. */
+fun roundToTwoDecimals(value: Double): Double {
+    if (value.isNaN() || value.isInfinite()) return value
+    val v = if (abs(value) < 0.005) 0.0 else value
+    return java.math.BigDecimal.valueOf(v).setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
 }
 
 enum class ArrowDirection { UP, DOWN, NEUTRAL }
 
 fun calculateArrowDirection(delta: Double?): ArrowDirection = when {
-    delta == null || delta == 0.0 -> ArrowDirection.NEUTRAL
-    delta > 0 -> ArrowDirection.UP
+    delta == null || abs(delta) < 0.005 -> ArrowDirection.NEUTRAL
+    delta > 0.0 -> ArrowDirection.UP
     else -> ArrowDirection.DOWN
 }
 
@@ -175,9 +163,9 @@ fun DirectionalTrendingArrow(
 }
 
 enum class SessionRange(val count: Int?, val label: String) {
+    TWO(2, "2"),
     SEVEN(7, "7"),
     THIRTY(30, "30"),
-    NINETY(90, "90"),
     ALL(null, "ALL")
 }
 
@@ -186,43 +174,49 @@ data class DaySession(
     val maxWeight: Double,
     val volume: Double,
     val totalSets: Int,
-    val totalReps: Int
+    val totalReps: Int,
+    val oneRm: Double = 0.0
 )
 
 /**
- * What the graph compares: heaviest single weight, or session volume (kg x reps x sets).
+ * What the graph compares: heaviest single weight, session volume (kg x reps x sets),
+ * or weighted peak 1RM (Epley formula).
  */
 enum class CompareMetric(
     val select: (SessionPoint) -> Double,
     val selectDay: (DaySession) -> Double
 ) {
     MAX_WEIGHT({ it.maxWeight }, { it.maxWeight }),
-    VOLUME({ it.volume }, { it.volume });
+    VOLUME({ it.volume }, { it.volume }),
+    ONE_RM({ it.oneRm }, { it.oneRm });
 
     fun select(day: DaySession): Double = selectDay(day)
 
     fun label(): String = when (this) {
         MAX_WEIGHT -> globalLocalization.labelGraphMaxWeight
         VOLUME -> globalLocalization.labelGraphVolume
+        ONE_RM -> globalLocalization.labelGraphOneRm
     }
 }
 
 fun groupRecordsByDay(
     records: List<com.nnoidea.fitnez2.data.entities.Record>,
-    zoneId: ZoneId = ZoneId.systemDefault()
+    zoneId: ZoneId = ZoneId.systemDefault(),
+    rolloverHour: Int = 0
 ): List<DaySession> {
     if (records.isEmpty()) return emptyList()
     return records
         .groupBy { record ->
-            Instant.ofEpochMilli(record.date).atZone(zoneId).toLocalDate()
+            TimeUtils.getWorkoutLocalDate(record.date, rolloverHour, zoneId)
         }
         .map { (_, dayRecords) ->
             DaySession(
-                date = dayRecords.maxOf { it.date },
-                maxWeight = dayRecords.maxOf { it.weight },
-                volume = dayRecords.sumOf { it.weight * it.reps * it.sets },
+                date = TimeUtils.getWorkoutEpochMillis(dayRecords.maxOf { it.date }, rolloverHour, zoneId),
+                maxWeight = roundToTwoDecimals(dayRecords.maxOf { it.weight }),
+                volume = roundToTwoDecimals(dayRecords.sumOf { it.weight * it.reps * it.sets }),
                 totalSets = dayRecords.sumOf { it.sets },
-                totalReps = dayRecords.sumOf { it.reps * it.sets }
+                totalReps = dayRecords.sumOf { it.reps * it.sets },
+                oneRm = roundToTwoDecimals(calculateDayOneRm(dayRecords))
             )
         }
         .sortedBy { it.date }
@@ -236,9 +230,9 @@ fun buildChartBars(
     if (daySessions.isEmpty()) return emptyList()
 
     val days = when (range) {
+        SessionRange.TWO -> daySessions.takeLast(2)
         SessionRange.SEVEN -> daySessions.takeLast(8)
         SessionRange.THIRTY -> daySessions.takeLast(30)
-        SessionRange.NINETY -> daySessions.takeLast(90)
         SessionRange.ALL -> daySessions
     }
 
@@ -252,6 +246,7 @@ fun buildChartBars(
                 totalSets = d.totalSets,
                 totalReps = d.totalReps,
                 volume = d.volume,
+                oneRm = d.oneRm,
                 isPr = false,
                 isLatest = true,
                 leftValue = v,
@@ -273,10 +268,12 @@ fun buildChartBars(
                 totalSets = currDay.totalSets,
                 totalReps = currDay.totalReps,
                 volume = currDay.volume,
+                oneRm = currDay.oneRm,
                 isPr = false,
                 isLatest = (i == lastIdx - 1),
                 leftValue = leftVal,
-                rightValue = rightVal
+                rightValue = rightVal,
+                startDate = prevDay.date
             )
         }
     }
@@ -309,10 +306,12 @@ fun buildChartBars(
             totalSets = chunk.sumOf { it.totalSets },
             totalReps = chunk.sumOf { it.totalReps },
             volume = chunk.maxOf { it.volume },
+            oneRm = chunk.maxOf { it.oneRm },
             isPr = false,
             isLatest = false,
             leftValue = corners[index],
-            rightValue = corners[index + 1]
+            rightValue = corners[index + 1],
+            startDate = chunk.first().date
         )
     }
 
@@ -322,10 +321,12 @@ fun buildChartBars(
         totalSets = latestDay.totalSets,
         totalReps = latestDay.totalReps,
         volume = latestDay.volume,
+        oneRm = latestDay.oneRm,
         isPr = false,
         isLatest = true,
         leftValue = corners[6],
-        rightValue = corners[7]
+        rightValue = corners[7],
+        startDate = latestDay.date
     )
 
     return bucketBars + latestBar
@@ -343,7 +344,15 @@ fun compareSessions(
     sessions: List<SessionPoint>,
     select: (SessionPoint) -> Double = { it.rightValue }
 ): MetricComparison? {
-    if (sessions.size < 2) return null
+    if (sessions.isEmpty()) return null
+    if (sessions.size == 1) {
+        val bar = sessions.first()
+        if (bar.leftValue == bar.rightValue) return null
+        val initial = bar.leftValue
+        val latest = select(bar)
+        val delta = latest - initial
+        return MetricComparison(initial, latest, delta, if (initial == 0.0) null else delta / initial * 100.0)
+    }
     val initial = select(sessions.first())
     val latest = select(sessions.last())
     val delta = latest - initial
@@ -438,6 +447,10 @@ fun GraphScreen(
     val compareMetric = compareMetricOverride ?: CompareMetric.entries.find { it.name == savedMetricStr } ?: CompareMetric.MAX_WEIGHT
     var showMetricDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        globalUiState.isBottomSheetHidden = false
+    }
+
     // Sync exercise selection with bottomSheetState:
     // Only resolve a default if the bottom sheet does not already have a valid selection.
     LaunchedEffect(exercises) {
@@ -465,8 +478,8 @@ fun GraphScreen(
     }.collectAsState(initial = emptyList())
 
     // Group records by calendar day
-    val allDays: List<DaySession> = remember(records) {
-        groupRecordsByDay(records)
+    val allDays: List<DaySession> = remember(records, globalUiState.nightModeHour) {
+        groupRecordsByDay(records, rolloverHour = globalUiState.nightModeHour)
     }
 
     // Build chart bars for selected range and metric
@@ -476,16 +489,14 @@ fun GraphScreen(
     }
 
     // Progress comparison over the visible window, in the selected metric.
-    val comparison = remember(displayBars) {
-        if (displayBars.isEmpty()) null
-        else if (displayBars.size == 1) {
-            val v = displayBars.first().rightValue
-            MetricComparison(v, v, 0.0, null)
-        } else {
-            val initial = displayBars.first().leftValue
-            val latest = displayBars.last().rightValue
-            val delta = latest - initial
-            MetricComparison(initial, latest, delta, if (initial == 0.0) null else delta / initial * 100.0)
+    val comparison = remember(displayBars, allDays) {
+        if (displayBars.isEmpty() || allDays.size <= 1) null
+        else {
+            val initial = roundToTwoDecimals(displayBars.first().leftValue)
+            val latest = roundToTwoDecimals(displayBars.last().rightValue)
+            val delta = roundToTwoDecimals(latest - initial)
+            val percent = if (initial == 0.0 || delta == 0.0) 0.0 else roundToTwoDecimals(delta / initial * 100.0)
+            MetricComparison(initial, latest, delta, percent)
         }
     }
 
@@ -495,16 +506,16 @@ fun GraphScreen(
     fun formatMetric(value: Double): String = formatMaxTwoDecimals(value)
 
     val deltaText = when {
-        allDays.isEmpty() -> "--"
-        allDays.size == 1 -> formatMetric(compareMetric.select(allDays.first()))
-        delta != null && delta > 0 -> "+${formatMaxTwoDecimals(delta)}"
-        delta != null -> formatMaxTwoDecimals(delta)
+        allDays.size <= 1 -> "--"
+        delta != null && delta > 0.0 -> "+${formatMaxTwoDecimals(delta)}"
+        delta != null && delta < 0.0 -> formatMaxTwoDecimals(delta)
+        delta != null -> "0"
         else -> "--"
     }
 
     val percentText = when {
-        percent != null && percent > 0 -> "+${formatMaxTwoDecimals(percent)}%"
-        percent != null && percent < 0 -> "${formatMaxTwoDecimals(percent)}%"
+        percent != null && percent > 0.0 -> "+${formatMaxTwoDecimals(percent)}%"
+        percent != null && percent < 0.0 -> "${formatMaxTwoDecimals(percent)}%"
         percent != null -> "0%"
         else -> ""
     }
@@ -512,8 +523,8 @@ fun GraphScreen(
     val heroBg = MaterialTheme.colorScheme.primaryContainer
     val deltaColor = when {
         allDays.size <= 1 -> MaterialTheme.colorScheme.onPrimaryContainer
-        delta != null && delta > 0 -> adaptiveGreen(heroBg)
-        delta != null && delta < 0 -> adaptiveRed(heroBg)
+        delta != null && delta > 0.0 -> adaptiveGreen(heroBg)
+        delta != null && delta < 0.0 -> adaptiveRed(heroBg)
         else -> MaterialTheme.colorScheme.onPrimaryContainer
     }
 
@@ -562,10 +573,10 @@ fun GraphScreen(
                                         ),
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
-                                } else if (comparison == null || displayBars.size <= 1) {
+                                } else if (allDays.size <= 1 || comparison == null) {
                                     Row(verticalAlignment = Alignment.Bottom) {
                                         Text(
-                                            text = formatMetric(compareMetric.select(allDays.first())),
+                                            text = formatMetric(compareMetric.select(allDays.last())),
                                             style = MaterialTheme.typography.displayLarge.copy(
                                                 fontSize = 58.sp,
                                                 lineHeight = 58.sp,
@@ -842,7 +853,7 @@ private fun MetricPickerCard(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.testTag("metric_picker_card"),
         onClick = onClick,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,

@@ -20,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
@@ -43,6 +44,7 @@ import com.nnoidea.fitnez2.ui.navigation.AppPage
 import com.nnoidea.fitnez2.ui.screens.monthly.MonthlyScreen
 import com.nnoidea.fitnez2.ui.screens.timeline.TimelineScreen
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -982,5 +984,76 @@ class ComposeComprehensiveUiTest {
 
         // Verify TimelineScreen's bottomsheet preserves "Squat"
         org.junit.Assert.assertEquals("Squat", sharedSheetState.selectedExerciseName)
+    }
+
+    @Test
+    fun testGraphScreen_oneRmMetricSelection_updatesMetricAndPersists() {
+        lateinit var sheetState: com.nnoidea.fitnez2.ui.screens.timeline.HomeBottomSheetState
+
+        composeRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+            Fitnez2Theme {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    sheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
+                    com.nnoidea.fitnez2.ui.screens.graph.GraphScreen(
+                        onOpenDrawer = {},
+                        bottomSheetState = sheetState
+                    )
+                }
+            }
+        }
+        composeRule.waitForIdle()
+
+        // Scroll to and click metric picker (currently showing default Weight)
+        composeRule.onNodeWithTag("metric_picker_card").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        // In the dialog, click "1RM"
+        composeRule.onNodeWithText("1RM").performClick()
+        composeRule.waitForIdle()
+
+        // Metric picker card is displayed and shows 1RM
+        composeRule.onNodeWithTag("metric_picker_card").performScrollTo()
+        composeRule.onNodeWithTag("metric_picker_card").assertIsDisplayed()
+
+        // Verify setting was saved
+        val savedMetric = runBlocking {
+            kotlinx.coroutines.withTimeout(5000) {
+                settingsService.graphMetricFlow.first { it == "ONE_RM" }
+            }
+        }
+        org.junit.Assert.assertEquals("ONE_RM", savedMetric)
+    }
+
+    @Test
+    fun testGraphScreen_unhidesBottomSheet_whenOpenedWhileHidden() {
+        lateinit var globalUiState: GlobalUiState
+
+        composeRule.setContent {
+            globalUiState = rememberGlobalUiState(settingsService)
+            globalUiState.isBottomSheetHidden = true
+
+            Fitnez2Theme {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    val sheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
+                    com.nnoidea.fitnez2.ui.screens.graph.GraphScreen(
+                        onOpenDrawer = {},
+                        bottomSheetState = sheetState
+                    )
+                }
+            }
+        }
+        composeRule.waitForIdle()
+
+        // Verify GraphScreen unhides the bottom sheet
+        org.junit.Assert.assertFalse(globalUiState.isBottomSheetHidden)
     }
 }

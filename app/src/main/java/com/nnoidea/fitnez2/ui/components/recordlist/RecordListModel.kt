@@ -32,7 +32,8 @@ fun prepareRecordDisplayItems(
     records: List<Record>,
     exerciseMap: Map<String, String>,
     useAlternatingColors: Boolean,
-    section: Int = 0
+    section: Int = 0,
+    rolloverHour: Int = 0
 ): List<RecordDisplayItem> {
     if (records.isEmpty()) return emptyList()
 
@@ -56,7 +57,7 @@ fun prepareRecordDisplayItems(
     for (record in oldestFirst) {
         val exerciseName = exerciseMap[record.exerciseId] ?: globalLocalization.labelUnknownExercise
 
-        if (currentDayDate == null || !TimeUtils.isSameDay(currentDayDate, record.date)) {
+        if (currentDayDate == null || !TimeUtils.isSameDay(currentDayDate, record.date, rolloverHour)) {
             flushGroup()
             currentDayDate = record.date
             isLight = true
@@ -77,7 +78,7 @@ fun prepareRecordDisplayItems(
     var lastDayDate: Long? = null
 
     for ((dayDate, groupRecords, groupIsLight) in dayGroups.reversed()) {
-        if (lastDayDate == null || !TimeUtils.isSameDay(lastDayDate, dayDate)) {
+        if (lastDayDate == null || !TimeUtils.isSameDay(lastDayDate, dayDate, rolloverHour)) {
             result.add(RecordDisplayItem.DateHeader(dayDate, section))
         }
         lastDayDate = dayDate
@@ -92,7 +93,8 @@ fun prepareRecordDisplayItems(
 
 fun prepareRecordDisplayItems(
     workoutItems: List<WorkoutRecordWithExercise>,
-    useAlternatingColors: Boolean = true
+    useAlternatingColors: Boolean = true,
+    rolloverHour: Int = 0
 ): List<RecordDisplayItem> {
     if (workoutItems.isEmpty()) return emptyList()
 
@@ -111,6 +113,7 @@ fun prepareRecordDisplayItems(
         records = records,
         exerciseMap = exerciseMap,
         useAlternatingColors = useAlternatingColors,
-        section = 0
+        section = 0,
+        rolloverHour = rolloverHour
     )
 }

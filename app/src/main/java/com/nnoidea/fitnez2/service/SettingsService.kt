@@ -26,6 +26,8 @@ class SettingsService(context: Context) {
 
     val graphMetricFlow: Flow<String> = repository.graphMetricFlow
 
+    val nightModeHourFlow: Flow<Int> = repository.nightModeHourFlow
+
     suspend fun setLanguageCode(code: String?) {
         repository.setLanguageCode(code)
     }
@@ -60,5 +62,9 @@ class SettingsService(context: Context) {
 
     suspend fun setGraphMetric(metric: String) {
         repository.setGraphMetric(metric)
+    }
+
+    suspend fun setNightModeHour(hour: Int) {
+        repository.setNightModeHour(hour)
     }
 }

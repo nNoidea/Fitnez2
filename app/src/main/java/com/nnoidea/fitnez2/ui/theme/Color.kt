@@ -1,6 +1,9 @@
 package com.nnoidea.fitnez2.ui.theme
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 
 // Light Scheme Expressive Colors
 val PrimaryLight = Color(0xFF006495)
@@ -77,3 +80,36 @@ val SurfaceContainerHighestDark = Color(0xFF31353A)
 // Expressive Swipe-to-Delete Action Colors
 val SwipeDeleteContainer = Color(0xFFF97386)
 val OnSwipeDeleteContainer = Color(0xFF490013)
+
+// Adaptive Semantic Colors (dynamically high-contrast against backgrounds)
+val AdaptiveRedLight = Color(0xFFE53935)
+val AdaptiveRedDark = Color(0xFFFF5252)
+
+val AdaptiveGoldLight = Color(0xFFD97706)
+val AdaptiveGoldDark = Color(0xFFFFC107)
+
+val AdaptiveGreenLight = Color(0xFF008000)
+val AdaptiveGreenDark = Color(0xFF4CAF50)
+
+fun contrastRatio(c1: Color, c2: Color): Float {
+    val l1 = c1.luminance()
+    val l2 = c2.luminance()
+    return (maxOf(l1, l2) + 0.05f) / (minOf(l1, l2) + 0.05f)
+}
+
+fun isLightBackground(background: Color): Boolean = background.luminance() > 0.20f
+
+fun adaptiveRed(background: Color): Color =
+    if (isLightBackground(background)) AdaptiveRedLight else AdaptiveRedDark
+
+fun adaptiveGold(background: Color): Color =
+    if (isLightBackground(background)) AdaptiveGoldLight else AdaptiveGoldDark
+
+fun adaptiveGreen(background: Color): Color =
+    if (isLightBackground(background)) AdaptiveGreenLight else AdaptiveGreenDark
+
+// Alternating Record List Colors
+val ColorRecordNeutralContainer: Color @Composable get() = MaterialTheme.colorScheme.primary
+val ColorRecordNeutralContent: Color @Composable get() = MaterialTheme.colorScheme.onPrimary
+val ColorRecordColoredContainer: Color @Composable get() = MaterialTheme.colorScheme.secondaryContainer
+val ColorRecordColoredContent: Color @Composable get() = MaterialTheme.colorScheme.onSecondaryContainer

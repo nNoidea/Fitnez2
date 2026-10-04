@@ -53,6 +53,11 @@ fun rememberGlobalUiState(settingsService: SettingsService): GlobalUiState {
                 state.fontMode = mode
             }
         }
+        launch {
+            settingsService.nightModeHourFlow.collect { hour ->
+                state.nightModeHour = hour
+            }
+        }
     }
 
     return state

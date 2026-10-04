@@ -23,11 +23,14 @@ class GlobalUiState(
     val scope: CoroutineScope,
     private val settingsService: SettingsService
 ) {
-    // State: Day Change Tracker Key (invalidated automatically at midnight)
+    // State: Day Change Tracker Key (invalidated automatically at midnight or rollover hour)
     var midnightTransitionTimestamp by mutableLongStateOf(System.currentTimeMillis())
         private set
 
     var isScrollToTopButtonVisible by mutableStateOf(false)
+
+    // State: Night Mode Rollover Hour (0 = standard midnight, 1..12 = rollover hour)
+    var nightModeHour by androidx.compose.runtime.mutableIntStateOf(0)
 
     init {
         startDayChangeTracker()
@@ -36,21 +39,23 @@ class GlobalUiState(
     private fun startDayChangeTracker() {
         scope.launch {
             while (true) {
-                val delayMillis = getMillisUntilNextMidnight()
+                val delayMillis = getMillisUntilNextRollover(nightModeHour)
                 kotlinx.coroutines.delay(delayMillis)
                 midnightTransitionTimestamp = System.currentTimeMillis()
             }
         }
     }
 
-    private fun getMillisUntilNextMidnight(): Long {
+    private fun getMillisUntilNextRollover(rolloverHour: Int): Long {
         val calendar = java.util.Calendar.getInstance()
         val now = calendar.timeInMillis
-        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, rolloverHour)
         calendar.set(java.util.Calendar.MINUTE, 0)
         calendar.set(java.util.Calendar.SECOND, 0)
         calendar.set(java.util.Calendar.MILLISECOND, 0)
-        calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        if (calendar.timeInMillis <= now) {
+            calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
         return (calendar.timeInMillis - now).coerceAtLeast(1000)
     }
 
@@ -135,6 +140,14 @@ class GlobalUiState(
         fontMode = mode
         scope.launch {
             settingsService.setFontMode(mode)
+        }
+    }
+
+    fun switchNightModeHour(hour: Int) {
+        nightModeHour = hour
+        midnightTransitionTimestamp = System.currentTimeMillis()
+        scope.launch {
+            settingsService.setNightModeHour(hour)
         }
     }
 

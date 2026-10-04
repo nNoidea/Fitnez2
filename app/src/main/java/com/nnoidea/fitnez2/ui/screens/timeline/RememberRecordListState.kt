@@ -66,6 +66,10 @@ fun rememberRecordListState(
 
     LaunchedEffect(state, weightUnit) { (state as RecordListStateImpl).updateWeightUnit(weightUnit) }
 
+    LaunchedEffect(state, globalUiState.nightModeHour) {
+        (state as? RecordListStateImpl)?.rebuildItems()
+    }
+
     LaunchedEffect(state.listState) {
         snapshotFlow {
             val layout = state.listState.layoutInfo

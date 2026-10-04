@@ -1,6 +1,7 @@
 package com.nnoidea.fitnez2.ui.components.recordlist
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import com.nnoidea.fitnez2.core.TimeUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -186,19 +187,26 @@ private fun RecordDateHeader(
 ) {
     val globalUiState = LocalGlobalUiState.current
     val currentLocale = globalLocalization.appLocale
-    val isToday = remember(date, globalUiState.midnightTransitionTimestamp) { android.text.format.DateUtils.isToday(date) }
-    val isYesterday = remember(date, globalUiState.midnightTransitionTimestamp) {
-        android.text.format.DateUtils.isToday(date + android.text.format.DateUtils.DAY_IN_MILLIS)
+    val rolloverHour = globalUiState.nightModeHour
+    val isToday = remember(date, globalUiState.midnightTransitionTimestamp, rolloverHour) {
+        TimeUtils.isToday(date, rolloverHour)
+    }
+    val isYesterday = remember(date, globalUiState.midnightTransitionTimestamp, rolloverHour) {
+        TimeUtils.isYesterday(date, rolloverHour)
     }
 
-    val dateString = remember(date, currentLocale) {
-        globalLocalization.formatDateShort(date)
+    val displayDateMillis = remember(date, rolloverHour) {
+        TimeUtils.getWorkoutEpochMillis(date, rolloverHour)
     }
 
-    val dayName = remember(date, currentLocale, isToday, isYesterday) {
+    val dateString = remember(displayDateMillis, currentLocale) {
+        globalLocalization.formatDateShort(displayDateMillis)
+    }
+
+    val dayName = remember(displayDateMillis, currentLocale, isToday, isYesterday) {
         if (isToday) globalLocalization.labelToday
         else if (isYesterday) globalLocalization.labelYesterday
-        else globalLocalization.formatDayName(date)
+        else globalLocalization.formatDayName(displayDateMillis)
     }
 
     Row(

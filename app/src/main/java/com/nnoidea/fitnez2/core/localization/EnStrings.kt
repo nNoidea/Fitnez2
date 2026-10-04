@@ -105,6 +105,15 @@ sealed class EnStrings(
     open val labelRotationOn: String = "On"
     open val labelRotationOff: String = "Off"
 
+    open val labelNightMode: String = "Night Mode"
+    open val labelNightModeDescription: String = "Early morning workouts before this hour are counted as part of the previous day."
+    open val labelNightModeOff: String = "Off (00:00)"
+    open fun labelNightModeHour(hour: Int): String = when (hour) {
+        0 -> labelNightModeOff
+        12 -> "12:00 (Noon)"
+        else -> String.format(java.util.Locale.US, "%02d:00", hour)
+    }
+
     open val labelExportData: String = "Export Data"
     open val labelImportData: String = "Import Data"
     open val labelExportSuccess: String = "Export Successful"
@@ -166,6 +175,7 @@ sealed class EnStrings(
     open val labelCompareBy: String = "Compare by"
     open val labelGraphMaxWeight: String = "Weight"
     open val labelGraphVolume: String = "Volume"
+    open val labelGraphOneRm: String = "1RM"
 
     // Unsaved Work Dialog
     open val titleNoName: String = "No Name"

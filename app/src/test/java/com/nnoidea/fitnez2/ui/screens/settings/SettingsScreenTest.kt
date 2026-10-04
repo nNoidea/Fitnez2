@@ -181,4 +181,35 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Item One").performClick()
         assertTrue(clicked)
     }
+
+    @Test
+    fun testSettingsGroup_nightModeRadioItem_rendersAndSelects() {
+        var selectedHour by mutableStateOf(0)
+
+        composeTestRule.setContent {
+            Fitnez2Theme {
+                SettingsGroup {
+                    radioItem(
+                        label = "Night Mode",
+                        value = if (selectedHour == 0) "Off (00:00)" else String.format(java.util.Locale.US, "%02d:00", selectedHour),
+                        options = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+                        selected = selectedHour,
+                        onSelected = { selectedHour = it },
+                        labelProvider = { if (it == 0) "Off (00:00)" else String.format(java.util.Locale.US, "%02d:00", it) }
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithText("Night Mode").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Off (00:00)").assertIsDisplayed()
+
+        // Click to open dialog
+        composeTestRule.onNodeWithText("Night Mode").performClick()
+
+        // Select 01:00
+        composeTestRule.onNodeWithText("01:00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("01:00").performClick()
+        assertEquals(1, selectedHour)
+    }
 }

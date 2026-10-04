@@ -192,7 +192,7 @@ class RecordListStateImpl(
         initialLoadDone = true
 
         val targetIndex = uiItems.indexOfFirst {
-            it is RecordDisplayItem.DateHeader && com.nnoidea.fitnez2.core.TimeUtils.isSameDay(it.date, targetDate)
+            it is RecordDisplayItem.DateHeader && com.nnoidea.fitnez2.core.TimeUtils.isSameDay(it.date, targetDate, globalUiState.nightModeHour)
         }.takeIf { it >= 0 } ?: uiItems.indexOfFirst {
             it is RecordDisplayItem.DateHeader && it.date < targetDate
         }.takeIf { it >= 0 }
@@ -204,12 +204,12 @@ class RecordListStateImpl(
         }
     }
 
-    private fun rebuildItems() {
+    internal fun rebuildItems() {
         val eligibleRecords = loadedRecords.filter {
             exerciseMap.containsKey(it.exerciseId) &&
             (filterExerciseIds == null || it.exerciseId in filterExerciseIds)
         }
-        val items = prepareRecordDisplayItems(eligibleRecords, exerciseMap, useAlternatingColors, section = 0)
+        val items = prepareRecordDisplayItems(eligibleRecords, exerciseMap, useAlternatingColors, section = 0, rolloverHour = globalUiState.nightModeHour)
         uiItems = if (isLoading) {
             items + RecordDisplayItem.LoadingMore
         } else {
@@ -359,7 +359,8 @@ class RecordListStateImpl(
             uiItems = prepareRecordDisplayItems(
                 records = loadedRecords,
                 exerciseMap = map,
-                useAlternatingColors = useAlternatingColors
+                useAlternatingColors = useAlternatingColors,
+                rolloverHour = globalUiState.nightModeHour
             )
         }
     }

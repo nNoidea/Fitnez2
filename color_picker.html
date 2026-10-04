@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theme & Color Picker Previewer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 1rem 1.5rem;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #475569;
+      background: #334155;
+      color: #f8fafc;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: #475569;
+      border-color: #64748b;
+    }
+
+    .btn-primary {
+      background: #0284c7;
+      border-color: #0284c7;
+    }
+    .btn-primary:hover {
+      background: #0369a1;
+      border-color: #0369a1;
+    }
+
+    .tabs {
+      display: flex;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .tab-btn {
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      flex: 1;
+      overflow: hidden;
+      height: calc(100vh - 65px);
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      background: #1e293b;
+      border-right: 1px solid #334155;
+      padding: 1.25rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      margin-bottom: 0.75rem;
+      font-weight: 700;
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      padding: 0.35rem 0.5rem;
+      background: #0f172a;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+
+    .color-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #cbd5e1;
+    }
+
+    .color-inputs {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .hex-input {
+      width: 75px;
+      background: transparent;
+      border: 1px solid #475569;
+      color: #f1f5f9;
+      font-family: monospace;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.4rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .color-swatch-input {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 32px;
+      height: 32px;
+      border: 2px solid #475569;
+      border-radius: 8px;
+      cursor: pointer;
+      background: transparent;
+      padding: 0;
+    }
+
+    .color-swatch-input::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    .color-swatch-input::-webkit-color-swatch {
+      border: none;
+      border-radius: 6px;
+    }
+
+    /* Previews Viewport */
+    .preview-container {
+      display: flex;
+      gap: 1.5rem;
+      padding: 2rem;
+      background: #090d16;
+      overflow-y: auto;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .preview-card {
+      flex: 1;
+      max-width: 540px;
+      min-width: 320px;
+      border-radius: 20px;
+      padding: 1.75rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .theme-badge {
+      align-self: flex-start;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .sample-headline {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .sample-body {
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .component-surface {
+      border-radius: 14px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .record-card-sample {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 1.1rem;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .tag-chips {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge-chip {
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .graph-mock {
+      display: flex;
+      align-items: flex-end;
+      height: 90px;
+      gap: 12px;
+      padding-top: 10px;
+      border-bottom: 2px solid;
+    }
+
+    .graph-bar {
+      flex: 1;
+      border-radius: 6px 6px 0 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding-top: 4px;
+    }
+
+    .contrast-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-family: monospace;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-weight: 700;
+      margin-top: 0.25rem;
+    }
+
+    /* Modal for Code Export */
+    dialog {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 14px;
+      padding: 1.5rem;
+      max-width: 600px;
+      width: 90%;
+      margin: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    pre {
+      background: #0f172a;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      border: 1px solid #334155;
+      font-family: "JetBrains Mono", Consolas, monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>
+      <span>🎨</span> Theme & Color Picker Previewer
+    </h1>
+    <div class="toolbar-actions">
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-split" onclick="setViewMode('split')">Split View</button>
+        <button class="tab-btn" id="tab-light" onclick="setViewMode('light')">Light Only</button>
+        <button class="tab-btn" id="tab-dark" onclick="setViewMode('dark')">Dark Only</button>
+      </div>
+      <button class="btn" onclick="resetToDefaults()">Reset Defaults</button>
+      <button class="btn btn-primary" onclick="openExportModal()">Export to Compose</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Controls Sidebar -->
+    <div class="controls-panel">
+      <!-- Light Theme Controls -->
+      <div id="controls-light-section">
+        <div class="section-title">☀️ Light Mode Palette</div>
+        
+        <div class="color-row">
+          <span class="color-label">Background</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-l-bg" value="#F7F9FF" oninput="syncFromHex('l-bg')">
+            <input type="color" class="color-swatch-input" id="color-l-bg" value="#f7f9ff" oninput="syncFromColor('l-bg')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Card / Surface</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-l-surface" value="#EBEFF5" oninput="syncFromHex('l-surface')">
+            <input type="color" class="color-swatch-input" id="color-l-surface" value="#ebeff5" oninput="syncFromColor('l-surface')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Text Primary</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-l-text" value="#181C20" oninput="syncFromHex('l-text')">
+            <input type="color" class="color-swatch-input" id="color-l-text" value="#181c20" oninput="syncFromColor('l-text')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Text Muted</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-l-muted" value="#41474D" oninput="syncFromHex('l-muted')">
+            <input type="color" class="color-swatch-input" id="color-l-muted" value="#41474d" oninput="syncFromColor('l-muted')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Primary Accent</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-l-accent" value="#006495" oninput="syncFromHex('l-accent')">
+            <input type="color" class="color-swatch-input" id="color-l-accent" value="#006495" oninput="syncFromColor('l-accent')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Semantic Green</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-l-green" value="#00AF00" oninput="syncFromHex('l-green')">
+            <input type="color" class="color-swatch-input" id="color-l-green" value="#00af00" oninput="syncFromColor('l-green')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Semantic Gold</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-l-gold" value="#D97706" oninput="syncFromHex('l-gold')">
+            <input type="color" class="color-swatch-input" id="color-l-gold" value="#d97706" oninput="syncFromColor('l-gold')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Semantic Red</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-l-red" value="#E53935" oninput="syncFromHex('l-red')">
+            <input type="color" class="color-swatch-input" id="color-l-red" value="#e53935" oninput="syncFromColor('l-red')">
+          </div>
+        </div>
+      </div>
+
+      <!-- Dark Theme Controls -->
+      <div id="controls-dark-section">
+        <div class="section-title">🌙 Dark Mode Palette</div>
+
+        <div class="color-row">
+          <span class="color-label">Background</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-d-bg" value="#101418" oninput="syncFromHex('d-bg')">
+            <input type="color" class="color-swatch-input" id="color-d-bg" value="#101418" oninput="syncFromColor('d-bg')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Card / Surface</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-d-surface" value="#1C2024" oninput="syncFromHex('d-surface')">
+            <input type="color" class="color-swatch-input" id="color-d-surface" value="#1c2024" oninput="syncFromColor('d-surface')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Text Primary</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-d-text" value="#DFE3E9" oninput="syncFromHex('d-text')">
+            <input type="color" class="color-swatch-input" id="color-d-text" value="#dfe3e9" oninput="syncFromColor('d-text')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Text Muted</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-d-muted" value="#C1C7CE" oninput="syncFromHex('d-muted')">
+            <input type="color" class="color-swatch-input" id="color-d-muted" value="#c1c7ce" oninput="syncFromColor('d-muted')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Primary Accent</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-d-accent" value="#8FCEFF" oninput="syncFromHex('d-accent')">
+            <input type="color" class="color-swatch-input" id="color-d-accent" value="#8fceff" oninput="syncFromColor('d-accent')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Semantic Green</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-d-green" value="#4CAF50" oninput="syncFromHex('d-green')">
+            <input type="color" class="color-swatch-input" id="color-d-green" value="#4caf50" oninput="syncFromColor('d-green')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Semantic Gold</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-d-gold" value="#FFC107" oninput="syncFromHex('d-gold')">
+            <input type="color" class="color-swatch-input" id="color-d-gold" value="#ffc107" oninput="syncFromColor('d-gold')">
+          </div>
+        </div>
+
+        <div class="color-row">
+          <span class="color-label">Semantic Red</span>
+          <div class="color-inputs">
+            <input type="text" class="hex-input" id="hex-d-red" value="#FF5252" oninput="syncFromHex('d-red')">
+            <input type="color" class="color-swatch-input" id="color-d-red" value="#ff5252" oninput="syncFromColor('d-red')">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Preview Canvas -->
+    <div class="preview-container">
+      
+      <!-- Light Preview Card -->
+      <div class="preview-card" id="card-light">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="theme-badge" id="badge-light">Light Mode</span>
+          <span class="contrast-badge" id="contrast-light">Contrast: --</span>
+        </div>
+
+        <h2 class="sample-headline" id="headline-light">Bench Press & Squat Tracker</h2>
+        <p class="sample-body" id="body-light">
+          This preview demonstrates how your chosen background, primary text, and muted body text look together in real-world lighting conditions.
+        </p>
+
+        <!-- Component Surface -->
+        <div class="component-surface" id="surface-light">
+          <div style="font-weight: 700; font-size: 0.85rem;" id="surface-title-light">Recent Session (Card Surface)</div>
+          
+          <div class="record-card-sample" id="rec-sample-light-1">
+            <span>Squat (1x 140kg)</span>
+            <span class="badge-chip" id="chip-light-pr">PR +5kg</span>
+          </div>
+
+          <div class="record-card-sample" id="rec-sample-light-2">
+            <span>Bench Press (3x 100kg)</span>
+            <span class="badge-chip" id="chip-light-vol">Volume Set</span>
+          </div>
+
+          <!-- Mini Progress Bar / Chart -->
+          <div class="graph-mock" id="graph-light">
+            <div class="graph-bar" id="bar-l-1" style="height: 50%;">115</div>
+            <div class="graph-bar" id="bar-l-2" style="height: 75%;">125</div>
+            <div class="graph-bar" id="bar-l-3" style="height: 95%;">133.3</div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.7rem; font-family: monospace;" id="axis-light">
+            <span>1/10</span>
+            <span>3/10</span>
+            <span>4/10</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-light" style="align-self: flex-start; padding: 0.6rem 1.2rem;">
+          + Add New Workout Record
+        </button>
+      </div>
+
+      <!-- Dark Preview Card -->
+      <div class="preview-card" id="card-dark">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="theme-badge" id="badge-dark">Dark Mode</span>
+          <span class="contrast-badge" id="contrast-dark">Contrast: --</span>
+        </div>
+
+        <h2 class="sample-headline" id="headline-dark">Bench Press & Squat Tracker</h2>
+        <p class="sample-body" id="body-dark">
+          This preview demonstrates how your chosen background, primary text, and muted body text look together in dark/night gym conditions.
+        </p>
+
+        <!-- Component Surface -->
+        <div class="component-surface" id="surface-dark">
+          <div style="font-weight: 700; font-size: 0.85rem;" id="surface-title-dark">Recent Session (Card Surface)</div>
+          
+          <div class="record-card-sample" id="rec-sample-dark-1">
+            <span>Squat (1x 140kg)</span>
+            <span class="badge-chip" id="chip-dark-pr">PR +5kg</span>
+          </div>
+
+          <div class="record-card-sample" id="rec-sample-dark-2">
+            <span>Bench Press (3x 100kg)</span>
+            <span class="badge-chip" id="chip-dark-vol">Volume Set</span>
+          </div>
+
+          <!-- Mini Progress Bar / Chart -->
+          <div class="graph-mock" id="graph-dark">
+            <div class="graph-bar" id="bar-d-1" style="height: 50%;">115</div>
+            <div class="graph-bar" id="bar-d-2" style="height: 75%;">125</div>
+            <div class="graph-bar" id="bar-d-3" style="height: 95%;">133.3</div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.7rem; font-family: monospace;" id="axis-dark">
+            <span>1/10</span>
+            <span>3/10</span>
+            <span>4/10</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-dark" style="align-self: flex-start; padding: 0.6rem 1.2rem;">
+          + Add New Workout Record
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Export Dialog -->
+  <dialog id="export-modal">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Export to Jetpack Compose (Color.kt)</h3>
+    <p style="font-size: 0.85rem; color: #94a3b8;">Copy and paste directly into your <code>Color.kt</code> file:</p>
+    <pre id="compose-code-output"></pre>
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <button class="btn" onclick="document.getElementById('export-modal').close()">Close</button>
+      <button class="btn btn-primary" onclick="copyComposeCode()">Copy to Clipboard</button>
+    </div>
+  </dialog>
+
+  <script>
+    const defaultColors = {
+      'l-bg': '#F7F9FF',
+      'l-surface': '#EBEFF5',
+      'l-text': '#181C20',
+      'l-muted': '#41474D',
+      'l-accent': '#006495',
+      'l-green': '#00AF00',
+      'l-gold': '#D97706',
+      'l-red': '#E53935',
+      'd-bg': '#101418',
+      'd-surface': '#1C2024',
+      'd-text': '#DFE3E9',
+      'd-muted': '#C1C7CE',
+      'd-accent': '#8FCEFF',
+      'd-green': '#4CAF50',
+      'd-gold': '#FFC107',
+      'd-red': '#FF5252'
+    };
+
+    function syncFromHex(id) {
+      let hex = document.getElementById('hex-' + id).value.trim();
+      if (!hex.startsWith('#')) hex = '#' + hex;
+      if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+        document.getElementById('color-' + id).value = hex;
+        applyColors();
+      }
+    }
+
+    function syncFromColor(id) {
+      const val = document.getElementById('color-' + id).value.toUpperCase();
+      document.getElementById('hex-' + id).value = val;
+      applyColors();
+    }
+
+    function getVal(id) {
+      return document.getElementById('hex-' + id).value.trim();
+    }
+
+    // Relative luminance calculation for WCAG contrast
+    function getLuminance(hex) {
+      hex = hex.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16) / 255;
+      const g = parseInt(hex.substr(2, 2), 16) / 255;
+      const b = parseInt(hex.substr(4, 2), 16) / 255;
+      const a = [r, g, b].map(v => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+      return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+    }
+
+    function getContrastRatio(hex1, hex2) {
+      const lum1 = getLuminance(hex1);
+      const lum2 = getLuminance(hex2);
+      const brightest = Math.max(lum1, lum2);
+      const darkest = Math.min(lum1, lum2);
+      return (brightest + 0.05) / (darkest + 0.05);
+    }
+
+    function applyColors() {
+      // Light mode DOM updates
+      const lBg = getVal('l-bg');
+      const lSurface = getVal('l-surface');
+      const lText = getVal('l-text');
+      const lMuted = getVal('l-muted');
+      const lAccent = getVal('l-accent');
+      const lGreen = getVal('l-green');
+      const lGold = getVal('l-gold');
+      const lRed = getVal('l-red');
+
+      const cardL = document.getElementById('card-light');
+      cardL.style.backgroundColor = lBg;
+      cardL.style.color = lText;
+
+      document.getElementById('headline-light').style.color = lText;
+      document.getElementById('body-light').style.color = lMuted;
+      document.getElementById('surface-light').style.backgroundColor = lSurface;
+      document.getElementById('surface-title-light').style.color = lText;
+
+      const badgeL = document.getElementById('badge-light');
+      badgeL.style.backgroundColor = lSurface;
+      badgeL.style.color = lAccent;
+
+      const rec1L = document.getElementById('rec-sample-light-1');
+      rec1L.style.backgroundColor = lAccent;
+      rec1L.style.color = '#ffffff';
+
+      const rec2L = document.getElementById('rec-sample-light-2');
+      rec2L.style.backgroundColor = lSurface;
+      rec2L.style.color = lText;
+      rec2L.style.border = `1px solid ${lMuted}40`;
+
+      document.getElementById('chip-light-pr').style.backgroundColor = lGreen;
+      document.getElementById('chip-light-pr').style.color = '#ffffff';
+
+      document.getElementById('chip-light-vol').style.backgroundColor = lGold;
+      document.getElementById('chip-light-vol').style.color = '#ffffff';
+
+      const graphL = document.getElementById('graph-light');
+      graphL.style.borderColor = lMuted + '60';
+      document.getElementById('axis-light').style.color = lMuted;
+
+      const barL1 = document.getElementById('bar-l-1');
+      barL1.style.backgroundColor = lRed;
+      barL1.style.color = '#ffffff';
+
+      const barL2 = document.getElementById('bar-l-2');
+      barL2.style.backgroundColor = lGold;
+      barL2.style.color = '#ffffff';
+
+      const barL3 = document.getElementById('bar-l-3');
+      barL3.style.backgroundColor = lGreen;
+      barL3.style.color = '#ffffff';
+
+      const btnL = document.getElementById('btn-light');
+      btnL.style.backgroundColor = lAccent;
+      btnL.style.color = '#ffffff';
+      btnL.style.borderColor = lAccent;
+
+      // Dark mode DOM updates
+      const dBg = getVal('d-bg');
+      const dSurface = getVal('d-surface');
+      const dText = getVal('d-text');
+      const dMuted = getVal('d-muted');
+      const dAccent = getVal('d-accent');
+      const dGreen = getVal('d-green');
+      const dGold = getVal('d-gold');
+      const dRed = getVal('d-red');
+
+      const cardD = document.getElementById('card-dark');
+      cardD.style.backgroundColor = dBg;
+      cardD.style.color = dText;
+
+      document.getElementById('headline-dark').style.color = dText;
+      document.getElementById('body-dark').style.color = dMuted;
+      document.getElementById('surface-dark').style.backgroundColor = dSurface;
+      document.getElementById('surface-title-dark').style.color = dText;
+
+      const badgeD = document.getElementById('badge-dark');
+      badgeD.style.backgroundColor = dSurface;
+      badgeD.style.color = dAccent;
+
+      const rec1D = document.getElementById('rec-sample-dark-1');
+      rec1D.style.backgroundColor = dAccent;
+      rec1D.style.color = '#002030';
+
+      const rec2D = document.getElementById('rec-sample-dark-2');
+      rec2D.style.backgroundColor = dSurface;
+      rec2D.style.color = dText;
+      rec2D.style.border = `1px solid ${dMuted}40`;
+
+      document.getElementById('chip-dark-pr').style.backgroundColor = dGreen;
+      document.getElementById('chip-dark-pr').style.color = '#002510';
+
+      document.getElementById('chip-dark-vol').style.backgroundColor = dGold;
+      document.getElementById('chip-dark-vol').style.color = '#251b00';
+
+      const graphD = document.getElementById('graph-dark');
+      graphD.style.borderColor = dMuted + '60';
+      document.getElementById('axis-dark').style.color = dMuted;
+
+      const barD1 = document.getElementById('bar-d-1');
+      barD1.style.backgroundColor = dRed;
+      barD1.style.color = '#ffffff';
+
+      const barD2 = document.getElementById('bar-d-2');
+      barD2.style.backgroundColor = dGold;
+      barD2.style.color = '#000000';
+
+      const barD3 = document.getElementById('bar-d-3');
+      barD3.style.backgroundColor = dGreen;
+      barD3.style.color = '#000000';
+
+      const btnD = document.getElementById('btn-dark');
+      btnD.style.backgroundColor = dAccent;
+      btnD.style.color = '#002538';
+      btnD.style.borderColor = dAccent;
+
+      // Update Contrast Indicators
+      updateContrastBadge('contrast-light', lText, lBg);
+      updateContrastBadge('contrast-dark', dText, dBg);
+    }
+
+    function updateContrastBadge(elementId, textColor, bgColor) {
+      try {
+        const ratio = getContrastRatio(textColor, bgColor);
+        const formatted = ratio.toFixed(2) + ':1';
+        const badge = document.getElementById(elementId);
+        
+        let grade = 'AAA';
+        let bg = '#16a34a'; // green
+        if (ratio < 4.5) {
+          grade = 'FAIL';
+          bg = '#dc2626'; // red
+        } else if (ratio < 7) {
+          grade = 'AA';
+          bg = '#d97706'; // amber
+        }
+
+        badge.textContent = `Contrast: ${formatted} (${grade})`;
+        badge.style.backgroundColor = bg;
+        badge.style.color = '#ffffff';
+      } catch (e) {}
+    }
+
+    function setViewMode(mode) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const cardL = document.getElementById('card-light');
+      const cardD = document.getElementById('card-dark');
+      const secL = document.getElementById('controls-light-section');
+      const secD = document.getElementById('controls-dark-section');
+
+      if (mode === 'split') {
+        document.getElementById('tab-split').classList.add('active');
+        cardL.style.display = 'flex';
+        cardD.style.display = 'flex';
+        secL.style.display = 'block';
+        secD.style.display = 'block';
+      } else if (mode === 'light') {
+        document.getElementById('tab-light').classList.add('active');
+        cardL.style.display = 'flex';
+        cardD.style.display = 'none';
+        secL.style.display = 'block';
+        secD.style.display = 'none';
+      } else if (mode === 'dark') {
+        document.getElementById('tab-dark').classList.add('active');
+        cardL.style.display = 'none';
+        cardD.style.display = 'flex';
+        secL.style.display = 'none';
+        secD.style.display = 'block';
+      }
+    }
+
+    function resetToDefaults() {
+      for (const [key, val] of Object.entries(defaultColors)) {
+        document.getElementById('hex-' + key).value = val;
+        document.getElementById('color-' + key).value = val.toLowerCase();
+      }
+      applyColors();
+    }
+
+    function toComposeHex(hex) {
+      return 'Color(0xFF' + hex.replace('#', '').toUpperCase() + ')';
+    }
+
+    function openExportModal() {
+      const code = `// Light Scheme
+val BackgroundLight = ${toComposeHex(getVal('l-bg'))}
+val SurfaceContainerLight = ${toComposeHex(getVal('l-surface'))}
+val OnBackgroundLight = ${toComposeHex(getVal('l-text'))}
+val OnSurfaceVariantLight = ${toComposeHex(getVal('l-muted'))}
+val PrimaryLight = ${toComposeHex(getVal('l-accent'))}
+
+// Dark Scheme
+val BackgroundDark = ${toComposeHex(getVal('d-bg'))}
+val SurfaceContainerDark = ${toComposeHex(getVal('d-surface'))}
+val OnBackgroundDark = ${toComposeHex(getVal('d-text'))}
+val OnSurfaceVariantDark = ${toComposeHex(getVal('d-muted'))}
+val PrimaryDark = ${toComposeHex(getVal('d-accent'))}
+
+// Adaptive Semantic Colors (dynamically high-contrast against backgrounds)
+fun contrastRatio(c1: Color, c2: Color): Float {
+    val l1 = c1.luminance()
+    val l2 = c2.luminance()
+    return (maxOf(l1, l2) + 0.05f) / (minOf(l1, l2) + 0.05f)
+}
+
+fun adaptiveRed(background: Color): Color {
+    val light = ${toComposeHex(getVal('l-red'))}
+    val dark = ${toComposeHex(getVal('d-red'))}
+    return if (contrastRatio(light, background) >= contrastRatio(dark, background)) light else dark
+}
+
+fun adaptiveGold(background: Color): Color {
+    val light = ${toComposeHex(getVal('l-gold'))}
+    val dark = ${toComposeHex(getVal('d-gold'))}
+    return if (contrastRatio(light, background) >= contrastRatio(dark, background)) light else dark
+}
+
+fun adaptiveGreen(background: Color): Color {
+    val light = ${toComposeHex(getVal('l-green'))}
+    val dark = ${toComposeHex(getVal('d-green'))}
+    return if (contrastRatio(light, background) >= contrastRatio(dark, background)) light else dark
+}`;
+
+      document.getElementById('compose-code-output').textContent = code;
+      document.getElementById('export-modal').showModal();
+    }
+
+    function copyComposeCode() {
+      const code = document.getElementById('compose-code-output').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Compose code copied to clipboard!');
+      });
+    }
+
+    // Initial setup
+    applyColors();
+  </script>
+</body>
+</html>

@@ -27,9 +27,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nnoidea.fitnez2.MainActivity
+import com.nnoidea.fitnez2.core.TimeUtils
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.service.LocalRecordService
 import com.nnoidea.fitnez2.service.LocalExerciseService
+import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.components.ScreenScaffold
 import com.nnoidea.fitnez2.ui.navigation.AppPage
 import java.time.DayOfWeek
@@ -74,13 +76,18 @@ fun MonthlyScreen(
         recordService.getRecordsByDateRangeFlow(windowStartMillis, windowEndMillis)
     }.collectAsState(initial = emptyList())
 
+    val globalUiState = LocalGlobalUiState.current
+    val rolloverHour = globalUiState.nightModeHour
+
     // Pre-compute and group records by day ONCE to prevent massive O(N) date conversions inside every cell!
-    val recordsByDay = remember(records) {
+    val recordsByDay = remember(records, rolloverHour) {
         records.groupBy { record ->
-            java.time.Instant.ofEpochMilli(record.date)
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
+            TimeUtils.getWorkoutLocalDate(record.date, rolloverHour)
         }
+    }
+
+    val todayWorkoutDate = remember(globalUiState.midnightTransitionTimestamp, rolloverHour) {
+        TimeUtils.getWorkoutLocalDate(System.currentTimeMillis(), rolloverHour)
     }
 
     // Dynamic header Month + Year string, automatically localized
@@ -232,7 +239,7 @@ fun MonthlyScreen(
                                     week.forEachIndexed { colIndex, day ->
                                         val gridIndex = (rowIndex * 7) + colIndex
                                         val isCurrentMonth = (day.month == pageMonthStart.month) && (day.year == pageMonthStart.year)
-                                        val isToday = day.isEqual(LocalDate.now())
+                                        val isToday = day.isEqual(todayWorkoutDate)
                                         val dayRecords = recordsByDay[day] ?: emptyList()
                                         val hasExercises = dayRecords.isNotEmpty()
 
@@ -269,7 +276,7 @@ fun MonthlyScreen(
                                             exerciseDisplayNames = dayExerciseNames,
                                             onClick = {
                                                 view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-                                                val epochMillis = day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                                val epochMillis = TimeUtils.getWorkoutDayStartEpochMillis(day, rolloverHour)
                                                 if (onNavigateToTimelineDate != null) {
                                                     onNavigateToTimelineDate(epochMillis)
                                                 } else {

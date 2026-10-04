@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Bedtime
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -171,6 +172,21 @@ fun SettingsScreen(
                 selected = globalState.weightUnit,
                 onSelected = { globalState.switchWeightUnit(it) },
                 labelProvider = { it }
+            )
+
+            // Night Mode Setting
+            val nightModeOptions = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+            radioItem(
+                label = globalLocalization.labelNightMode,
+                value = globalLocalization.labelNightModeHour(globalState.nightModeHour),
+                icon = Icons.Default.Bedtime,
+                iconContainerColor = primaryContainer.copy(alpha = 0.8f),
+                iconTint = onPrimaryContainer,
+                options = nightModeOptions,
+                selected = globalState.nightModeHour,
+                onSelected = { globalState.switchNightModeHour(it) },
+                labelProvider = { globalLocalization.labelNightModeHour(it) },
+                bodyText = globalLocalization.labelNightModeDescription
             )
 
             // In-App Font Setting
