@@ -1,4 +1,4 @@
-.PHONY: build install clean stop prod prod-install emulator test test-unit coverage coverage-report detekt check
+.PHONY: build install clean stop prod prod-install emulator test test-unit coverage coverage-report detekt check screenshots
 
 # Default task: Builds the debug APK
 build:
@@ -76,3 +76,11 @@ detekt:
 check:
 	@echo "Running detekt, lint and unit tests..."
 	./gradlew detekt lintDebug testDebugUnitTest
+
+# Captures README screenshots (timeline, monthly, graph, settings) at 1080x2400
+# in dark mode with Material You colors. Needs one running Android 12+ emulator;
+# set ANDROID_SERIAL when several devices are attached. Uses a temporary
+# emulator user so existing app data stays untouched.
+screenshots:
+	@echo "Capturing screenshots..."
+	./scripts/screenshots.sh

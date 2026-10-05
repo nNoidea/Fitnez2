@@ -89,7 +89,7 @@ class SettingsRepository(private val context: Context) {
     private val GRAPH_RANGE_KEY = stringPreferencesKey("graph_range")
 
     val graphRangeFlow: Flow<String> = context.dataStore.data
-        .map { preferences -> preferences[GRAPH_RANGE_KEY] ?: "ALL" }
+        .map { preferences -> preferences[GRAPH_RANGE_KEY] ?: "SEVEN" }
 
     suspend fun setGraphRange(range: String) {
         context.dataStore.edit { it[GRAPH_RANGE_KEY] = range }

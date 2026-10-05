@@ -136,7 +136,7 @@ fun GraphScreen(
 
     val exercises by exerciseService.getAllExercisesFlow().collectAsState(initial = emptyList())
     val weightUnit by settingsService.weightUnitFlow.collectAsState(initial = "kg")
-    val savedRangeStr by settingsService.graphRangeFlow.collectAsState(initial = "ALL")
+    val savedRangeStr by settingsService.graphRangeFlow.collectAsState(initial = "SEVEN")
     val savedMetricStr by settingsService.graphMetricFlow.collectAsState(initial = "MAX_WEIGHT")
 
     var selectedRangeOverride by remember { mutableStateOf<SessionRange?>(null) }

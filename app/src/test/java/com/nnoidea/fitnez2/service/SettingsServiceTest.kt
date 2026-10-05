@@ -68,7 +68,7 @@ class SettingsServiceTest {
 
     @Test
     fun setAndGetGraphRangeAndMetric() = runBlocking {
-        assertEquals("ALL", settingsService.graphRangeFlow.first())
+        assertEquals("SEVEN", settingsService.graphRangeFlow.first())
         assertEquals("MAX_WEIGHT", settingsService.graphMetricFlow.first())
 
         settingsService.setGraphRange("THIRTY")

@@ -8,6 +8,7 @@ import com.nnoidea.fitnez2.data.entities.Record
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class DatabaseSeeder(
     private val applicationScope: CoroutineScope,
@@ -29,8 +30,9 @@ class DatabaseSeeder(
     private suspend fun populateDatabase(database: AppDatabase) {
         val exerciseDao = database.exerciseDao()
         val recordDao = database.recordDao()
+        val now = System.currentTimeMillis()
 
-        val initialExercises = listOf(
+        val starterLifts = listOf(
             "Squat",
             "Bench Press",
             "Deadlift",
@@ -39,40 +41,40 @@ class DatabaseSeeder(
             "Pull Up",
             "Dips"
         )
-
-        initialExercises.forEach { name ->
+        starterLifts.forEach { name ->
             exerciseDao.insertExercise(Exercise(name = name))
         }
+        val idsByName = exerciseDao.getAllExercises().associateBy({ it.name }, { it.id })
 
-        val exercises = exerciseDao.getAllExercises()
-        if (exercises.isEmpty()) return
-
-        val now = System.currentTimeMillis()
-        val oneHour = 3600000L
-        val oneDay = 86400000L
-        val oneWeek = 604800000L
-
-        val timePoints = listOf(
-            now - oneHour,
-            now - oneDay,
-            now - (2 * oneDay),
-            now - oneWeek
-        )
-
-        timePoints.forEach { timestamp ->
-            repeat(5) { i ->
-                val exercise = exercises[i % exercises.size]
-                recordDao.insertRecord(
-                    Record(
-                        exerciseId = exercise.id,
-                        date = timestamp,
-                        weight = 20.0 + (i * 2.5),
-                        sets = 1,
-                        reps = 5 + i
-                    )
+        suspend fun log(exercise: String, daysAgo: Int, sets: Int, reps: Int, weight: Double, order: Int = 0) {
+            recordDao.insertRecord(
+                Record(
+                    exerciseId = idsByName.getValue(exercise),
+                    sets = sets,
+                    reps = reps,
+                    weight = weight,
+                    date = trainingDayTimestamp(daysAgo, now),
+                    orderNumber = order
                 )
-            }
+            )
         }
+
+        // A week of Squat, heavier back-to-back so the graph climbs.
+        log("Squat", daysAgo = 4, sets = 3, reps = 5, weight = 60.0)
+        log("Squat", daysAgo = 3, sets = 3, reps = 5, weight = 62.5)
+        log("Squat", daysAgo = 2, sets = 3, reps = 5, weight = 65.0)
+        log("Squat", daysAgo = 1, sets = 3, reps = 5, weight = 67.5)
+        // Today's Squat shares its timestamp with other lifts; pin it as the
+        // latest record so the graph opens on the main lift.
+        log("Squat", daysAgo = 0, sets = 3, reps = 5, weight = 70.0, order = 1)
+        // Bench climbs back-to-back too.
+        log("Bench Press", daysAgo = 2, sets = 3, reps = 8, weight = 40.0)
+        log("Bench Press", daysAgo = 0, sets = 3, reps = 8, weight = 42.5)
+        // A few other lifts so the timeline looks lived-in. Ten records total,
+        // all within the last week, so they are easy to wipe.
+        log("Deadlift", daysAgo = 1, sets = 3, reps = 5, weight = 100.0)
+        log("Overhead Press", daysAgo = 0, sets = 3, reps = 8, weight = 30.0)
+        log("Barbell Row", daysAgo = 3, sets = 3, reps = 8, weight = 50.0)
 
         com.nnoidea.fitnez2.ui.common.GlobalUiState.emitToAll(
             com.nnoidea.fitnez2.ui.common.UiSignal.DatabaseSeeded
@@ -80,4 +82,16 @@ class DatabaseSeeder(
 
         Log.d("DatabaseSeeder", "Seeding complete.")
     }
+}
+
+/** Stable timestamp for a training day N days ago: midday, safely clear of the night-mode rollover hour. */
+fun trainingDayTimestamp(daysAgo: Int, nowMillis: Long): Long {
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = nowMillis
+    calendar.add(Calendar.DAY_OF_YEAR, -daysAgo)
+    calendar.set(Calendar.HOUR_OF_DAY, 12)
+    calendar.set(Calendar.MINUTE, 0)
+    calendar.set(Calendar.SECOND, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
+    return calendar.timeInMillis
 }

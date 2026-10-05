@@ -1,8 +1,8 @@
 # Fitnez2
 
-## Screenshots
+A fitness tracking app for your weight exercises, specially made with Material 3 Expressive + own custom expressive components that go even further than the Material 3 Expressive library.
 
-Run `make screenshots` with one running Android 12+ emulator to rebuild and capture these screens at a standard 1080 × 2400 portrait resolution. Set `ANDROID_SERIAL` if more than one emulator is attached. The command uses a temporary emulator user so existing app data stays untouched; screenshots use Android dark mode and Material You dynamic colors.
+## Screenshots
 
 <table>
   <tr>
@@ -14,8 +14,6 @@ Run `make screenshots` with one running Android 12+ emulator to rebuild and capt
     <td align="center"><img src="screenshots/settings.png" alt="Fitnez2 settings screen" width="100%"></td>
   </tr>
 </table>
-
-A fitness tracking app for your weight exercises, specially made with Material 3 Expressive + own custom expressive components that go even further than the Material 3 Expressive library.
 
 ## Features
 
