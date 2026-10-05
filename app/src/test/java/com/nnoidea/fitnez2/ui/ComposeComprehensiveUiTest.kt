@@ -452,8 +452,11 @@ class ComposeComprehensiveUiTest {
 
         val timelineSquatMatcher = hasTestTag("record_card_Squat") and hasAnyAncestor(hasTestTag("main_timeline_record_list"))
 
-        // Wait for initial records to load in main timeline
-        composeRule.onAllNodes(timelineSquatMatcher).assertCountEquals(1)
+        // Wait for initial records to load in main timeline (async Flow + DB load)
+        composeRule.waitForIdle()
+        composeRule.waitUntil(5000) {
+            composeRule.onAllNodes(timelineSquatMatcher).fetchSemanticsNodes().size == 1
+        }
 
         // Insert first back-to-back record
         runBlocking {
