@@ -31,6 +31,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -42,6 +43,68 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import com.nnoidea.fitnez2.ui.theme.adaptiveGold
+
+private fun DrawScope.drawYLabelPills(
+    sessions: List<SessionPoint>,
+    labelVals: List<Double>,
+    yMap: Map<Double, Float>,
+    barBottom: Float,
+    stubHeight: Float,
+    corners: List<Double>,
+    maxLabelVal: Double?,
+    width: Float,
+    paddingLeft: Float,
+    paddingRight: Float,
+    slotWidth: Float,
+    gap: Float,
+    prColor: Color,
+    labelPillColor: Color,
+    onLabelPillColor: Color
+) {
+    cornerLabelPositions(sessions, paddingLeft, slotWidth, gap).forEach { corner ->
+        val canonical = resolveCanonicalValue(corner.value, labelVals)
+        val y = yMap[canonical] ?: (barBottom - stubHeight)
+
+        val text = formatMaxTwoDecimals(canonical)
+        val hasDistinctPeak = (maxLabelVal != null && corners.min() < corners.max())
+        val isMax = hasDistinctPeak && (canonical == maxLabelVal)
+
+        val paint = android.graphics.Paint().apply {
+            color = if (isMax) Color(0xFF1C1B1F).hashCode() else onLabelPillColor.hashCode()
+            textSize = 10.sp.toPx()
+            textAlign = android.graphics.Paint.Align.CENTER
+            typeface = if (isMax) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
+        }
+
+        val pill = centeredLabelPillRect(
+            textWidth = paint.measureText(text),
+            ascent = paint.fontMetrics.ascent,
+            descent = paint.fontMetrics.descent,
+            centerX = corner.x,
+            lineY = y,
+            liftGap = 10.dp.toPx(),
+            paddingH = 5.dp.toPx(),
+            paddingV = 2.dp.toPx(),
+            minLeft = paddingLeft,
+            maxRight = width - paddingRight
+        )
+        val pillH = pill.height
+
+        drawRoundRect(
+            color = if (isMax) prColor else labelPillColor,
+            topLeft = Offset(pill.left, pill.top),
+            size = Size(pill.right - pill.left, pillH),
+            cornerRadius = CornerRadius(pillH / 2f, pillH / 2f)
+        )
+
+        drawContext.canvas.nativeCanvas.drawText(
+            text,
+            (pill.left + pill.right) / 2f,
+            pill.bottom - 2.dp.toPx() - paint.fontMetrics.descent,
+            paint
+        )
+    }
+}
 
 @Composable
 fun BatteryStyleChart(
@@ -61,6 +124,8 @@ fun BatteryStyleChart(
 
     val dateFormatter = remember { DateTimeFormatter.ofPattern("d/M", Locale.getDefault()) }
     val fullDateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()) }
+    val labelPillColor = MaterialTheme.colorScheme.tertiaryContainer
+    val onLabelPillColor = MaterialTheme.colorScheme.onTertiaryContainer
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val totalWidth = maxWidth
@@ -93,7 +158,7 @@ fun BatteryStyleChart(
             val corners = silhouetteCornerValues(sessions)
 
             val paddingLeft = 8.dp.toPx()
-            val paddingRight = 42.dp.toPx()
+            val paddingRight = 8.dp.toPx()
             val paddingTop = 28.dp.toPx()
             val paddingBottom = 32.dp.toPx()
 
@@ -122,44 +187,6 @@ fun BatteryStyleChart(
                     start = Offset(paddingLeft, y),
                     end = Offset(width - paddingRight, y),
                     strokeWidth = 1.dp.toPx()
-                )
-
-                val text = formatMaxTwoDecimals(value)
-                val hasDistinctPeak = (maxLabelVal != null && corners.min() < corners.max())
-                val isMax = hasDistinctPeak && (value == maxLabelVal)
-
-                val paint = android.graphics.Paint().apply {
-                    color = if (isMax) Color(0xFF1C1B1F).hashCode() else textColor.hashCode()
-                    textSize = 10.sp.toPx()
-                    textAlign = android.graphics.Paint.Align.RIGHT
-                    typeface = if (isMax) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
-                }
-
-                if (isMax) {
-                    val textWidth = paint.measureText(text)
-                    val fontMetrics = paint.fontMetrics
-                    val pillPaddingH = 5.dp.toPx()
-                    val pillPaddingV = 2.dp.toPx()
-                    val textBaselineY = y + 4.dp.toPx()
-                    val pillRight = width - 8.dp.toPx() + pillPaddingH
-                    val pillLeft = pillRight - textWidth - 2 * pillPaddingH
-                    val pillTop = textBaselineY + fontMetrics.ascent - pillPaddingV
-                    val pillBottom = textBaselineY + fontMetrics.descent + pillPaddingV
-                    val pillH = pillBottom - pillTop
-
-                    drawRoundRect(
-                        color = prColor,
-                        topLeft = Offset(pillLeft, pillTop),
-                        size = Size(pillRight - pillLeft, pillH),
-                        cornerRadius = CornerRadius(pillH / 2f, pillH / 2f)
-                    )
-                }
-
-                drawContext.canvas.nativeCanvas.drawText(
-                    text,
-                    width - 8.dp.toPx(),
-                    y + 4.dp.toPx(),
-                    paint
                 )
             }
 
@@ -205,6 +232,26 @@ fun BatteryStyleChart(
                 }
                 drawPath(segment, barColor)
             }
+
+            // Y labels sit directly on the graph: each gets a tiny pill backdrop
+            // (gold for the peak, tonal otherwise) so it stays readable over bars.
+            drawYLabelPills(
+                sessions = sessions,
+                labelVals = labelVals,
+                yMap = yMap,
+                barBottom = barBottom,
+                stubHeight = stubHeight,
+                corners = corners,
+                maxLabelVal = maxLabelVal,
+                width = width,
+                paddingLeft = paddingLeft,
+                paddingRight = paddingRight,
+                slotWidth = slotWidth,
+                gap = gap,
+                prColor = prColor,
+                labelPillColor = labelPillColor,
+                onLabelPillColor = onLabelPillColor
+            )
 
             // Baseline ticks + date labels at bar corners and junctions
             data class DatePoint(val x: Float, val timestamp: Long, val align: android.graphics.Paint.Align)
@@ -273,7 +320,7 @@ fun BatteryStyleChart(
             val dateStr = fullDateFormatter.format(Instant.ofEpochMilli(session.date).atZone(ZoneId.systemDefault()))
 
             val paddingLeft = 8.dp
-            val paddingRight = 42.dp
+            val paddingRight = 8.dp
             val chartWidthDp = totalWidth - paddingLeft - paddingRight
             val slotWidthDp = chartWidthDp / sessions.size
 

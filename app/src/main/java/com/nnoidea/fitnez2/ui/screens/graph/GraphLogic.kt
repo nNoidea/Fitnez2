@@ -383,3 +383,56 @@ fun silhouetteCornerValues(bars: List<SessionPoint>): List<Double> {
     if (bars.isEmpty()) return emptyList()
     return listOf(bars.first().leftValue) + bars.map { it.rightValue }
 }
+
+/** Pill backdrop for an on-graph axis label: hugs right-aligned text with padding. */
+data class LabelPillRect(val left: Float, val top: Float, val right: Float, val bottom: Float) {
+    val height: Float get() = bottom - top
+}
+
+/** One label per silhouette corner: the first bar's left edge plus every bar's right edge. */
+data class CornerLabelPoint(val value: Double, val x: Float)
+
+/**
+ * Positions for all corner labels: first bar's left edge, junction centers
+ * between bars, and the last bar's right edge. Inner corners share their value
+ * with the next bar's left, so labeling every right corner covers them.
+ */
+fun cornerLabelPositions(
+    bars: List<SessionPoint>,
+    paddingLeft: Float,
+    slotWidth: Float,
+    gap: Float
+): List<CornerLabelPoint> {
+    if (bars.isEmpty()) return emptyList()
+    return buildList {
+        add(CornerLabelPoint(bars.first().leftValue, paddingLeft + gap / 2f))
+        for (k in 1 until bars.size) {
+            add(CornerLabelPoint(bars[k - 1].rightValue, paddingLeft + k * slotWidth))
+        }
+        add(CornerLabelPoint(bars.last().rightValue, paddingLeft + bars.size * slotWidth - gap / 2f))
+    }
+}
+
+/** Pill backdrop centered over [centerX], floating [liftGap] above [lineY], shifted to stay inside [minLeft, maxRight]. */
+fun centeredLabelPillRect(
+    textWidth: Float,
+    ascent: Float,
+    descent: Float,
+    centerX: Float,
+    lineY: Float,
+    liftGap: Float,
+    paddingH: Float,
+    paddingV: Float,
+    minLeft: Float,
+    maxRight: Float
+): LabelPillRect {
+    val baselineY = lineY - liftGap - paddingV - descent
+    val pillWidth = textWidth + 2 * paddingH
+    val left = (centerX - pillWidth / 2f).coerceIn(minLeft, (maxRight - pillWidth).coerceAtLeast(minLeft))
+    return LabelPillRect(
+        left = left,
+        top = baselineY + ascent - paddingV,
+        right = left + pillWidth,
+        bottom = baselineY + descent + paddingV
+    )
+}

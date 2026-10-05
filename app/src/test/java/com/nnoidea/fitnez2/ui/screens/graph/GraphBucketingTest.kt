@@ -677,7 +677,7 @@ class GraphBucketingTest {
 
     @Test
     fun calculateDayOneRm_repsBeatSetsForEqualTonnage() {
-        // 1 set of 2 reps @ 1kg (2 total reps, 2kg tonnage) -> collapses to exact Epley: 1 * (1 + 2/30) = 1.0667
+        // 1 set of 2 reps @ 1kg (2 total reps, 2kg tonnage) -> exact Epley: 1 * (1 + 2/30) = 1.0667
         val twoReps = listOf(
             Record(exerciseId = "row", sets = 1, reps = 2, weight = 1.0, date = 1000L)
         )
@@ -690,6 +690,74 @@ class GraphBucketingTest {
         assertTrue("1 set of 2 reps ($scoreReps) must beat 2 sets of 1 rep ($scoreSets)", scoreReps > scoreSets)
         assertEquals(1.0667, scoreReps, 0.001)
         assertEquals(1.040, scoreSets, 0.001)
+    }
+
+    private fun cornerBar(index: Int, left: Double, right: Double) = SessionPoint(
+        date = index.toLong(),
+        maxWeight = right,
+        totalSets = 1,
+        totalReps = 1,
+        leftValue = left,
+        rightValue = right
+    )
+
+    @Test
+    fun cornerLabelPositions_coversFirstLeftAndEveryRight() {
+        val bars = listOf(
+            cornerBar(0, left = 10.0, right = 20.0),
+            cornerBar(1, left = 20.0, right = 30.0)
+        )
+        // paddingLeft 8, slotWidth 100, gap 8
+        val points = cornerLabelPositions(bars, 8f, 100f, 8f)
+        assertEquals(3, points.size)
+        assertEquals(10.0, points[0].value, 0.0)
+        assertEquals(8f + 4f, points[0].x, 0.001f)
+        assertEquals(20.0, points[1].value, 0.0)
+        assertEquals(8f + 100f, points[1].x, 0.001f)
+        assertEquals(30.0, points[2].value, 0.0)
+        assertEquals(8f + 200f - 4f, points[2].x, 0.001f)
+    }
+
+    @Test
+    fun cornerLabelPositions_emptyBarsGiveNoPoints() {
+        assertTrue(cornerLabelPositions(emptyList(), 8f, 100f, 8f).isEmpty())
+    }
+
+    @Test
+    fun centeredLabelPillRect_floatsAboveLine() {
+        val pill = centeredLabelPillRect(
+            textWidth = 40f,
+            ascent = -10f,
+            descent = 3f,
+            centerX = 100f,
+            lineY = 80f,
+            liftGap = 3f,
+            paddingH = 5f,
+            paddingV = 2f,
+            minLeft = 0f,
+            maxRight = 200f
+        )
+        // Bottom hovers liftGap above the line, horizontally centered.
+        assertEquals(80f - 3f, pill.bottom, 0.001f)
+        assertEquals(100f - 25f, pill.left, 0.001f)
+        assertEquals(100f + 25f, pill.right, 0.001f)
+        assertEquals((3f + 10f + 2 * 2f), pill.height, 0.001f)
+    }
+
+    @Test
+    fun centeredLabelPillRect_clampsInsideBounds() {
+        val leftPill = centeredLabelPillRect(
+            textWidth = 40f, ascent = -10f, descent = 3f, centerX = 10f, lineY = 80f, liftGap = 3f,
+            paddingH = 5f, paddingV = 2f, minLeft = 8f, maxRight = 200f
+        )
+        assertEquals(8f, leftPill.left, 0.001f)
+        assertEquals(80f - 3f, leftPill.bottom, 0.001f)
+        val rightPill = centeredLabelPillRect(
+            textWidth = 40f, ascent = -10f, descent = 3f, centerX = 195f, lineY = 80f, liftGap = 3f,
+            paddingH = 5f, paddingV = 2f, minLeft = 8f, maxRight = 200f
+        )
+        assertEquals(200f, rightPill.right, 0.001f)
+        assertEquals(80f - 3f, rightPill.bottom, 0.001f)
     }
 }
 
