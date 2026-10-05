@@ -136,8 +136,11 @@ class GlobalUiState(
         }
     }
 
-    // Signals: One-off events (e.g. ScrollToTop)
-    private val _signalFlow = MutableSharedFlow<UiSignal>()
+    // Signals: One-off events (e.g. ScrollToTop). Buffered so emitToAll never
+    // suspends the caller: collectors live on the Main/test dispatcher, and a
+    // zero-buffer emit from the main thread would deadlock under a queued
+    // (StandardTestDispatcher) test clock.
+    private val _signalFlow = MutableSharedFlow<UiSignal>(extraBufferCapacity = 64)
     val signalFlow = _signalFlow.asSharedFlow()
 
     suspend fun emitSignal(signal: UiSignal) {
