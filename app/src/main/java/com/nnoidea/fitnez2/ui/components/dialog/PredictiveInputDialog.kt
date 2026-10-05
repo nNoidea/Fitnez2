@@ -1,10 +1,7 @@
 package com.nnoidea.fitnez2.ui.components.dialog
 
-import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 
 /**
@@ -37,7 +33,6 @@ fun PredictiveInputDialog(
     dismissOnBackPress: Boolean = true,
     onConfirm: (String) -> Unit
 ) {
-    val view = LocalView.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var text by remember { mutableStateOf(initialValue) }
 
@@ -55,28 +50,19 @@ fun PredictiveInputDialog(
         dismissOnClickOutside = dismissOnClickOutside,
         dismissOnBackPress = dismissOnBackPress,
         confirmButton = {
-            Button(
-                onClick = {
-                    DialogDefaults.performConfirmHaptic(view)
+            DialogConfirmButton(
+                label = confirmLabel,
+                enabled = text.isNotBlank(),
+                onConfirm = {
                     keyboardController?.hide()
                     if (text.isNotBlank()) {
                         onConfirm(text)
                     }
-                },
-                enabled = text.isNotBlank()
-            ) {
-                Text(confirmLabel)
-            }
+                }
+            )
         },
         dismissButton = {
-            TextButton(
-                onClick = {
-                    DialogDefaults.performDismissHaptic(view)
-                    onDismissRequest()
-                }
-            ) {
-                Text(cancelLabel)
-            }
+            DialogDismissButton(label = cancelLabel, onDismiss = onDismissRequest)
         }
     ) {
         TextField(

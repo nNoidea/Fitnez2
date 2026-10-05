@@ -88,7 +88,6 @@ object ItStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Esercizio sconosciuto"
-    override val labelOlderRecords = "Record più vecchi"
 
     // Developer Options
     override val devColorPalette = "Tavolozza colori"

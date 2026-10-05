@@ -3,7 +3,6 @@ package com.nnoidea.fitnez2.data
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.data.dao.ExerciseDao
 import com.nnoidea.fitnez2.data.dao.RecordDao
 import com.nnoidea.fitnez2.data.dao.WorkoutDao
@@ -16,8 +15,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

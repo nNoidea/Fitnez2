@@ -134,4 +134,108 @@ class ValidatedInputsTest {
 
         assertEquals(82.5, committedWeight, 0.01)
     }
+
+    @Test
+    fun setsInput_singleKeystroke_reportsRawValueExactlyOnce() {
+        var committedSets by mutableStateOf(3)
+        val rawValues = mutableListOf<String>()
+
+        composeRule.setContent {
+            SetsInput(
+                value = committedSets.toString(),
+                onValidChange = { committedSets = it },
+                onRawValueChange = { rawValues += it }
+            ) { displayValue, _, interactionSource, onValueChange, _ ->
+                BasicTextField(
+                    value = displayValue,
+                    onValueChange = onValueChange,
+                    interactionSource = interactionSource,
+                    modifier = Modifier.testTag("sets_field")
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("sets_field").performClick()
+        composeRule.waitForIdle()
+        rawValues.clear()
+
+        composeRule.onNodeWithTag("sets_field").performTextReplacement("7")
+        composeRule.waitForIdle()
+
+        assertEquals(listOf("7"), rawValues)
+    }
+
+    @Test
+    fun setsInput_typedDecimalPoint_isAcceptedAndCanonicalizedOnBlur() {
+        var committedSets by mutableStateOf(3)
+        val rawValues = mutableListOf<String>()
+        var dummyText by mutableStateOf("")
+
+        composeRule.setContent {
+            Column {
+                SetsInput(
+                    value = committedSets.toString(),
+                    onValidChange = { committedSets = it },
+                    onRawValueChange = { rawValues += it }
+                ) { displayValue, _, interactionSource, onValueChange, _ ->
+                    BasicTextField(
+                        value = displayValue,
+                        onValueChange = onValueChange,
+                        interactionSource = interactionSource,
+                        modifier = Modifier.testTag("sets_field")
+                    )
+                }
+                BasicTextField(
+                    value = dummyText,
+                    onValueChange = { dummyText = it },
+                    modifier = Modifier.testTag("other_field")
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("sets_field").performClick()
+        composeRule.waitForIdle()
+        rawValues.clear()
+
+        // ValidateAndCorrect.sets() is documented to accept "5.0" -> 5
+        composeRule.onNodeWithTag("sets_field").performTextReplacement("5.0")
+        composeRule.waitForIdle()
+
+        assertEquals(listOf("5.0"), rawValues)
+
+        composeRule.onNodeWithTag("other_field").performClick()
+        composeRule.waitForIdle()
+
+        assertEquals(5, committedSets)
+    }
+
+    @Test
+    fun setsInput_letters_stillRejected() {
+        var committedSets by mutableStateOf(3)
+        val rawValues = mutableListOf<String>()
+
+        composeRule.setContent {
+            SetsInput(
+                value = committedSets.toString(),
+                onValidChange = { committedSets = it },
+                onRawValueChange = { rawValues += it }
+            ) { displayValue, _, interactionSource, onValueChange, _ ->
+                BasicTextField(
+                    value = displayValue,
+                    onValueChange = onValueChange,
+                    interactionSource = interactionSource,
+                    modifier = Modifier.testTag("sets_field")
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("sets_field").performClick()
+        composeRule.waitForIdle()
+        rawValues.clear()
+
+        composeRule.onNodeWithTag("sets_field").performTextReplacement("abc")
+        composeRule.waitForIdle()
+
+        assertEquals(emptyList<String>(), rawValues)
+    }
 }

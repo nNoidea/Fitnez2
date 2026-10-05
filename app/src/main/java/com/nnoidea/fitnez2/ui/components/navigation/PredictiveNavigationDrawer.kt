@@ -1,6 +1,5 @@
 package com.nnoidea.fitnez2.ui.components.navigation
 
-import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -10,7 +9,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
+
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -50,7 +49,6 @@ class PredictiveDrawerState(
     val isOpen: Boolean get() = offsetX.value > -drawerWidthPx * 0.5f
     val isClosed: Boolean get() = !isOpen
 
-    val currentValue: DrawerValue get() = if (isOpen) DrawerValue.Open else DrawerValue.Closed
     val targetValue: DrawerValue get() = if (offsetX.targetValue > -drawerWidthPx * 0.5f) DrawerValue.Open else DrawerValue.Closed
 
     val progress: Float
@@ -112,7 +110,7 @@ fun PredictiveNavigationDrawer(
     val scope = rememberCoroutineScope()
     val viewConfig = LocalViewConfiguration.current
 
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .then(

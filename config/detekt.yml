@@ -1,0 +1,87 @@
+# detekt config for an idiomatic Jetpack Compose codebase.
+# Only deviations from detekt defaults are listed here.
+
+build:
+  maxIssues: 0
+
+complexity:
+  LongMethod:
+    # Composables are legitimately long; the pure-logic rules cover real complexity.
+    active: true
+    threshold: 120
+  LongParameterList:
+    # Compose functions legitimately take many params (modifier, colors, callbacks).
+    active: false
+  TooManyFunctions:
+    active: false
+  LargeClass:
+    active: true
+    threshold: 800
+  CyclomaticComplexMethod:
+    # `when (mode)` dispatchers over haptic enums are long but flat, not branchy.
+    active: true
+    threshold: 20
+  NestedBlockDepth:
+    active: true
+    threshold: 5
+
+naming:
+  # File named for its concept (OneRmCalculator.kt) rather than its single class is
+  # deliberate and more readable than forcing the class name onto the file.
+  MatchingDeclarationName:
+    active: false
+  # Compose function names are PascalCase by convention, not a mistake.
+  FunctionNaming:
+    active: true
+    ignoreAnnotated: ['Composable']
+  # SCREAMING_SNAKE_CASE private DataStore keys read better than camelCase here.
+  VariableNaming:
+    active: true
+    ignoreAnnotated: ['Composable']
+    privateVariablePattern: '(_)?[A-Za-z][A-Za-z0-9_]*'
+
+style:
+  MagicNumber:
+    # Compose is full of dp/sp literals; meaningless without a unit context.
+    active: false
+  MaxLineLength:
+    active: true
+    maxLineLength: 140
+    excludeCommentStatements: true
+  ReturnCount:
+    # Guard-clause chains (early returns rejecting invalid input) read better than
+    # nesting; ValidateAndCorrect.positiveInt is the canonical example.
+    active: true
+    max: 5
+    excludeGuardClauses: true
+  UnusedPrivateMember:
+    active: true
+  WildcardImport:
+    active: true
+    # Wildcarding Compose layout/material3/runtime is the ecosystem norm, and these
+    # are the packages a Compose file needs most.
+    excludeImports:
+      - 'java.util.*'
+      - 'androidx.compose.foundation.layout.*'
+      - 'androidx.compose.material3.*'
+      - 'androidx.compose.runtime.*'
+      - 'org.junit.Assert.*'
+  ForbiddenComment:
+    active: true
+    comments:
+      - 'FIXME:'
+      - 'STOPSHIP:'
+      - 'TODO:REMOVE:'
+
+exceptions:
+  TooGenericExceptionCaught:
+    # Swallowing Throwable is deliberate here: hardware capability probes must not crash.
+    active: false
+  SwallowedException:
+    active: true
+  InstanceOfCheckForException:
+    active: true
+
+performance:
+  SpreadOperator:
+    active: true

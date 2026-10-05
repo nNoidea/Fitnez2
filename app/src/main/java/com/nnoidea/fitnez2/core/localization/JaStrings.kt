@@ -88,7 +88,6 @@ object JaStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "不明な種目"
-    override val labelOlderRecords = "過去のレコード"
 
     // Developer Options
     override val devColorPalette = "カラーパレット"

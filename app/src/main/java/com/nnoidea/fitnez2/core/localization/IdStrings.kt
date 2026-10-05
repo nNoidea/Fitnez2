@@ -88,7 +88,6 @@ object IdStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Latihan Tidak Dikenal"
-    override val labelOlderRecords = "Rekor Lama"
 
     // Developer Options
     override val devColorPalette = "Palet Warna"

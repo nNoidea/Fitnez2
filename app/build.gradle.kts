@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kover)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -38,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     testOptions {
         unitTests {
@@ -78,6 +80,15 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+detekt {
+    // Ratchet: only new/changed lines fail. Existing debt stays visible in reports
+    // without blocking work. Delete the baseline once the backlog is cleared.
+    baseline = file("detekt-baseline.xml")
+    buildUponDefaultConfig = true
+    config.setFrom(files("$rootDir/config/detekt.yml"))
+    source.setFrom("src/main/java", "src/test/java")
 }
 
 kover {

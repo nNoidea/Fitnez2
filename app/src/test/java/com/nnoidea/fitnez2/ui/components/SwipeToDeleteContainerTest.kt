@@ -293,11 +293,11 @@ class SwipeToDeleteContainerTest {
         val dummyView = android.view.View(context)
 
         SwipeHapticsConfig.clockBackHapticsEnabled = true
-        SwipeHapticsConfig.performClockBack(context, dummyView)
-        SwipeHapticsConfig.performClockBack(context, null)
+        SwipeHapticsConfig.performClockBack(context)
+        SwipeHapticsConfig.performClockBack(context)
 
         SwipeHapticsConfig.clockBackHapticsEnabled = false
-        SwipeHapticsConfig.performClockBack(context, dummyView)
+        SwipeHapticsConfig.performClockBack(context)
         SwipeHapticsConfig.clockBackHapticsEnabled = true
     }
 

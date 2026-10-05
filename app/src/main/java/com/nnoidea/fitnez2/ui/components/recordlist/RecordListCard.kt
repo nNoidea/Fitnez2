@@ -1,6 +1,5 @@
 package com.nnoidea.fitnez2.ui.components.recordlist
 
-import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut

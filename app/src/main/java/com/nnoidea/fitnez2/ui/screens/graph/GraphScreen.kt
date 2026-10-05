@@ -1,7 +1,6 @@
 package com.nnoidea.fitnez2.ui.screens.graph
 
 import android.view.HapticFeedbackConstants
-import com.nnoidea.fitnez2.core.TimeUtils
 import com.nnoidea.fitnez2.ui.theme.adaptiveGold
 import com.nnoidea.fitnez2.ui.theme.adaptiveGreen
 import com.nnoidea.fitnez2.ui.theme.adaptiveRed
@@ -10,15 +9,12 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -51,9 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -76,40 +69,6 @@ import com.nnoidea.fitnez2.ui.screens.timeline.HomeBottomSheet
 import com.nnoidea.fitnez2.ui.screens.timeline.HomeBottomSheetState
 import com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState
 import kotlinx.coroutines.launch
-import java.math.RoundingMode
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import kotlin.math.abs
-
-/** Formats a numeric value with up to 2 decimal places, rounding to nearest hundredth. */
-fun formatMaxTwoDecimals(value: Double, locale: Locale = Locale.getDefault()): String {
-    if (value.isNaN() || value.isInfinite()) return "--"
-    val v = if (abs(value) < 0.005) 0.0 else value
-    val symbols = DecimalFormatSymbols.getInstance(locale)
-    val df = DecimalFormat("0.##", symbols).apply {
-        roundingMode = RoundingMode.HALF_UP
-    }
-    return df.format(v)
-}
-
-/** Rounds a numeric value to 2 decimal places using HALF_UP. */
-fun roundToTwoDecimals(value: Double): Double {
-    if (value.isNaN() || value.isInfinite()) return value
-    val v = if (abs(value) < 0.005) 0.0 else value
-    return java.math.BigDecimal.valueOf(v).setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
-}
-
-enum class ArrowDirection { UP, DOWN, NEUTRAL }
-
-fun calculateArrowDirection(delta: Double?): ArrowDirection = when {
-    delta == null || abs(delta) < 0.005 -> ArrowDirection.NEUTRAL
-    delta > 0.0 -> ArrowDirection.UP
-    else -> ArrowDirection.DOWN
-}
 
 @Composable
 fun DirectionalTrendingArrow(
@@ -162,267 +121,6 @@ fun DirectionalTrendingArrow(
     }
 }
 
-enum class SessionRange(val count: Int?, val label: String) {
-    TWO(2, "2"),
-    SEVEN(7, "7"),
-    THIRTY(30, "30"),
-    ALL(null, "ALL")
-}
-
-data class DaySession(
-    val date: Long,
-    val maxWeight: Double,
-    val volume: Double,
-    val totalSets: Int,
-    val totalReps: Int,
-    val oneRm: Double = 0.0
-)
-
-/**
- * What the graph compares: heaviest single weight, session volume (kg x reps x sets),
- * or weighted peak 1RM (Epley formula).
- */
-enum class CompareMetric(
-    val select: (SessionPoint) -> Double,
-    val selectDay: (DaySession) -> Double
-) {
-    MAX_WEIGHT({ it.maxWeight }, { it.maxWeight }),
-    VOLUME({ it.volume }, { it.volume }),
-    ONE_RM({ it.oneRm }, { it.oneRm });
-
-    fun select(day: DaySession): Double = selectDay(day)
-
-    fun label(): String = when (this) {
-        MAX_WEIGHT -> globalLocalization.labelGraphMaxWeight
-        VOLUME -> globalLocalization.labelGraphVolume
-        ONE_RM -> globalLocalization.labelGraphOneRm
-    }
-}
-
-fun groupRecordsByDay(
-    records: List<com.nnoidea.fitnez2.data.entities.Record>,
-    zoneId: ZoneId = ZoneId.systemDefault(),
-    rolloverHour: Int = 0
-): List<DaySession> {
-    if (records.isEmpty()) return emptyList()
-    return records
-        .groupBy { record ->
-            TimeUtils.getWorkoutLocalDate(record.date, rolloverHour, zoneId)
-        }
-        .map { (_, dayRecords) ->
-            DaySession(
-                date = TimeUtils.getWorkoutEpochMillis(dayRecords.maxOf { it.date }, rolloverHour, zoneId),
-                maxWeight = roundToTwoDecimals(dayRecords.maxOf { it.weight }),
-                volume = roundToTwoDecimals(dayRecords.sumOf { it.weight * it.reps * it.sets }),
-                totalSets = dayRecords.sumOf { it.sets },
-                totalReps = dayRecords.sumOf { it.reps * it.sets },
-                oneRm = roundToTwoDecimals(calculateDayOneRm(dayRecords))
-            )
-        }
-        .sortedBy { it.date }
-}
-
-fun buildChartBars(
-    daySessions: List<DaySession>,
-    range: SessionRange,
-    metric: CompareMetric
-): List<SessionPoint> {
-    if (daySessions.isEmpty()) return emptyList()
-
-    val days = when (range) {
-        SessionRange.TWO -> daySessions.takeLast(2)
-        SessionRange.SEVEN -> daySessions.takeLast(8)
-        SessionRange.THIRTY -> daySessions.takeLast(30)
-        SessionRange.ALL -> daySessions
-    }
-
-    if (days.size == 1) {
-        val d = days.first()
-        val v = metric.select(d)
-        return listOf(
-            SessionPoint(
-                date = d.date,
-                maxWeight = d.maxWeight,
-                totalSets = d.totalSets,
-                totalReps = d.totalReps,
-                volume = d.volume,
-                oneRm = d.oneRm,
-                isPr = false,
-                isLatest = true,
-                leftValue = v,
-                rightValue = v
-            )
-        )
-    }
-
-    if (days.size <= 8) {
-        val lastIdx = days.lastIndex
-        return (0 until lastIdx).map { i ->
-            val prevDay = days[i]
-            val currDay = days[i + 1]
-            val leftVal = metric.select(prevDay)
-            val rightVal = metric.select(currDay)
-            SessionPoint(
-                date = currDay.date,
-                maxWeight = currDay.maxWeight,
-                totalSets = currDay.totalSets,
-                totalReps = currDay.totalReps,
-                volume = currDay.volume,
-                oneRm = currDay.oneRm,
-                isPr = false,
-                isLatest = (i == lastIdx - 1),
-                leftValue = leftVal,
-                rightValue = rightVal,
-                startDate = prevDay.date
-            )
-        }
-    }
-
-    val latestDay = days.last()
-    val rest = days.dropLast(1)
-    val base = rest.size / 6
-    var remainder = rest.size % 6
-    var from = 0
-
-    val chunks = (0 until 6).map {
-        val size = base + if (remainder > 0) {
-            remainder--
-            1
-        } else 0
-        val chunk = rest.subList(from, from + size)
-        from += size
-        chunk
-    }
-
-    val c0 = metric.select(rest.first())
-    val bucketMaxes = chunks.map { chunk -> chunk.maxOf { metric.select(it) } }
-    val cLatest = metric.select(latestDay)
-    val corners = listOf(c0) + bucketMaxes + listOf(cLatest)
-
-    val bucketBars = chunks.mapIndexed { index, chunk ->
-        SessionPoint(
-            date = chunk.last().date,
-            maxWeight = chunk.maxOf { it.maxWeight },
-            totalSets = chunk.sumOf { it.totalSets },
-            totalReps = chunk.sumOf { it.totalReps },
-            volume = chunk.maxOf { it.volume },
-            oneRm = chunk.maxOf { it.oneRm },
-            isPr = false,
-            isLatest = false,
-            leftValue = corners[index],
-            rightValue = corners[index + 1],
-            startDate = chunk.first().date
-        )
-    }
-
-    val latestBar = SessionPoint(
-        date = latestDay.date,
-        maxWeight = latestDay.maxWeight,
-        totalSets = latestDay.totalSets,
-        totalReps = latestDay.totalReps,
-        volume = latestDay.volume,
-        oneRm = latestDay.oneRm,
-        isPr = false,
-        isLatest = true,
-        leftValue = corners[6],
-        rightValue = corners[7],
-        startDate = latestDay.date
-    )
-
-    return bucketBars + latestBar
-}
-
-data class MetricComparison(
-    val initial: Double,
-    val latest: Double,
-    val delta: Double,
-    val percent: Double?
-)
-
-/** Initial -> latest comparison over the visible window; null when there is no pair. */
-fun compareSessions(
-    sessions: List<SessionPoint>,
-    select: (SessionPoint) -> Double = { it.rightValue }
-): MetricComparison? {
-    if (sessions.isEmpty()) return null
-    if (sessions.size == 1) {
-        val bar = sessions.first()
-        if (bar.leftValue == bar.rightValue) return null
-        val initial = bar.leftValue
-        val latest = select(bar)
-        val delta = latest - initial
-        return MetricComparison(initial, latest, delta, if (initial == 0.0) null else delta / initial * 100.0)
-    }
-    val initial = select(sessions.first())
-    val latest = select(sessions.last())
-    val delta = latest - initial
-    return MetricComparison(initial, latest, delta, if (initial == 0.0) null else delta / initial * 100.0)
-}
-
-/**
- * Spotlight the peak session only when it is distinct (> min and > 0).
- * Ties resolve to the most recent session.
- */
-fun markPrFlags(
-    sessions: List<SessionPoint>,
-    select: (SessionPoint) -> Double = { it.rightValue }
-): List<SessionPoint> {
-    if (sessions.isEmpty()) return emptyList()
-    val max = sessions.maxOf(select)
-    val min = sessions.minOf(select)
-    // ponytail: O(n) scans x4 over a tiny in-memory list; a single pass saves nothing here.
-    val prDate = if (max > 0.0 && max > min) {
-        sessions.filter { select(it) == max }.maxByOrNull { it.date }?.date
-    } else null
-    return sessions.map { it.copy(isPr = it.date == prDate) }
-}
-
-/**
- * Legacy collapse sessions helper retained for compatibility.
- */
-fun bucketSessions(sessions: List<SessionPoint>): List<SessionPoint> {
-    if (sessions.size <= 7) return sessions
-    val rest = sessions.dropLast(1)
-    val base = rest.size / 6
-    var remainder = rest.size % 6
-    var from = 0
-    return buildList {
-        repeat(6) {
-            val size = base + if (remainder > 0) {
-                remainder--
-                1
-            } else 0
-            val chunk = rest.subList(from, from + size)
-            from += size
-            add(
-                SessionPoint(
-                    date = chunk.last().date,
-                    maxWeight = chunk.maxOf { it.maxWeight },
-                    totalSets = chunk.sumOf { it.totalSets },
-                    totalReps = chunk.sumOf { it.totalReps },
-                    volume = chunk.sumOf { it.volume },
-                    isPr = chunk.any { it.isPr },
-                    isLatest = false,
-                    leftValue = chunk.first().leftValue,
-                    rightValue = chunk.last().rightValue
-                )
-            )
-        }
-        add(sessions.last())
-    }
-}
-
-fun resolveDefaultExerciseId(
-    exercises: List<com.nnoidea.fitnez2.data.entities.Exercise>,
-    latestRecordExerciseId: String?
-): String? {
-    if (exercises.isEmpty()) return null
-    if (latestRecordExerciseId != null && exercises.any { it.id == latestRecordExerciseId }) {
-        return latestRecordExerciseId
-    }
-    return exercises.first().id
-}
-
 @Composable
 fun GraphScreen(
     onOpenDrawer: () -> Unit,
@@ -469,7 +167,6 @@ fun GraphScreen(
     }
 
     val selectedExerciseId = bottomSheetState.selectedExerciseId
-    val selectedExercise = exercises.find { it.id == selectedExerciseId }
 
     // Fetch records chronologically ASC for graph mapping
     val records by remember(selectedExerciseId) {

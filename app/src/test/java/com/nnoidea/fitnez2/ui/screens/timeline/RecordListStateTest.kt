@@ -8,7 +8,6 @@ import com.nnoidea.fitnez2.ui.components.recordlist.RecordDisplayItem
 import com.nnoidea.fitnez2.ui.components.recordlist.prepareRecordDisplayItems
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -80,11 +79,6 @@ class RecordListStateTest {
         //                        → RecordGroup(Bench x1, isLight = false)
 
         val groups = result.filterIsInstance<RecordDisplayItem.RecordGroup>()
-        val todayGroups = groups.filter {
-            result.indexOf(it) > 0 && result[result.indexOf(it) - 1] is RecordDisplayItem.DateHeader &&
-            TimeUtils.isSameDay((result[result.indexOf(it) - 1] as RecordDisplayItem.DateHeader).date, records[0].date)
-        }
-
         // The first group (newest day) should start with isLight = true
         assertTrue(groups[0].isLight)
 

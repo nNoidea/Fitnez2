@@ -39,8 +39,6 @@ fun rememberRecordListState(
         RecordListStateImpl(
             scope = scope,
             recordService = recordService,
-            exerciseService = exerciseService,
-            settingsService = settingsService,
             globalUiState = globalUiState,
             onHapticFeedback = { view.performHapticFeedback(it) },
             filterExerciseIds = filterExerciseIds,
@@ -90,7 +88,6 @@ fun rememberRecordListState(
     LaunchedEffect(state, globalUiState) {
         globalUiState.signalFlow.collect { signal ->
             when (signal) {
-                is UiSignal.ScrollToTop -> state.scrollToTop(null)
                 is UiSignal.ScrollToRecord -> state.scrollToTop(signal.recordId)
                 is UiSignal.RecordInserted -> (state as RecordListStateImpl).handleSignalInsert(signal.recordId)
                 is UiSignal.RecordUpdated -> (state as RecordListStateImpl).handleSignalUpdate(signal.record)

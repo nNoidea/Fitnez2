@@ -88,7 +88,6 @@ object DaStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Ukendt øvelse"
-    override val labelOlderRecords = "Ældre optegnelser"
 
     // Developer Options
     override val devColorPalette = "Farvepalette"

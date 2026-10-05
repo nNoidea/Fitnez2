@@ -88,7 +88,6 @@ object PtStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Exercício Desconhecido"
-    override val labelOlderRecords = "Registros Antigos"
 
     // Developer Options
     override val devColorPalette = "Paleta de Cores"

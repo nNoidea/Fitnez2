@@ -91,12 +91,6 @@ val AdaptiveGoldDark = Color(0xFFFFC107)
 val AdaptiveGreenLight = Color(0xFF008000)
 val AdaptiveGreenDark = Color(0xFF4CAF50)
 
-fun contrastRatio(c1: Color, c2: Color): Float {
-    val l1 = c1.luminance()
-    val l2 = c2.luminance()
-    return (maxOf(l1, l2) + 0.05f) / (minOf(l1, l2) + 0.05f)
-}
-
 fun isLightBackground(background: Color): Boolean = background.luminance() > 0.20f
 
 fun adaptiveRed(background: Color): Color =

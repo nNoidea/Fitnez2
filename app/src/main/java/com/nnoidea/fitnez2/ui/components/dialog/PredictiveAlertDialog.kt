@@ -1,7 +1,6 @@
 package com.nnoidea.fitnez2.ui.components.dialog
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -18,7 +17,6 @@ import androidx.compose.ui.Modifier
  * Standard Material 3 Alert Dialog (Level 2A).
  *
  * Provides a structured layout:
- * - Optional Icon
  * - Title ([MaterialTheme.typography.headlineSmall])
  * - Supporting text ([MaterialTheme.typography.bodyLarge])
  * - Custom content body slot
@@ -34,7 +32,6 @@ fun PredictiveAlertDialog(
     title: String,
     modifier: Modifier = Modifier,
     text: String? = null,
-    icon: (@Composable () -> Unit)? = null,
     confirmButton: (@Composable () -> Unit)? = null,
     dismissButton: (@Composable () -> Unit)? = null,
     neutralButton: (@Composable () -> Unit)? = null,
@@ -54,15 +51,6 @@ fun PredictiveAlertDialog(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(DialogDefaults.ContentSpacing)
         ) {
-            if (icon != null) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    icon()
-                }
-            }
-
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall

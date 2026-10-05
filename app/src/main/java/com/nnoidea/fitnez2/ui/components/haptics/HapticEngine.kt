@@ -73,17 +73,6 @@ object HapticEngine {
         playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_CLICK, scale)
     }
 
-    fun click(context: Context, scale: Float = 0.5f) = performClick(context, scale)
-
-    /**
-     * Plays a subtle hardware low-tick for slider / drag notch movements.
-     */
-    fun performSliderTick(context: Context, scale: Float = HapticDefaults.SwipeTickScale) {
-        playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_LOW_TICK, scale)
-    }
-
-    fun tick(context: Context, scale: Float = HapticDefaults.SwipeTickScale) = performSliderTick(context, scale)
-
     /**
      * Plays a two-stage Spring Snap (quick rise swell + tactile click) for threshold crossings.
      */
@@ -96,8 +85,6 @@ object HapticEngine {
         vibrateEffect(context, effect)
     }
 
-    fun springSnap(context: Context, scale: Float = HapticDefaults.PopScale) = performSpringSnap(context, scale)
-
     /**
      * Plays a subtle detent release when pulling back under a threshold.
      */
@@ -109,8 +96,6 @@ object HapticEngine {
         vibrateEffect(context, effect)
     }
 
-    fun clockBack(context: Context, scale: Float = HapticDefaults.SwipeTickScale) = performClockBack(context, scale)
-
     /**
      * Standard view-based affirmative confirmation (e.g. dialog confirm, item commit).
      */
@@ -120,37 +105,12 @@ object HapticEngine {
         }
     }
 
-    fun confirm(context: Context? = null, view: View? = null) {
-        if (view != null) {
-            performConfirm(view)
-        } else if (context != null) {
-            performClick(context, 0.7f)
-        }
-    }
-
     /**
      * Standard view-based error or reject feedback (e.g. validation error, illegal action).
      */
     fun performReject(view: View?) {
         view?.let {
             performViewHaptic(it, HapticFeedbackConstants.REJECT, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING)
-        }
-    }
-
-    fun reject(context: Context? = null, view: View? = null) {
-        if (view != null) {
-            performReject(view)
-        } else if (context != null) {
-            playPrimitive(context, VibrationEffect.Composition.PRIMITIVE_THUD, 0.8f)
-        }
-    }
-
-    /**
-     * Standard view-based gesture start / touch down feedback.
-     */
-    fun performGestureStart(view: View?) {
-        view?.let {
-            performViewHaptic(it, HapticFeedbackConstants.GESTURE_START, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING)
         }
     }
 
@@ -188,12 +148,10 @@ object HapticEngine {
                 vibrateEffect(context, effect)
             }
             PopHapticMode.EFFECT_HEAVY_CLICK -> {
-                val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK)
-                vibrateEffect(context, effect)
+                vibratePredefined(context, PopHapticMode.EFFECT_HEAVY_CLICK)
             }
             PopHapticMode.EFFECT_POP -> {
-                val effect = VibrationEffect.createPredefined(4 /* EFFECT_POP */)
-                vibrateEffect(context, effect)
+                vibratePredefined(context, PopHapticMode.EFFECT_POP)
             }
             PopHapticMode.STRONG_POP -> {
                 val amp = (amplitude * clampedScale).toInt().coerceIn(1, 255)
@@ -262,8 +220,7 @@ object HapticEngine {
                 }
             }
             SliderTickMode.EFFECT_TICK -> {
-                val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
-                vibrateEffect(context, effect)
+                vibratePredefined(context, SliderTickMode.EFFECT_TICK)
             }
             SliderTickMode.MICRO_PULSE -> {
                 val amp = (120 * clampedScale).toInt().coerceIn(10, 255)
@@ -275,6 +232,24 @@ object HapticEngine {
             }
             SliderTickMode.NONE -> { /* Silent */ }
         }
+    }
+
+    /**
+     * Resolves and plays a prebaked [VibrationEffect]. Wrapped in try/catch because
+     * an id the running platform does not recognise throws from createPredefined.
+     */
+    private fun vibratePredefined(context: Context, mode: PopHapticMode) {
+        val id = predefinedEffectId(mode) ?: return
+        try {
+            vibrateEffect(context, VibrationEffect.createPredefined(id))
+        } catch (_: Throwable) { /* Unsupported on this platform */ }
+    }
+
+    private fun vibratePredefined(context: Context, mode: SliderTickMode) {
+        val id = predefinedEffectId(mode) ?: return
+        try {
+            vibrateEffect(context, VibrationEffect.createPredefined(id))
+        } catch (_: Throwable) { /* Unsupported on this platform */ }
     }
 
     private fun performViewHaptic(view: View, feedbackConstant: Int, flags: Int) {

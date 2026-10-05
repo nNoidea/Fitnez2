@@ -88,7 +88,6 @@ object KoStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "알 수 없는 운동"
-    override val labelOlderRecords = "이전 기록"
 
     // Developer Options
     override val devColorPalette = "색상 팔레트"

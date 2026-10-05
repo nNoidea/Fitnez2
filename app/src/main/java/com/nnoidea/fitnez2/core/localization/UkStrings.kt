@@ -88,7 +88,6 @@ object UkStrings : EnStrings(
     override val unitKg = "кг"
     override val unitLb = "фунт"
     override val labelUnknownExercise = "Невідома вправа"
-    override val labelOlderRecords = "Старіші записи"
 
     // Developer Options
     override val devColorPalette = "Колірна палітра"

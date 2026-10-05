@@ -88,7 +88,6 @@ object ZhStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "未知动作"
-    override val labelOlderRecords = "更早的记录"
 
     // Developer Options
     override val devColorPalette = "调色板"

@@ -88,7 +88,6 @@ object HiStrings : EnStrings(
     override val unitKg = "किग्रा"
     override val unitLb = "पाउंड"
     override val labelUnknownExercise = "अज्ञात व्यायाम"
-    override val labelOlderRecords = "पुराने रिकॉर्ड"
 
     // Developer Options
     override val devColorPalette = "रंग पट्टिका"

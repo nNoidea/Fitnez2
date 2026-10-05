@@ -1,9 +1,7 @@
 package com.nnoidea.fitnez2.core
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ValidateAndCorrectTest {
@@ -80,31 +78,5 @@ class ValidateAndCorrectTest {
         assertNull(ValidateAndCorrect.weight("NaN"))
         assertNull(ValidateAndCorrect.weight("Infinity"))
         assertNull(ValidateAndCorrect.weight("-Infinity"))
-    }
-
-    @Test
-    fun directValidation_validateSets() {
-        assertTrue(ValidateAndCorrect.validateSets(1))
-        assertTrue(ValidateAndCorrect.validateSets(100))
-        assertFalse(ValidateAndCorrect.validateSets(0))
-        assertFalse(ValidateAndCorrect.validateSets(-1))
-    }
-
-    @Test
-    fun directValidation_validateReps() {
-        assertTrue(ValidateAndCorrect.validateReps(1))
-        assertTrue(ValidateAndCorrect.validateReps(50))
-        assertFalse(ValidateAndCorrect.validateReps(0))
-        assertFalse(ValidateAndCorrect.validateReps(-5))
-    }
-
-    @Test
-    fun directValidation_validateWeight() {
-        assertTrue(ValidateAndCorrect.validateWeight(100.0))
-        assertTrue(ValidateAndCorrect.validateWeight(0.0))
-        assertTrue(ValidateAndCorrect.validateWeight(-10.0))
-        assertFalse(ValidateAndCorrect.validateWeight(Double.NaN))
-        assertFalse(ValidateAndCorrect.validateWeight(Double.POSITIVE_INFINITY))
-        assertFalse(ValidateAndCorrect.validateWeight(Double.NEGATIVE_INFINITY))
     }
 }

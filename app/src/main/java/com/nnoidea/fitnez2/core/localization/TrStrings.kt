@@ -88,7 +88,6 @@ object TrStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Bilinmeyen Egzersiz"
-    override val labelOlderRecords = "Eski Kayıtlar"
 
     // Developer Options
     override val devColorPalette = "Renk Paleti"

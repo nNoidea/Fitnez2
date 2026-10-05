@@ -30,7 +30,7 @@ fun SetsInput(
     SmartValidatedInput(
         value = value,
         validate = { ValidateAndCorrect.sets(it) },
-        inputFilter = { it.isEmpty() || it.all { c -> c.isDigit() } },
+        inputFilter = { it.isEmpty() || (it.count { c -> c == '.' } <= 1 && it.all { c -> c.isDigit() || c == '.' }) },
         onValidChange = { onValidChange(it as Int) },
         onRawValueChange = onRawValueChange,
         content = content
@@ -63,7 +63,7 @@ fun RepsInput(
     SmartValidatedInput(
         value = value,
         validate = { ValidateAndCorrect.reps(it) },
-        inputFilter = { it.isEmpty() || it.all { c -> c.isDigit() } },
+        inputFilter = { it.isEmpty() || (it.count { c -> c == '.' } <= 1 && it.all { c -> c.isDigit() || c == '.' }) },
         onValidChange = { onValidChange(it as Int) },
         onRawValueChange = onRawValueChange,
         content = content

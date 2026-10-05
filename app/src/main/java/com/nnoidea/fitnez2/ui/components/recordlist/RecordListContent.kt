@@ -15,11 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,10 +70,8 @@ fun RecordListContent(
             items = items,
             key = { _, model ->
                 when (model) {
-                    is RecordDisplayItem.DateHeader -> "header_${model.section}_${model.date}"
+                    is RecordDisplayItem.DateHeader -> "header_${model.date}"
                     is RecordDisplayItem.RecordGroup -> "record_group_${model.records.first().record.id}"
-                    is RecordDisplayItem.BatchSeparator -> "separator_${model.index}"
-                    is RecordDisplayItem.EvictedBatch -> "evicted_${model.index}"
                     is RecordDisplayItem.LoadingMore -> "loading_more"
                 }
             },
@@ -84,8 +79,6 @@ fun RecordListContent(
                 when (model) {
                     is RecordDisplayItem.DateHeader -> "header"
                     is RecordDisplayItem.RecordGroup -> "record_group"
-                    is RecordDisplayItem.BatchSeparator -> "separator"
-                    is RecordDisplayItem.EvictedBatch -> "evicted"
                     is RecordDisplayItem.LoadingMore -> "loading"
                 }
             }
@@ -98,16 +91,6 @@ fun RecordListContent(
                             modifier = Modifier.animateItem()
                         )
                     }
-                }
-                is RecordDisplayItem.BatchSeparator -> {
-                    OlderRecordsSeparator(modifier = Modifier.animateItem())
-                }
-                is RecordDisplayItem.EvictedBatch -> {
-                    Spacer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(item.heightDp.dp)
-                    )
                 }
                 is RecordDisplayItem.LoadingMore -> {
                     LoadingMoreIndicator(modifier = Modifier.animateItem())
@@ -136,31 +119,6 @@ fun RecordListContent(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun OlderRecordsSeparator(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 24.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.outlineVariant
-        )
-        Text(
-            text = globalLocalization.labelOlderRecords,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.outlineVariant
-        )
     }
 }
 

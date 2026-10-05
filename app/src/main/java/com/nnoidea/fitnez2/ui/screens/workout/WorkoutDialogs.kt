@@ -38,8 +38,7 @@ fun UnsavedWorkDialog(
     show: Boolean,
     onDismiss: () -> Unit,
     onDiscard: () -> Unit,
-    onSave: () -> Unit,
-    workoutName: String
+    onSave: () -> Unit
 ) {
     PredictiveAlertDialog(
         show = show,

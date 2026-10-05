@@ -63,8 +63,6 @@ class RecordListStateTest {
         return RecordListStateImpl(
             scope = testScope,
             recordService = recordService,
-            exerciseService = exerciseService,
-            settingsService = settingsService,
             globalUiState = globalUiState,
             onHapticFeedback = {},
             filterExerciseIds = filterExerciseIds

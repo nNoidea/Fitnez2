@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
-import android.view.HapticFeedbackConstants
 
 /**
  * Core validated input logic. Handles:
@@ -112,12 +111,14 @@ internal fun <T> SmartValidatedInput(
     // Filter input while typing
     val onValueChangeWrapper: (String) -> Unit = { newValue ->
         if (inputFilter(newValue)) {
+            // Assigning internalValue is what reports the raw value, via the
+            // LaunchedEffect below. Calling onRawValueChange here too fired the
+            // callback twice for every accepted keystroke.
             internalValue = newValue
-            onRawValueChange?.invoke(newValue)
         }
     }
 
-    // Report raw value on initial composition and when synced from upstream
+    // Report raw value on initial composition, when synced from upstream, and on typing
     LaunchedEffect(internalValue) {
         onRawValueChange?.invoke(internalValue)
     }

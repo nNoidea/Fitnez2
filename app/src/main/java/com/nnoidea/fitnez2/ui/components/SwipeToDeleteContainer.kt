@@ -1,8 +1,5 @@
 package com.nnoidea.fitnez2.ui.components
 
-import android.os.Build
-import android.view.HapticFeedbackConstants
-import android.view.View
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -15,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
@@ -235,7 +231,7 @@ fun SwipeToDeleteContainer(
                         hasVibratedForThreshold = true
                         lastNotch = (abs(newOffset) / currentIntervalPx).toInt()
                     } else if (!isOver && hasVibratedForThreshold) {
-                        SwipeHapticsConfig.performClockBack(context, view)
+                        SwipeHapticsConfig.performClockBack(context)
                         hasVibratedForThreshold = false
                         lastNotch = (abs(newOffset) / currentIntervalPx).toInt()
                     } else if (!isOver) {

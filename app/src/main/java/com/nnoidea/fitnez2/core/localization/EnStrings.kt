@@ -112,7 +112,6 @@ sealed class EnStrings(
     open val unitKg: String = "kg"
     open val unitLb: String = "lb"
     open val labelUnknownExercise: String = "Unknown Exercise"
-    open val labelOlderRecords: String = "Older Records"
 
     // Developer Options
     open val devColorPalette: String = "Color Palette"

@@ -6,18 +6,15 @@ import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.core.TimeUtils
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.entities.Record
-import com.nnoidea.fitnez2.data.entities.WorkoutRecord
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.data.models.WorkoutRecordWithExercise
 
 sealed class RecordDisplayItem {
-    data class DateHeader(val date: Long, val section: Int = 0) : RecordDisplayItem()
+    data class DateHeader(val date: Long) : RecordDisplayItem()
     data class RecordGroup(
         val records: List<RecordWithExercise>,
         val isLight: Boolean
     ) : RecordDisplayItem()
-    data class BatchSeparator(val index: Int) : RecordDisplayItem()
-    data class EvictedBatch(val index: Int, val heightDp: Int) : RecordDisplayItem()
     data object LoadingMore : RecordDisplayItem()
 }
 
@@ -32,7 +29,6 @@ fun prepareRecordDisplayItems(
     records: List<Record>,
     exerciseMap: Map<String, String>,
     useAlternatingColors: Boolean,
-    section: Int = 0,
     rolloverHour: Int = 0
 ): List<RecordDisplayItem> {
     if (records.isEmpty()) return emptyList()
@@ -79,7 +75,7 @@ fun prepareRecordDisplayItems(
 
     for ((dayDate, groupRecords, groupIsLight) in dayGroups.reversed()) {
         if (lastDayDate == null || !TimeUtils.isSameDay(lastDayDate, dayDate, rolloverHour)) {
-            result.add(RecordDisplayItem.DateHeader(dayDate, section))
+            result.add(RecordDisplayItem.DateHeader(dayDate))
         }
         lastDayDate = dayDate
         result.add(RecordDisplayItem.RecordGroup(
@@ -113,7 +109,6 @@ fun prepareRecordDisplayItems(
         records = records,
         exerciseMap = exerciseMap,
         useAlternatingColors = useAlternatingColors,
-        section = 0,
         rolloverHour = rolloverHour
     )
 }

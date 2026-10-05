@@ -88,7 +88,6 @@ object ArStrings : EnStrings(
     override val unitKg = "كجم"
     override val unitLb = "رطل"
     override val labelUnknownExercise = "تمرين غير معروف"
-    override val labelOlderRecords = "السجلات القديمة"
 
     // Developer Options
     override val devColorPalette = "لوحة الألوان"

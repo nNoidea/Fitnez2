@@ -5,10 +5,8 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.entities.Exercise
-import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.data.entities.Workout
 import com.nnoidea.fitnez2.data.models.WorkoutRecordWithExercise
 import com.nnoidea.fitnez2.ui.common.GlobalUiState
@@ -23,7 +21,7 @@ import kotlinx.coroutines.launch
 
 /**
  * BottomSheet state for the Home screen: persists records to the database
- * and emits a ScrollToTop signal so the history list scrolls up.
+ * and scrolls the history list up.
  */
 @Stable
 class HomeBottomSheetState(
@@ -32,7 +30,6 @@ class HomeBottomSheetState(
     private val workoutService: WorkoutService,
     exerciseService: ExerciseService,
     settingsService: SettingsService,
-    private val globalUiState: GlobalUiState,
     keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?,
     focusManager: androidx.compose.ui.focus.FocusManager,
     context: android.content.Context,

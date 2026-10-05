@@ -88,7 +88,6 @@ object FrStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Exercice inconnu"
-    override val labelOlderRecords = "Enregistrements plus anciens"
 
     // Developer Options
     override val devColorPalette = "Palette de couleurs"

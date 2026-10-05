@@ -88,7 +88,6 @@ object PlStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Nieznane ćwiczenie"
-    override val labelOlderRecords = "Starsze rekordy"
 
     // Developer Options
     override val devColorPalette = "Paleta kolorów"

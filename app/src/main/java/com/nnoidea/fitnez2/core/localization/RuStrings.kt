@@ -88,7 +88,6 @@ object RuStrings : EnStrings(
     override val unitKg = "кг"
     override val unitLb = "фунт"
     override val labelUnknownExercise = "Неизвестное упражнение"
-    override val labelOlderRecords = "Более старые записи"
 
     // Developer Options
     override val devColorPalette = "Цветовая палитра"

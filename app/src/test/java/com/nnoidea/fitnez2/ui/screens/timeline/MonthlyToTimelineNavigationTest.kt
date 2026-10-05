@@ -4,7 +4,6 @@ import com.nnoidea.fitnez2.data.entities.Record
 import com.nnoidea.fitnez2.ui.components.recordlist.RecordDisplayItem
 import com.nnoidea.fitnez2.ui.components.recordlist.prepareRecordDisplayItems
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
@@ -24,7 +23,7 @@ class MonthlyToTimelineNavigationTest {
         val records = listOf(
             Record("1", "a", 3, 10, 50.0, recordTimestamp, 0),
         )
-        val items = prepareRecordDisplayItems(records, exerciseMap, true, 0)
+        val items = prepareRecordDisplayItems(records, exerciseMap, true, rolloverHour = 0)
 
         val targetIndex = items.indexOfFirst {
             it is RecordDisplayItem.DateHeader &&
@@ -42,7 +41,7 @@ class MonthlyToTimelineNavigationTest {
         val records = listOf(
             Record("1", "a", 3, 10, 50.0, startOfToday, 0),
         )
-        val items = prepareRecordDisplayItems(records, exerciseMap, true, 0)
+        val items = prepareRecordDisplayItems(records, exerciseMap, true, rolloverHour = 0)
 
         val targetIndex = items.indexOfFirst {
             it is RecordDisplayItem.DateHeader &&
@@ -59,7 +58,7 @@ class MonthlyToTimelineNavigationTest {
         val records = listOf(
             Record("1", "a", 3, 10, 50.0, endOfToday, 0),
         )
-        val items = prepareRecordDisplayItems(records, exerciseMap, true, 0)
+        val items = prepareRecordDisplayItems(records, exerciseMap, true, rolloverHour = 0)
         val monthlyTarget = today.atStartOfDay(zone).toInstant().toEpochMilli()
 
         val targetIndex = items.indexOfFirst {
@@ -77,7 +76,7 @@ class MonthlyToTimelineNavigationTest {
         val records = listOf(
             Record("1", "a", 3, 10, 50.0, System.currentTimeMillis(), 0),
         )
-        val items = prepareRecordDisplayItems(records, exerciseMap, true, 0)
+        val items = prepareRecordDisplayItems(records, exerciseMap, true, rolloverHour = 0)
 
         val targetIndex = items.indexOfFirst {
             it is RecordDisplayItem.DateHeader &&
@@ -101,7 +100,7 @@ class MonthlyToTimelineNavigationTest {
             Record("2", "b", 3, 10, 50.0, yesterdayMillis + 7200000, 0),
             Record("3", "c", 3, 10, 50.0, twoDaysAgoMillis + 10000000, 0),
         )
-        val items = prepareRecordDisplayItems(records, exerciseMap, true, 0)
+        val items = prepareRecordDisplayItems(records, exerciseMap, true, rolloverHour = 0)
 
         val yesterdayIndex = items.indexOfFirst {
             it is RecordDisplayItem.DateHeader &&
@@ -129,7 +128,7 @@ class MonthlyToTimelineNavigationTest {
         val records = listOf(
             Record("1", "a", 3, 10, 50.0, recordDate, 0),
         )
-        val items = prepareRecordDisplayItems(records, exerciseMap, true, 0)
+        val items = prepareRecordDisplayItems(records, exerciseMap, true, rolloverHour = 0)
 
         val header = items.filterIsInstance<RecordDisplayItem.DateHeader>().first()
         assertEquals(recordDate, header.date)
@@ -153,7 +152,7 @@ class MonthlyToTimelineNavigationTest {
 
         // First 100 = recent days without the target date
         val first100 = recentRecords.filterNotNull().take(100)
-        val first100Items = prepareRecordDisplayItems(first100, exerciseMap, true, 0)
+        val first100Items = prepareRecordDisplayItems(first100, exerciseMap, true, rolloverHour = 0)
         val notFound = first100Items.indexOfFirst {
             it is RecordDisplayItem.DateHeader &&
                 com.nnoidea.fitnez2.core.TimeUtils.isSameDay(it.date, monthlyTarget)
@@ -162,7 +161,7 @@ class MonthlyToTimelineNavigationTest {
 
         // After "loading more" = recent + the old skipped-day record
         val allRecords = recentRecords.filterNotNull() + oldRecord
-        val allItems = prepareRecordDisplayItems(allRecords, exerciseMap, true, 0)
+        val allItems = prepareRecordDisplayItems(allRecords, exerciseMap, true, rolloverHour = 0)
         val found = allItems.indexOfFirst {
             it is RecordDisplayItem.DateHeader &&
                 com.nnoidea.fitnez2.core.TimeUtils.isSameDay(it.date, monthlyTarget)
@@ -179,7 +178,7 @@ class MonthlyToTimelineNavigationTest {
         val records = listOf(
             Record("1", "a", 3, 10, 50.0, sixMonthsAgoMillis, 0),
         )
-        val items = prepareRecordDisplayItems(records, exerciseMap, true, 0)
+        val items = prepareRecordDisplayItems(records, exerciseMap, true, rolloverHour = 0)
 
         val targetIndex = items.indexOfFirst {
             it is RecordDisplayItem.DateHeader &&

@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.service.LocalExerciseService
 import com.nnoidea.fitnez2.service.LocalWorkoutService
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PredictiveBottomSheet

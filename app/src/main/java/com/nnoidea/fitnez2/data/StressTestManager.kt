@@ -28,9 +28,7 @@ object StressTestManager {
         database.exerciseDao().insertAll(exercises)
 
         val savedExercises = database.exerciseDao().getAllExercises()
-        if (savedExercises.isEmpty()) {
-            throw IllegalStateException("Failed to create exercises")
-        }
+        check(savedExercises.isNotEmpty()) { "Failed to create exercises" }
 
         val yesterday = LocalDate.now().minusDays(1)
         val daysToSimulate = 10000

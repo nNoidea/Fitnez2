@@ -12,9 +12,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.nnoidea.fitnez2.ui.components.SettingsGroup
-import com.nnoidea.fitnez2.ui.components.SettingsItem
 import com.nnoidea.fitnez2.ui.components.SettingsPageScaffold
-import androidx.compose.ui.unit.dp
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

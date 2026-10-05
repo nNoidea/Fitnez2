@@ -37,18 +37,4 @@ object ValidateAndCorrect {
         }
         return number
     }
-
-    // Direct value validation for DAO / Internal use
-
-    fun validateSets(value: Int): Boolean {
-        return value > 0
-    }
-
-    fun validateReps(value: Int): Boolean {
-        return value > 0
-    }
-
-    fun validateWeight(value: Double): Boolean {
-        return !value.isNaN() && !value.isInfinite()
-    }
 }

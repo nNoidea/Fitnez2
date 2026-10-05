@@ -1,4 +1,4 @@
-.PHONY: build install clean stop prod prod-install emulator test test-unit coverage coverage-report
+.PHONY: build install clean stop prod prod-install emulator test test-unit coverage coverage-report detekt check
 
 # Default task: Builds the debug APK
 build:
@@ -65,3 +65,14 @@ coverage-report:
 test:
 	@echo "Testing..."
 	./gradlew connectedAndroidTest --rerun-tasks
+
+# Static analysis: complexity, naming, dead code. Baseline-ratcheted,
+# so only NEW violations fail the build. See config/detekt.yml
+detekt:
+	@echo "Running detekt..."
+	./gradlew detekt
+
+# Full pre-commit gate: static analysis + lint + unit tests
+check:
+	@echo "Running detekt, lint and unit tests..."
+	./gradlew detekt lintDebug testDebugUnitTest

@@ -88,7 +88,6 @@ object NoStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Ukjent øvelse"
-    override val labelOlderRecords = "Eldre oppføringer"
 
     // Developer Options
     override val devColorPalette = "Fargepalett"

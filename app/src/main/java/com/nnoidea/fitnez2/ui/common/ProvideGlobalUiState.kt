@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -70,10 +69,6 @@ fun ProvideGlobalUiState(
     state: GlobalUiState = rememberGlobalUiState(settingsService),
     content: @Composable () -> Unit
 ) {
-    SideEffect {
-        GlobalUiState.setInstance(state)
-    }
-
     DisposableEffect(state) {
         GlobalUiState.register(state)
         onDispose {

@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,8 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
@@ -47,11 +44,8 @@ internal fun CorePredictiveDialog(
     show: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    animateForIme: Boolean = true,
     dismissOnClickOutside: Boolean = true,
     dismissOnBackPress: Boolean = true,
-    contentPadding: Dp = DialogDefaults.ContentPadding,
-    maxHeightRatio: Float = DialogDefaults.MaxHeightRatio,
     content: @Composable () -> Unit
 ) {
     if (!show) return
@@ -61,7 +55,7 @@ internal fun CorePredictiveDialog(
     val screenHeight = remember(windowInfo, density) {
         with(density) { windowInfo.containerSize.height.toDp() }
     }
-    val maxHeight = screenHeight * maxHeightRatio
+    val maxHeight = screenHeight * DialogDefaults.MaxHeightRatio
 
     Dialog(
         onDismissRequest = {
@@ -124,7 +118,7 @@ internal fun CorePredictiveDialog(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .then(if (animateForIme) Modifier.imePadding() else Modifier),
+                    .imePadding(),
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
@@ -150,45 +144,11 @@ internal fun CorePredictiveDialog(
                     color = DialogDefaults.ContainerColor,
                     tonalElevation = DialogDefaults.Elevation
                 ) {
-                    Box(
-                        modifier = if (contentPadding > 0.dp) {
-                            Modifier.padding(contentPadding)
-                        } else {
-                            Modifier
-                        }
-                    ) {
+                    Box(modifier = Modifier.padding(DialogDefaults.ContentPadding)) {
                         content()
                     }
                 }
             }
         }
     }
-}
-
-/**
- * A generic container for custom dialog content with predictive back animation.
- */
-@Composable
-fun PredictiveModal(
-    show: Boolean,
-    onDismissRequest: () -> Unit,
-    modifier: Modifier = Modifier,
-    animateForIme: Boolean = false,
-    dismissOnClickOutside: Boolean = true,
-    dismissOnBackPress: Boolean = true,
-    contentPadding: Dp = DialogDefaults.ContentPadding,
-    maxHeightRatio: Float = DialogDefaults.MaxHeightRatio,
-    content: @Composable () -> Unit
-) {
-    CorePredictiveDialog(
-        show = show,
-        onDismissRequest = onDismissRequest,
-        modifier = modifier,
-        animateForIme = animateForIme,
-        dismissOnClickOutside = dismissOnClickOutside,
-        dismissOnBackPress = dismissOnBackPress,
-        contentPadding = contentPadding,
-        maxHeightRatio = maxHeightRatio,
-        content = content
-    )
 }

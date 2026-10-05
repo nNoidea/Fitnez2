@@ -7,17 +7,13 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.geometry.CornerRadius
@@ -47,144 +43,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import com.nnoidea.fitnez2.ui.theme.adaptiveGold
 
-data class SessionPoint(
-    val date: Long,
-    val maxWeight: Double,
-    val totalSets: Int,
-    val totalReps: Int,
-    val volume: Double = 0.0,
-    val oneRm: Double = 0.0,
-    val isPr: Boolean = false,
-    val isLatest: Boolean = false,
-    val leftValue: Double = maxWeight,
-    val rightValue: Double = maxWeight,
-    val startDate: Long = date
-)
-
-/**
- * Rounded-corner polygon: every vertex is trimmed along both adjacent edges and
- * rejoined with a quadratic, so all corners share one consistent radius.
- * Pure math over [Offset]s so it stays unit-testable; the Canvas just replays it.
- */
-data class CornerOp(val lineTo: Offset, val control: Offset, val end: Offset)
-data class RoundedPolygon(val start: Offset, val ops: List<CornerOp>)
-
-fun roundedPolygon(points: List<Offset>, radius: Float): RoundedPolygon {
-    data class Trim(val a: Offset, val p: Offset, val b: Offset)
-    val trims = points.mapIndexed { i, p ->
-        val prev = points[(i - 1 + points.size) % points.size]
-        val next = points[(i + 1) % points.size]
-        val ePrev = p - prev
-        val eNext = next - p
-        val lenPrev = ePrev.getDistance()
-        val lenNext = eNext.getDistance()
-        val r = minOf(radius, lenPrev / 2f, lenNext / 2f).coerceAtLeast(0f)
-        val a = if (lenPrev > 0f && r > 0f) p - ePrev / lenPrev * r else p
-        val b = if (lenNext > 0f && r > 0f) p + eNext / lenNext * r else p
-        Trim(a, p, b)
-    }
-    val ordered = trims.drop(1) + trims.take(1)
-    return RoundedPolygon(
-        start = trims[0].b,
-        ops = ordered.map { CornerOp(it.a, it.p, it.b) }
-    )
-}
-
-/**
- * Height labels in data units: preserves all distinct values (one per distinct height),
- * sorted ascending. Equal values collapse to share a single line.
- */
-fun heightLabelValues(values: List<Double>): List<Double> {
-    if (values.isEmpty()) return emptyList()
-    // Deduplicate by formatted 2-decimal string so the Y-axis never renders two lines with the exact same display label.
-    // If multiple values share the same formatted label, keep the max value to preserve upper bounds / PR pill.
-    return values.sorted()
-        .groupBy { formatMaxTwoDecimals(it) }
-        .map { (_, group) -> group.max() }
-        .sorted()
-}
-
-/**
- * Resolves a raw data value to its canonical height label value.
- * If multiple values round to the same display string, they resolve to the same canonical label
- * so they are graphed at the exact same height on their shared gridline.
- */
-fun resolveCanonicalValue(value: Double, labelValues: List<Double>): Double {
-    return labelValues.firstOrNull { formatMaxTwoDecimals(it) == formatMaxTwoDecimals(value) } ?: value
-}
-
-/**
- * Computes non-overlapping Y pixel coordinates for distinct chart values.
- * Anchors the max value at [yTop] and min value at [yBottom].
- * If any adjacent values would sit closer than [minGapPx], enforces at least [minGapPx]
- * between their horizontal lines so they are neatly stacked under each other without overlapping.
- */
-fun computeNonOverlappingY(
-    distinctValues: List<Double>,
-    yTop: Float,
-    yBottom: Float,
-    minGapPx: Float
-): Map<Double, Float> {
-    if (distinctValues.isEmpty()) return emptyMap()
-    if (distinctValues.size == 1) return mapOf(distinctValues.first() to yTop)
-
-    val n = distinctValues.size
-    val minVal = distinctValues.first()
-    val maxVal = distinctValues.last()
-    val valRange = maxVal - minVal
-
-    // Proportional ideal positions: highest value (index n-1) at yTop, lowest at yBottom
-    val idealY = FloatArray(n) { i ->
-        if (valRange <= 0.0) yTop
-        else {
-            val fraction = ((distinctValues[i] - minVal) / valRange).toFloat()
-            yBottom - fraction * (yBottom - yTop)
-        }
-    }
-
-    val effectiveMinGap = minOf(minGapPx, (yBottom - yTop) / (n - 1).coerceAtLeast(1))
-    val y = idealY.clone()
-
-    // Anchor bounds
-    y[n - 1] = yTop
-    y[0] = yBottom
-
-    // Top-down pass: ensure each lower value has at least effectiveMinGap distance below the higher value
-    for (i in (n - 2) downTo 1) {
-        val minAllowedY = y[i + 1] + effectiveMinGap
-        if (y[i] < minAllowedY) {
-            y[i] = minAllowedY
-        }
-    }
-
-    // Bottom-up pass: if pushed too close to bottom or next lower value, push back up
-    for (i in 1 until (n - 1)) {
-        val maxAllowedY = y[i - 1] - effectiveMinGap
-        if (y[i] > maxAllowedY) {
-            y[i] = maxAllowedY
-        }
-    }
-
-    // Secondary top-down pass to resolve any residual compression
-    for (i in (n - 2) downTo 1) {
-        val minAllowedY = y[i + 1] + effectiveMinGap
-        if (y[i] < minAllowedY) {
-            y[i] = minAllowedY
-        }
-    }
-
-    return distinctValues.indices.associate { i -> distinctValues[i] to y[i] }
-}
-
-/**
- * Silhouette corner heights in data units: the first bar's top-left plus every
- * bar's top-right. Labels drawn from these always sit exactly on the drawn silhouette.
- */
-fun silhouetteCornerValues(bars: List<SessionPoint>): List<Double> {
-    if (bars.isEmpty()) return emptyList()
-    return listOf(bars.first().leftValue) + bars.map { it.rightValue }
-}
-
 @Composable
 fun BatteryStyleChart(
     sessions: List<SessionPoint>,
@@ -206,7 +64,6 @@ fun BatteryStyleChart(
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val totalWidth = maxWidth
-        val totalWidthPx = with(LocalDensity.current) { totalWidth.toPx() }
 
         Canvas(
             modifier = Modifier
@@ -234,8 +91,6 @@ fun BatteryStyleChart(
             if (sessions.isEmpty()) return@Canvas
 
             val corners = silhouetteCornerValues(sessions)
-            val minWeight = corners.min()
-            val maxWeight = corners.max()
 
             val paddingLeft = 8.dp.toPx()
             val paddingRight = 42.dp.toPx()

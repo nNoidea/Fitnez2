@@ -5,14 +5,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextField
@@ -44,7 +42,6 @@ import com.nnoidea.fitnez2.service.LocalExerciseService
 import com.nnoidea.fitnez2.service.LocalWorkoutService
 import kotlinx.coroutines.launch
 import com.nnoidea.fitnez2.ui.components.bottomsheet.PREDICTIVE_BOTTOM_SHEET_PEEK_HEIGHT_DP
-import com.nnoidea.fitnez2.ui.components.dialog.PredictiveAlertDialog
 import com.nnoidea.fitnez2.ui.components.recordlist.RecordList
 import com.nnoidea.fitnez2.ui.components.recordlist.prepareRecordDisplayItems
 
@@ -172,8 +169,7 @@ fun WorkoutScreen(
         show = dialogVariant == true,
         onDismiss = { dialogVariant = null },
         onDiscard = { onBack() },
-        onSave = { scope.launch { if (performSave()) { dialogVariant = null; onBack() } } },
-        workoutName = workoutName
+        onSave = { scope.launch { if (performSave()) { dialogVariant = null; onBack() } } }
     )
 
     Box(modifier = Modifier.fillMaxSize()) {

@@ -116,6 +116,26 @@ class WorkoutServiceTest {
     }
 
     @Test
+    fun updateWorkout_nameWithSurroundingWhitespace_persistsTrimmedName() = runBlocking {
+        val workout = workoutService.createWorkout("Leg Day")
+        workoutService.updateWorkout(workout.copy(name = "  Leg Day Hard  "))
+
+        val retrieved = workoutService.getWorkoutById(workout.id)
+        assertEquals("Leg Day Hard", retrieved?.name)
+    }
+
+    @Test
+    fun updateWorkout_blankName_throws() = runBlocking {
+        val workout = workoutService.createWorkout("Pull Day")
+        try {
+            workoutService.updateWorkout(workout.copy(name = "   "))
+            fail("Expected IllegalArgumentException for blank name")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message!!.isNotEmpty())
+        }
+    }
+
+    @Test
     fun deleteAllWorkouts_clearsAll() = runBlocking {
         workoutService.createWorkout("Workout 1")
         workoutService.createWorkout("Workout 2")

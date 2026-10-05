@@ -1,7 +1,6 @@
 package com.nnoidea.fitnez2.ui.components.bottomsheet
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Stable
@@ -18,6 +17,7 @@ import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.unit.Velocity
 import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.data.entities.Exercise
+import com.nnoidea.fitnez2.ui.components.haptics.HapticEngine
 import com.nnoidea.fitnez2.data.models.RecordWithExercise
 import com.nnoidea.fitnez2.service.ExerciseService
 import com.nnoidea.fitnez2.service.RecordService
@@ -229,7 +229,7 @@ abstract class PredictiveBottomSheetState(
 
     // ── Sheet Physics ───────────────────────────────────────────────────
 
-    fun onDragDelta(delta: Float, view: android.view.View? = null) {
+    fun onDragDelta(delta: Float) {
         if (delta == 0f) return
         val newOffset = (offsetY.value + delta).coerceIn(minOffset, maxOffset)
         scope.launch {
@@ -237,11 +237,11 @@ abstract class PredictiveBottomSheetState(
         }
     }
 
-    suspend fun settleSpring(velocity: Float, view: android.view.View? = null) {
+    suspend fun settleSpring(velocity: Float) {
         val willCollapse = velocity > 1000f || (velocity >= 0 && offsetY.value > (maxOffset + minOffset) / 2f)
         val targetOffset = if (willCollapse) maxOffset else minOffset
         if (kotlin.math.abs(offsetY.value - targetOffset) > 1f) {
-            BottomSheetHapticsConfig.performSettle(context, view)
+            HapticEngine.performClick(context, 0.5f)
         }
         offsetY.animateTo(
             targetValue = targetOffset,

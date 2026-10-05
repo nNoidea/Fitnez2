@@ -18,6 +18,7 @@ ksp = "2.3.6"
 datastore = "1.0.0"
 gson = "2.10.1"
 kover = "0.9.9"
+detekt = "1.23.8"
 
 [libraries]
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
@@ -52,3 +53,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }

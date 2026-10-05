@@ -1,5 +1,6 @@
 package com.nnoidea.fitnez2.ui.components.haptics
 
+import android.os.VibrationEffect
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -42,6 +43,27 @@ enum class SliderTickMode(val displayName: String) {
     NONE("None (Silent)");
 
     override fun toString(): String = displayName
+}
+
+/**
+ * Resolves the prebaked [VibrationEffect] id for [mode], or null when the mode is
+ * built from primitives/compositions instead.
+ *
+ * EFFECT_POP is `@hide` in AOSP (VibrationEffect.java, marked @TestApi), so it has no
+ * public SDK constant and no API-level guarantee. It degrades to EFFECT_HEAVY_CLICK,
+ * the closest publicly supported feel. ponytail: rename this mode to a real prebaked
+ * effect if a distinct pop is ever actually needed.
+ */
+internal fun predefinedEffectId(mode: PopHapticMode): Int? = when (mode) {
+    PopHapticMode.EFFECT_HEAVY_CLICK -> VibrationEffect.EFFECT_HEAVY_CLICK
+    PopHapticMode.EFFECT_POP -> VibrationEffect.EFFECT_HEAVY_CLICK
+    else -> null
+}
+
+/** Slider tick counterpart; EFFECT_TICK has existed since API 26. */
+internal fun predefinedEffectId(mode: SliderTickMode): Int? = when (mode) {
+    SliderTickMode.EFFECT_TICK -> VibrationEffect.EFFECT_TICK
+    else -> null
 }
 
 /**

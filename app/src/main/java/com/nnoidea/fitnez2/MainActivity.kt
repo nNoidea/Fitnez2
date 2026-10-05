@@ -1,5 +1,7 @@
 package com.nnoidea.fitnez2
 
+import com.nnoidea.fitnez2.BuildConfig
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -42,17 +44,29 @@ import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
 import kotlinx.coroutines.launch
 
 import androidx.activity.compose.PredictiveBackHandler
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.CancellationException
+
+/**
+ * Resolves the NavHost start destination from an incoming intent extra.
+ * Extracted as a pure function so the release-build fallback (developer
+ * destination is not registered when [developerAllowed] is false) is
+ * unit-tested instead of verified by crashing on a device.
+ */
+internal fun resolveInitialRoute(requestedRoute: String?, developerAllowed: Boolean): String {
+    if (requestedRoute != null && AppPage.entries.any { it.route == requestedRoute }) {
+        if (requestedRoute == AppPage.Developer.route && !developerAllowed) {
+            return AppPage.Timeline.route
+        }
+        return requestedRoute
+    }
+    return AppPage.Timeline.route
+}
 
 class MainActivity : ComponentActivity() {
     companion object {
         const val EXTRA_PAGE_ROUTE = "extra_page_route"
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -111,8 +125,7 @@ class MainActivity : ComponentActivity() {
                         state = globalUiState
                     ) {
                     val initialRoute = remember {
-                        val route = intent.getStringExtra(EXTRA_PAGE_ROUTE)
-                        if (route != null && AppPage.entries.any { it.route == route }) route else AppPage.Timeline.route
+                        resolveInitialRoute(intent.getStringExtra(EXTRA_PAGE_ROUTE), BuildConfig.DEBUG)
                     }
                     val homeBottomSheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
 
@@ -205,8 +218,10 @@ class MainActivity : ComponentActivity() {
                                 composable(AppPage.Settings.route) {
                                     SettingsScreen(
                                         onOpenDrawer = { scope.launch { drawerState.open() } },
-                                        onNavigateToDeveloper = {
-                                            navController.navigate(AppPage.Developer.route)
+                                        onNavigateToDeveloper = if (BuildConfig.DEBUG) {
+                                            { navController.navigate(AppPage.Developer.route) }
+                                        } else {
+                                            null
                                         }
                                     )
                                 }
@@ -235,10 +250,12 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
-                                composable(AppPage.Developer.route) {
-                                    DeveloperOptionsScreen(
-                                        onBack = { navController.popBackStack() }
-                                    )
+                                if (BuildConfig.DEBUG) {
+                                    composable(AppPage.Developer.route) {
+                                        DeveloperOptionsScreen(
+                                            onBack = { navController.popBackStack() }
+                                        )
+                                    }
                                 }
                             }
                         }

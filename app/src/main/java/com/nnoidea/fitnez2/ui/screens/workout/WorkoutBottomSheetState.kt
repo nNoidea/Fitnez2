@@ -9,7 +9,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import com.nnoidea.fitnez2.core.ValidateAndCorrect
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.entities.Exercise
 import com.nnoidea.fitnez2.data.entities.WorkoutRecord

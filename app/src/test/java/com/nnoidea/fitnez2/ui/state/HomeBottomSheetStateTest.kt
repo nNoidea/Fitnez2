@@ -72,7 +72,6 @@ class HomeBottomSheetStateTest {
             workoutService = workoutService,
             exerciseService = exerciseService,
             settingsService = settingsService,
-            globalUiState = globalUiState,
             keyboardController = null,
             focusManager = dummyFocusManager,
             context = context,

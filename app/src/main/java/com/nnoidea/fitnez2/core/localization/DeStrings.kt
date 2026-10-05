@@ -88,7 +88,6 @@ object DeStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Unbekannte Übung"
-    override val labelOlderRecords = "Ältere Datensätze"
 
     // Developer Options
     override val devColorPalette = "Farbpalette"

@@ -3,8 +3,6 @@ package com.nnoidea.fitnez2.ui.components.input
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -27,7 +25,6 @@ class SetsRepsShiftTest {
 
     @Test
     fun testPrintSemanticsTree() {
-        var focused = false
         composeTestRule.setContent {
             Fitnez2Theme {
                 Box(modifier = Modifier.width(360.dp)) {

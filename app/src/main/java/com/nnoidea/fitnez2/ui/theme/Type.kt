@@ -3,13 +3,11 @@
 package com.nnoidea.fitnez2.ui.theme
 
 import androidx.compose.material3.Typography
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontVariation
-import androidx.compose.ui.unit.sp
 import com.nnoidea.fitnez2.R
 
 // Define Google Sans Flex with the ROND axis set to 100f (fully rounded)

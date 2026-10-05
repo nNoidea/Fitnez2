@@ -23,83 +23,7 @@ import org.junit.Test
 
 class GraphBucketingTest {
 
-    private fun sessions(n: Int, prIndex: Int = -1): List<SessionPoint> {
-        return (0 until n).map { i ->
-            SessionPoint(
-                date = 1000L + i,
-                maxWeight = 20.0 + i,
-                totalSets = 3,
-                totalReps = 30,
-                isPr = i == prIndex,
-                isLatest = i == n - 1
-            )
-        }
-    }
-
-    @Test
-    fun seven_showsIndividualSessions() {
-        val input = sessions(7)
-        val out = bucketSessions(input)
-        assertEquals(7, out.size)
-        assertEquals(input, out)
-    }
-
-    @Test
-    fun thirty_collapsesToExactlySevenBars() {
-        val input = sessions(30)
-        val out = bucketSessions(input)
-        assertEquals(7, out.size)
-        // Even split of first 29 into 6 -> 5,5,5,5,5,4; first bucket peaks at 24.0
-        assertEquals(24.0, out[0].maxWeight, 0.0)
-        assertEquals(15, out[0].totalSets)
-        // Latest bar is the latest session itself, never grouped
-        assertEquals(input.last(), out.last())
-    }
-
-    @Test
-    fun ninety_collapsesToExactlySevenBars() {
-        val input = sessions(90)
-        val out = bucketSessions(input)
-        assertEquals(7, out.size)
-        // Even split of first 89 into 6 -> 15,15,15,15,15,14; first bucket peaks at 34.0
-        assertEquals(34.0, out[0].maxWeight, 0.0)
-        assertEquals(45, out[0].totalSets)
-        // Latest bar is the latest session itself, never grouped
-        assertEquals(input.last(), out.last())
-    }
-
-    @Test
-    fun all_bundlesToAroundSevenBars() {
-        val input = sessions(403, prIndex = 200)
-        val out = bucketSessions(input)
-        assertEquals(7, out.size)
-        // PR flag propagates to its bucket
-        assertEquals(1, out.count { it.isPr })
-        // Latest bar is the latest session itself, never grouped
-        assertEquals(input.last(), out.last())
-        // peak preserved
-        assertEquals(422.0, out.maxOf { it.maxWeight }, 0.0)
-    }
-
-    @Test
-    fun latestBar_isNeverGrouped() {
-        // Latest session dips low: it must still show its own value, not the chunk peak
-        val input = sessions(30).dropLast(1) + SessionPoint(
-            date = 9999L, maxWeight = 5.0, totalSets = 1, totalReps = 5,
-            isPr = false, isLatest = true
-        )
-        val out = bucketSessions(input)
-        assertEquals(7, out.size)
-        assertEquals(input.last(), out.last())
-        assertEquals(5.0, out.last().maxWeight, 0.0)
-    }
-
-    @Test
-    fun smallLists_areNotOverBucketed() {
-        assertEquals(listOf<SessionPoint>(), bucketSessions(emptyList()))
-        assertEquals(5, bucketSessions(sessions(5)).size)
-        assertEquals(sessions(5), bucketSessions(sessions(5)))
-    }
+    
 
     @Test
     fun barCorners_formContinuousSilhouette() {
@@ -185,57 +109,6 @@ class GraphBucketingTest {
     }
 
     @Test
-    fun compareSessions_computesDeltaAndPercent() {
-        val sessions = listOf(
-            point(1L, weight = 80.0, volume = 800.0),
-            point(2L, weight = 100.0, volume = 1200.0)
-        )
-        val byWeight = compareSessions(sessions, CompareMetric.MAX_WEIGHT.select)!!
-        assertEquals(80.0, byWeight.initial, 0.0)
-        assertEquals(100.0, byWeight.latest, 0.0)
-        assertEquals(20.0, byWeight.delta, 0.0)
-        assertEquals(25.0, byWeight.percent!!, 0.001)
-        val byVolume = compareSessions(sessions, CompareMetric.VOLUME.select)!!
-        assertEquals(800.0, byVolume.initial, 0.0)
-        assertEquals(1200.0, byVolume.latest, 0.0)
-        assertEquals(400.0, byVolume.delta, 0.0)
-        assertEquals(50.0, byVolume.percent!!, 0.001)
-    }
-
-    @Test
-    fun compareSessions_returnsNullWhenFewerThanTwo() {
-        assertNull(compareSessions(emptyList(), CompareMetric.MAX_WEIGHT.select))
-        assertNull(compareSessions(listOf(point(1L, weight = 80.0)), CompareMetric.MAX_WEIGHT.select))
-    }
-
-    @Test
-    fun compareSessions_supportsSingleTransitionBarConnectingTwoDays() {
-        val transitionBar = SessionPoint(
-            date = 2000L,
-            maxWeight = 133.33,
-            totalSets = 1,
-            totalReps = 2,
-            leftValue = 131.75,
-            rightValue = 133.33
-        )
-        val c = compareSessions(listOf(transitionBar))!!
-        assertEquals(131.75, c.initial, 0.01)
-        assertEquals(133.33, c.latest, 0.01)
-        assertEquals(1.58, c.delta, 0.01)
-        assertEquals(1.20, c.percent!!, 0.01)
-    }
-
-    @Test
-    fun compareSessions_nullPercentWhenBaselineZero() {
-        val c = compareSessions(
-            listOf(point(1L, weight = 0.0), point(2L, weight = 50.0)),
-            CompareMetric.MAX_WEIGHT.select
-        )!!
-        assertEquals(50.0, c.delta, 0.0)
-        assertNull(c.percent)
-    }
-
-    @Test
     fun markPrFlags_spotlightsDistinctPeak() {
         val sessions = listOf(point(1L, 80.0), point(2L, 100.0), point(3L, 90.0))
         assertEquals(listOf(false, true, false), markPrFlags(sessions, CompareMetric.MAX_WEIGHT.select).map { it.isPr })
@@ -265,16 +138,6 @@ class GraphBucketingTest {
             point(2L, weight = 80.0, volume = 900.0)
         )
         assertEquals(listOf(false, true), markPrFlags(sessions, CompareMetric.VOLUME.select).map { it.isPr })
-    }
-
-    @Test
-    fun bucketing_sumsVolume() {
-        val sessions = (0 until 8).map { i -> point(1000L + i, weight = 20.0 + i, volume = 100.0 * (i + 1)) }
-        val out = bucketSessions(sessions)
-        assertEquals(7, out.size)
-        // rest = first 7 split into 6 -> 2,1,1,1,1,1; first bucket sums 100 + 200
-        assertEquals(300.0, out[0].volume, 0.0)
-        assertEquals(sessions.last(), out.last())
     }
 
     @Test

@@ -88,7 +88,6 @@ object SvStrings : EnStrings(
     override val unitKg = "kg"
     override val unitLb = "lb"
     override val labelUnknownExercise = "Okänd övning"
-    override val labelOlderRecords = "Äldre poster"
 
     // Developer Options
     override val devColorPalette = "Färgpalett"

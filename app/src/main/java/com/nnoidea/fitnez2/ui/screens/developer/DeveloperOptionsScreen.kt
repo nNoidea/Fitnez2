@@ -1,23 +1,13 @@
 package com.nnoidea.fitnez2.ui.screens.developer
 
-import com.nnoidea.fitnez2.ui.components.SettingsItem
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import com.nnoidea.fitnez2.ui.components.ScreenScaffold
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.components.dialog.LoadingDialog
 import com.nnoidea.fitnez2.ui.components.dialog.PredictiveConfirmationDialog

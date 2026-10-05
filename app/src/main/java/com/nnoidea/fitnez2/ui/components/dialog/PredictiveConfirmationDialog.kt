@@ -1,14 +1,7 @@
 package com.nnoidea.fitnez2.ui.components.dialog
 
-import android.view.HapticFeedbackConstants
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 
 /**
@@ -30,7 +23,6 @@ fun PredictiveConfirmationDialog(
     dismissOnBackPress: Boolean = true,
     onConfirm: () -> Unit
 ) {
-    val view = LocalView.current
     PredictiveAlertDialog(
         show = show,
         onDismissRequest = onDismissRequest,
@@ -40,32 +32,10 @@ fun PredictiveConfirmationDialog(
         dismissOnClickOutside = dismissOnClickOutside,
         dismissOnBackPress = dismissOnBackPress,
         confirmButton = {
-            Button(
-                onClick = {
-                    DialogDefaults.performConfirmHaptic(view)
-                    onConfirm()
-                },
-                colors = if (isDestructive) {
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    )
-                } else {
-                    ButtonDefaults.buttonColors()
-                }
-            ) {
-                Text(confirmLabel)
-            }
+            DialogConfirmButton(label = confirmLabel, destructive = isDestructive, onConfirm = onConfirm)
         },
         dismissButton = {
-            TextButton(
-                onClick = {
-                    DialogDefaults.performDismissHaptic(view)
-                    onDismissRequest()
-                }
-            ) {
-                Text(cancelLabel)
-            }
+            DialogDismissButton(label = cancelLabel, onDismiss = onDismissRequest)
         }
     )
 }

@@ -9,18 +9,14 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 
 /**
@@ -41,7 +37,6 @@ fun PredictiveContentDialog(
     bodyText: String? = null,
     dismissOnClickOutside: Boolean = true,
     dismissOnBackPress: Boolean = true,
-    scrollable: Boolean = true,
     buttons: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -53,7 +48,6 @@ fun PredictiveContentDialog(
         modifier = modifier,
         dismissOnClickOutside = dismissOnClickOutside,
         dismissOnBackPress = dismissOnBackPress,
-        maxHeightRatio = DialogDefaults.MaxHeightRatio
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -80,19 +74,12 @@ fun PredictiveContentDialog(
                     .fillMaxWidth()
                     .weight(1f, fill = false)
             ) {
-                if (scrollable) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState()),
-                        content = content
-                    )
-                } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        content = content
-                    )
-                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    content = content
+                )
             }
 
             if (buttons != null) {

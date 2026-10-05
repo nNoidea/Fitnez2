@@ -24,8 +24,8 @@ class WorkoutService(private val database: AppDatabase) {
     }
 
     suspend fun updateWorkout(workout: Workout) {
-        WorkoutVerifier.validateName(workout.name)
-        dao.updateWorkout(workout)
+        val trimmedName = WorkoutVerifier.validateName(workout.name)
+        dao.updateWorkout(workout.copy(name = trimmedName))
     }
 
     suspend fun deleteWorkout(workout: Workout) {

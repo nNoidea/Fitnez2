@@ -107,7 +107,8 @@ class ExerciseServiceTest {
 
     @Test
     fun updateExercise_nameConflictWithOtherExercise_throwsException() = runBlocking {
-        val ex1 = exerciseService.createExercise("Exercise 1")
+        // ex1 is required: renaming ex2 to "Exercise 1" must collide with it.
+        exerciseService.createExercise("Exercise 1")
         val ex2 = exerciseService.createExercise("Exercise 2")
 
         try {

@@ -59,13 +59,6 @@ class GlobalUiState(
     }
 
     companion object {
-        var instance: GlobalUiState? = null
-            private set
-
-        fun setInstance(state: GlobalUiState) {
-            instance = state
-        }
-
         private val activeInstances =
             java.util.Collections.synchronizedList(mutableListOf<GlobalUiState>())
 

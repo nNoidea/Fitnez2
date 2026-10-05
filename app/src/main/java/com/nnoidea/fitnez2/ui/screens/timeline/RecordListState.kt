@@ -11,9 +11,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.entities.Record
-import com.nnoidea.fitnez2.service.ExerciseService
 import com.nnoidea.fitnez2.service.RecordService
-import com.nnoidea.fitnez2.service.SettingsService
 import com.nnoidea.fitnez2.ui.common.GlobalUiState
 import com.nnoidea.fitnez2.ui.common.UiSignal
 import com.nnoidea.fitnez2.ui.components.recordlist.RecordDisplayItem
@@ -48,8 +46,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 class RecordListStateImpl(
     private val scope: CoroutineScope,
     private val recordService: RecordService,
-    private val exerciseService: ExerciseService,
-    private val settingsService: SettingsService,
     private val globalUiState: GlobalUiState,
     private val onHapticFeedback: (Int) -> Unit,
     val filterExerciseIds: List<String>? = null,
@@ -209,7 +205,7 @@ class RecordListStateImpl(
             exerciseMap.containsKey(it.exerciseId) &&
             (filterExerciseIds == null || it.exerciseId in filterExerciseIds)
         }
-        val items = prepareRecordDisplayItems(eligibleRecords, exerciseMap, useAlternatingColors, section = 0, rolloverHour = globalUiState.nightModeHour)
+        val items = prepareRecordDisplayItems(eligibleRecords, exerciseMap, useAlternatingColors, rolloverHour = globalUiState.nightModeHour)
         uiItems = if (isLoading) {
             items + RecordDisplayItem.LoadingMore
         } else {

@@ -1,6 +1,7 @@
 package com.nnoidea.fitnez2.ui.components.bottomsheet
 
 import androidx.activity.compose.PredictiveBackHandler
+import com.nnoidea.fitnez2.ui.components.dialog.DialogDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -125,13 +125,12 @@ fun PredictiveBottomSheet(
         val overshootBuffer = 150.dp
         val sheetTotalHeight = expandedHeight + overshootBuffer
 
-        val view = androidx.compose.ui.platform.LocalView.current
         val sheetDraggableState = rememberDraggableState { delta ->
             if (!isOverlayOpen) {
                 if (globalUiState.isBottomSheetHidden) {
                     globalUiState.isBottomSheetHidden = false
                 }
-                state.onDragDelta(delta, view)
+                state.onDragDelta(delta)
             }
         }
 
@@ -143,10 +142,11 @@ fun PredictiveBottomSheet(
                 .offset { IntOffset(0, (state.offsetY.value + topPaddingPx + hideOffsetPx).roundToInt()) }
                 .graphicsLayer {
                     if (state.predictiveProgress > 0f) {
-                        val scale = 1f - (state.predictiveProgress * 0.2f)
+                        val p = state.predictiveProgress
+                        val scale = 1f - (p * DialogDefaults.PredictiveScaleFactor)
                         scaleX = scale
                         scaleY = scale
-                        translationY = size.height * state.predictiveProgress * 0.2f
+                        translationY = size.height * p * DialogDefaults.PredictiveScaleFactor
                     }
                 }
                 .background(
@@ -159,7 +159,7 @@ fun PredictiveBottomSheet(
                     orientation = Orientation.Vertical,
                     onDragStarted = { },
                     onDragStopped = { velocity ->
-                        scope.launch { state.settleSpring(velocity, view) }
+                        scope.launch { state.settleSpring(velocity) }
                     }
                 )
                 .nestedScroll(state.nestedScrollConnection)

@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.Dp
 import com.nnoidea.fitnez2.ui.components.haptics.HapticDefaults
 import com.nnoidea.fitnez2.ui.components.haptics.HapticEngine
 import com.nnoidea.fitnez2.ui.components.haptics.PopHapticMode
@@ -150,7 +149,7 @@ object SwipeHapticsConfig {
     /**
      * Triggers tactile feedback when dragging back under the threshold ("clocking back").
      */
-    fun performClockBack(context: Context, view: View?) {
+    fun performClockBack(context: Context) {
         if (!hapticsEnabled || !clockBackHapticsEnabled) return
         HapticEngine.performClockBack(context, swipeTickScale)
     }

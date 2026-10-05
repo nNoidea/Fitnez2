@@ -1,11 +1,7 @@
 package com.nnoidea.fitnez2.ui.screens.settings
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.unit.dp
+import com.nnoidea.fitnez2.BuildConfig
+
 import com.nnoidea.fitnez2.ui.components.dialog.LoadingDialog
 import com.nnoidea.fitnez2.ui.components.SettingsPageScaffold
 import com.nnoidea.fitnez2.ui.components.SettingsGroup
@@ -21,19 +17,16 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Bedtime
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.core.localization.LocalizationManager
 import com.nnoidea.fitnez2.ui.common.LocalGlobalUiState
 import com.nnoidea.fitnez2.ui.common.UiSignal
-import com.nnoidea.fitnez2.ui.components.ScreenScaffold
 import com.nnoidea.fitnez2.service.LocalBackupService
 import com.nnoidea.fitnez2.service.LocalSettingsService
 
@@ -255,26 +248,23 @@ fun SettingsScreen(
         }
 
         // Group 3: Advanced
-        SettingsGroup {
-            // Developer Settings
-            item(
-                label = globalLocalization.labelDeveloperOptions,
-                value = "",
-                icon = Icons.Default.Build,
-                iconContainerColor = surfaceVariant,
-                iconTint = onSurfaceVariant,
-                showChevron = true,
-                onClick = {
-                    if (onNavigateToDeveloper != null) {
-                        onNavigateToDeveloper()
-                    } else {
-                        val intent = android.content.Intent(context, com.nnoidea.fitnez2.MainActivity::class.java).apply {
-                            putExtra(com.nnoidea.fitnez2.MainActivity.EXTRA_PAGE_ROUTE, "developer")
-                        }
-                        context.startActivity(intent)
+        // Developer Options hosts a one-tap "wipe all data + insert 1,000,000
+        // synthetic records" stress test. Never reachable in a release build.
+        if (BuildConfig.DEBUG) {
+            SettingsGroup {
+                // Developer Settings
+                item(
+                    label = globalLocalization.labelDeveloperOptions,
+                    value = "",
+                    icon = Icons.Default.Build,
+                    iconContainerColor = surfaceVariant,
+                    iconTint = onSurfaceVariant,
+                    showChevron = true,
+                    onClick = {
+                        onNavigateToDeveloper?.invoke()
                     }
-                }
-            )
+                )
+            }
         }
     }
     

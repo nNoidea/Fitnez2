@@ -6,15 +6,11 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
@@ -54,7 +50,6 @@ fun LoadingShowcaseDialog(
         show = show,
         onDismissRequest = onDismiss,
         title = globalLocalization.devLoadingIndicatorsTitle,
-        scrollable = true,
         buttons = {
             TextButton(onClick = onDismiss) {
                 Text(globalLocalization.labelClose)
