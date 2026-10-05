@@ -393,6 +393,19 @@ data class LabelPillRect(val left: Float, val top: Float, val right: Float, val 
 data class CornerLabelPoint(val value: Double, val x: Float)
 
 /**
+ * Collapses back-to-back corners sharing the same label, keeping the latest bar's
+ * position — runs like 1,1,1,3,3,3 draw as 1,3. Separated repeats are kept.
+ */
+fun collapseConsecutiveLabels(points: List<CornerLabelPoint>): List<CornerLabelPoint> {
+    if (points.size < 2) return points
+    return buildList {
+        points.forEachIndexed { i, point ->
+            if (i == points.lastIndex || points[i + 1].value != point.value) add(point)
+        }
+    }
+}
+
+/**
  * Positions for all corner labels: first bar's left edge, junction centers
  * between bars, and the last bar's right edge. Inner corners share their value
  * with the next bar's left, so labeling every right corner covers them.

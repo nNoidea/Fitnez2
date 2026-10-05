@@ -723,6 +723,41 @@ class GraphBucketingTest {
         assertTrue(cornerLabelPositions(emptyList(), 8f, 100f, 8f).isEmpty())
     }
 
+    private fun labelRun(vararg values: Double) =
+        values.toList().mapIndexed { i, v -> CornerLabelPoint(v, i.toFloat()) }
+
+    @Test
+    fun collapseConsecutiveLabels_runCollapsesToLatestBar() {
+        val collapsed = collapseConsecutiveLabels(labelRun(1.0, 1.0, 1.0, 3.0, 3.0, 3.0))
+        assertEquals(listOf(CornerLabelPoint(1.0, 2f), CornerLabelPoint(3.0, 5f)), collapsed)
+    }
+
+    @Test
+    fun collapseConsecutiveLabels_nonConsecutiveRepeatsAreKept() {
+        val collapsed = collapseConsecutiveLabels(labelRun(1.0, 1.0, 2.0, 4.0, 1.0, 3.0, 3.0, 3.0))
+        assertEquals(
+            listOf(
+                CornerLabelPoint(1.0, 1f),
+                CornerLabelPoint(2.0, 2f),
+                CornerLabelPoint(4.0, 3f),
+                CornerLabelPoint(1.0, 4f),
+                CornerLabelPoint(3.0, 7f)
+            ),
+            collapsed
+        )
+    }
+
+    @Test
+    fun collapseConsecutiveLabels_shortInputsPassThrough() {
+        assertEquals(emptyList<CornerLabelPoint>(), collapseConsecutiveLabels(emptyList()))
+        val single = listOf(CornerLabelPoint(1.0, 0f))
+        assertEquals(single, collapseConsecutiveLabels(single))
+        assertEquals(
+            listOf(CornerLabelPoint(2.0, 2f)),
+            collapseConsecutiveLabels(labelRun(2.0, 2.0, 2.0))
+        )
+    }
+
     @Test
     fun centeredLabelPillRect_floatsAboveLine() {
         val pill = centeredLabelPillRect(

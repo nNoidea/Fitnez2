@@ -32,7 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +44,13 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.core.content.res.ResourcesCompat
+import com.nnoidea.fitnez2.R
+import com.nnoidea.fitnez2.ui.theme.GoogleSansFlexRounded
 import com.nnoidea.fitnez2.ui.theme.adaptiveGold
+
+/** Variable-font axis matching the theme: fully rounded, weight comes from the typeface. */
+private const val ROUNDED_VARIATION = "'ROND' 100"
 
 private fun DrawScope.drawYLabelPills(
     sessions: List<SessionPoint>,
@@ -59,21 +67,30 @@ private fun DrawScope.drawYLabelPills(
     gap: Float,
     prColor: Color,
     labelPillColor: Color,
-    onLabelPillColor: Color
+    onLabelPillColor: Color,
+    roundedTypeface: android.graphics.Typeface? = null
 ) {
-    cornerLabelPositions(sessions, paddingLeft, slotWidth, gap).forEach { corner ->
-        val canonical = resolveCanonicalValue(corner.value, labelVals)
+    collapseConsecutiveLabels(
+        cornerLabelPositions(sessions, paddingLeft, slotWidth, gap).map { corner ->
+            corner.copy(value = resolveCanonicalValue(corner.value, labelVals))
+        }
+    ).forEach { corner ->
+        val canonical = corner.value
         val y = yMap[canonical] ?: (barBottom - stubHeight)
 
         val text = formatMaxTwoDecimals(canonical)
         val hasDistinctPeak = (maxLabelVal != null && corners.min() < corners.max())
         val isMax = hasDistinctPeak && (canonical == maxLabelVal)
 
+        // Same binary choice as the theme: rounded font or system default.
         val paint = android.graphics.Paint().apply {
-            color = if (isMax) Color(0xFF1C1B1F).hashCode() else onLabelPillColor.hashCode()
+            color = if (isMax) Color(0xFF1C1B1F).toArgb() else onLabelPillColor.toArgb()
             textSize = 10.sp.toPx()
             textAlign = android.graphics.Paint.Align.CENTER
-            typeface = if (isMax) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
+            typeface = roundedTypeface?.let {
+                if (isMax) android.graphics.Typeface.create(it, android.graphics.Typeface.BOLD) else it
+            } ?: if (isMax) android.graphics.Typeface.DEFAULT_BOLD else android.graphics.Typeface.DEFAULT
+            if (roundedTypeface != null) fontVariationSettings = ROUNDED_VARIATION
         }
 
         val pill = centeredLabelPillRect(
@@ -126,6 +143,12 @@ fun BatteryStyleChart(
     val fullDateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()) }
     val labelPillColor = MaterialTheme.colorScheme.tertiaryContainer
     val onLabelPillColor = MaterialTheme.colorScheme.onTertiaryContainer
+    // Same binary choice as the theme: rounded font or system default.
+    val context = LocalContext.current
+    val useRoundedFont = MaterialTheme.typography.bodyLarge.fontFamily == GoogleSansFlexRounded
+    val roundedTypeface = remember(useRoundedFont) {
+        if (useRoundedFont) ResourcesCompat.getFont(context, R.font.google_sans_flex) else null
+    }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val totalWidth = maxWidth
@@ -250,7 +273,8 @@ fun BatteryStyleChart(
                 gap = gap,
                 prColor = prColor,
                 labelPillColor = labelPillColor,
-                onLabelPillColor = onLabelPillColor
+                onLabelPillColor = onLabelPillColor,
+                roundedTypeface = roundedTypeface
             )
 
             // Baseline ticks + date labels at bar corners and junctions
@@ -306,9 +330,11 @@ fun BatteryStyleChart(
                     pt.x,
                     height - 6.dp.toPx(),
                     android.graphics.Paint().apply {
-                        color = textColor.copy(alpha = 0.65f).hashCode()
+                        color = textColor.copy(alpha = 0.65f).toArgb()
                         textSize = 10.sp.toPx()
                         textAlign = pt.align
+                        typeface = roundedTypeface ?: android.graphics.Typeface.DEFAULT
+                        if (roundedTypeface != null) fontVariationSettings = ROUNDED_VARIATION
                     }
                 )
             }

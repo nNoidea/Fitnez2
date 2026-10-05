@@ -28,7 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.graphicsLayer
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.ui.navigation.AppPage
-import com.nnoidea.fitnez2.ui.theme.AppTitleFontFamily
 
 @Composable
 fun PredictiveSidePanel(
@@ -62,9 +61,7 @@ fun PredictiveSidePanel(
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
                 Text(
                     text = globalLocalization.labelAppName,
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontFamily = AppTitleFontFamily
-                    ),
+                    style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Normal,
                     letterSpacing = (-1).sp
                 )
