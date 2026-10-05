@@ -12,7 +12,6 @@ object NoStrings : EnStrings(
     override val errorExerciseNameBlank = "Navn på øvelse kan ikke være tomt"
 
     override val errorIdMustBeZero = "Nye øvelser må ha en ID på 0"
-    override val errorIdMustNotBeZero = "Oppføringer som skal oppdateres må ha en ikke-null ID"
 
     override fun errorExerciseAlreadyExists(name: String) = "Øvelse med navn '$name' finnes allerede"
     override fun errorExerciseRenameConflict(name: String) = "Navn på øvelse '$name' er allerede i bruk"
@@ -22,10 +21,7 @@ object NoStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "Treningsøkt med navn '$name' finnes allerede"
     override val errorWorkoutNoExercises = "Vennligst legg til minst én øvelse"
     override val errorWorkoutEmpty = "Treningsøkten er tom"
-
-    override val labelAddExercise = "Legg Til Øvelse"
     override val labelCreateExercise = "Opprett en øvelse"
-    override val labelCreateWorkout = "Opprett en treningsøkt"
     override val labelWorkoutName = "Navn På Treningsøkt"
     override val labelWorkout = "Treningsøkt"
     override val labelExercise = "Øvelse"
@@ -35,7 +31,6 @@ object NoStrings : EnStrings(
     override val labelCancel = "Avbryt"
     override val labelClose = "Lukk"
     override val labelDelete = "Slett"
-    override val labelSwitchLanguage = "Bytt Språk"
     override val labelAiTranslationsDisclaimer = "Oversettelser er gjort av kunstig intelligens"
 
     override val labelTimeline = "Tidslinje"
@@ -44,14 +39,11 @@ object NoStrings : EnStrings(
 
     override val labelSets = "Sett"
     override val labelReps = "Reps"
-    override val labelWeight = "Vekt"
 
     override fun labelEdit(target: String) = "Rediger $target"
 
     override val labelSelectExercise = "Velg Noe"
     override val labelWeightUnit = "Vektenhet"
-    override val labelProgramPlaceholder = "Plassholder For Programside"
-    override val labelHistoryListPlaceholder = "Plassholder For Historikliste"
     override val labelOpenDrawer = "Åpne Navigasjonsskuff"
     override val labelHistoryEmpty = "Ingen historikk ennå."
     override val labelAppName = "Fitnez2"
@@ -97,8 +89,6 @@ object NoStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "Ukjent øvelse"
     override val labelOlderRecords = "Eldre oppføringer"
-    override val labelRestDay = "Hviledag"
-    override fun labelExercisesCount(count: Int) = if (count == 1) "1 øvelse" else "$count øvelser"
 
     // Developer Options
     override val devColorPalette = "Fargepalett"
@@ -114,18 +104,8 @@ object NoStrings : EnStrings(
     override val devMoveSlider = "Flytt glidebryteren for å føle forskjellige vibrasjoner"
 
     // Validation Errors
-    override val errorSetsEmpty = "Sett kan ikke være tomt"
-    override val errorSetsFormat = "Ugyldig settformat"
-    override val errorSetsWholeNumber = "Sett må være et heltall"
     override val errorSetsPositive = "Sett må være større enn 0"
-
-    override val errorRepsEmpty = "Reps kan ikke være tomt"
-    override val errorRepsFormat = "Ugyldig repsformat"
-    override val errorRepsWholeNumber = "Reps må være et heltall"
     override val errorRepsPositive = "Reps må være større enn 0"
-
-    override val errorWeightEmpty = "Vekt kan ikke være tomt"
-    override val errorWeightFormat = "Ugyldig vektformat"
     override val errorWeightInvalid = "Ugyldig vektverdi"
     
     override val labelGoToCurrentMonth = "Gå til gjeldende måned"
@@ -133,9 +113,6 @@ object NoStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "Graf"
     override val labelNoDataForExercise = "Ingen historikk for denne øvelsen ennå"
-    override val labelMaxWeight = "Personlig Rekord"
-    override val labelCurrentWeight = "Siste Vekt"
-    override val labelProgress = "Fremgang"
     override val labelNoExercises = "Ingen øvelser funnet. Opprett en øvelse først!"
     override val labelCompareBy = "Sammenlign etter"
     override val labelGraphMaxWeight = "Vekt"
@@ -147,7 +124,6 @@ object NoStrings : EnStrings(
     override val titleUnsavedWork = "Ulagret Arbeid"
     override val msgUnsavedWork = "Vil du forkaste eller lagre?"
     override val labelDiscard = "Forkast"
-    override val labelKeepEditing = "Fortsett Å Redigere"
     override val labelEditAction = "Rediger"
 
     // Exercise Selection Dialog Separators

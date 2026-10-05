@@ -12,7 +12,6 @@ object KoStrings : EnStrings(
     override val errorExerciseNameBlank = "운동 이름은 비워둘 수 없습니다"
 
     override val errorIdMustBeZero = "새 운동의 ID는 0이어야 합니다"
-    override val errorIdMustNotBeZero = "업데이트할 레코드의 ID는 0이 아니어야 합니다"
 
     override fun errorExerciseAlreadyExists(name: String) = "'$name' 이라는 이름의 운동이 이미 존재합니다"
     override fun errorExerciseRenameConflict(name: String) = "운동 이름 '$name'은(는) 이미 사용 중입니다"
@@ -22,10 +21,7 @@ object KoStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "'$name' 이라는 이름의 운동 프로그램이 이미 존재합니다"
     override val errorWorkoutNoExercises = "최소 하나의 운동을 추가해주세요"
     override val errorWorkoutEmpty = "운동 프로그램이 비어 있습니다"
-
-    override val labelAddExercise = "운동 추가"
     override val labelCreateExercise = "운동 생성"
-    override val labelCreateWorkout = "운동 프로그램 생성"
     override val labelWorkoutName = "프로그램 이름"
     override val labelWorkout = "프로그램"
     override val labelExercise = "운동"
@@ -35,7 +31,6 @@ object KoStrings : EnStrings(
     override val labelCancel = "취소"
     override val labelClose = "닫기"
     override val labelDelete = "삭제"
-    override val labelSwitchLanguage = "언어 전환"
     override val labelAiTranslationsDisclaimer = "번역은 인공지능에 의해 수행됩니다"
 
     override val labelTimeline = "타임라인"
@@ -44,14 +39,11 @@ object KoStrings : EnStrings(
 
     override val labelSets = "세트"
     override val labelReps = "횟수"
-    override val labelWeight = "무게"
 
     override fun labelEdit(target: String) = "$target 수정"
 
     override val labelSelectExercise = "항목 선택"
     override val labelWeightUnit = "무게 단위"
-    override val labelProgramPlaceholder = "프로그램 페이지 플레이스홀더"
-    override val labelHistoryListPlaceholder = "기록 목록 플레이스홀더"
     override val labelOpenDrawer = "탐색 창 열기"
     override val labelHistoryEmpty = "아직 기록이 없습니다."
     override val labelAppName = "Fitnez2"
@@ -97,8 +89,6 @@ object KoStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "알 수 없는 운동"
     override val labelOlderRecords = "이전 기록"
-    override val labelRestDay = "휴식일"
-    override fun labelExercisesCount(count: Int) = "$count 개의 운동"
 
     // Developer Options
     override val devColorPalette = "색상 팔레트"
@@ -114,18 +104,8 @@ object KoStrings : EnStrings(
     override val devMoveSlider = "슬라이더를 움직여 다양한 진동을 느껴보세요"
 
     // Validation Errors
-    override val errorSetsEmpty = "세트는 비워둘 수 없습니다"
-    override val errorSetsFormat = "잘못된 세트 형식"
-    override val errorSetsWholeNumber = "세트는 정수여야 합니다"
     override val errorSetsPositive = "세트는 0보다 커야 합니다"
-
-    override val errorRepsEmpty = "횟수는 비워둘 수 없습니다"
-    override val errorRepsFormat = "잘못된 횟수 형식"
-    override val errorRepsWholeNumber = "횟수는 정수여야 합니다"
     override val errorRepsPositive = "횟수는 0보다 커야 합니다"
-
-    override val errorWeightEmpty = "무게는 비워둘 수 없습니다"
-    override val errorWeightFormat = "잘못된 무게 형식"
     override val errorWeightInvalid = "잘못된 무게 값"
     
     override val labelGoToCurrentMonth = "현재 달로 이동"
@@ -133,9 +113,6 @@ object KoStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "그래프"
     override val labelNoDataForExercise = "이 운동에 대한 기록이 아직 없습니다"
-    override val labelMaxWeight = "개인 최고 기록"
-    override val labelCurrentWeight = "최근 무게"
-    override val labelProgress = "진행 상황"
     override val labelNoExercises = "운동을 찾을 수 없습니다. 먼저 운동을 생성하세요!"
     override val labelCompareBy = "비교 기준"
     override val labelGraphMaxWeight = "무게"
@@ -147,7 +124,6 @@ object KoStrings : EnStrings(
     override val titleUnsavedWork = "저장되지 않은 작업"
     override val msgUnsavedWork = "취소하시겠습니까, 아니면 저장하시겠습니까?"
     override val labelDiscard = "취소"
-    override val labelKeepEditing = "계속 편집"
     override val labelEditAction = "편집"
 
     // Exercise Selection Dialog Separators

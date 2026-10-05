@@ -12,7 +12,6 @@ object JaStrings : EnStrings(
     override val errorExerciseNameBlank = "種目名は空にできません"
 
     override val errorIdMustBeZero = "新しい種目のIDは0である必要があります"
-    override val errorIdMustNotBeZero = "更新するレコードのIDはゼロ以外である必要があります"
 
     override fun errorExerciseAlreadyExists(name: String) = "'$name' という名前の種目は既に存在します"
     override fun errorExerciseRenameConflict(name: String) = "種目名 '$name' は既に使用されています"
@@ -22,10 +21,7 @@ object JaStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "'$name' という名前のワークアウトは既に存在します"
     override val errorWorkoutNoExercises = "少なくとも1つの種目を追加してください"
     override val errorWorkoutEmpty = "ワークアウトが空です"
-
-    override val labelAddExercise = "種目を追加"
     override val labelCreateExercise = "種目を作成"
-    override val labelCreateWorkout = "ワークアウトを作成"
     override val labelWorkoutName = "ワークアウト名"
     override val labelWorkout = "ワークアウト"
     override val labelExercise = "種目"
@@ -35,7 +31,6 @@ object JaStrings : EnStrings(
     override val labelCancel = "キャンセル"
     override val labelClose = "閉じる"
     override val labelDelete = "削除"
-    override val labelSwitchLanguage = "言語を切り替え"
     override val labelAiTranslationsDisclaimer = "翻訳は人工知能によって行われます"
 
     override val labelTimeline = "タイムライン"
@@ -44,14 +39,11 @@ object JaStrings : EnStrings(
 
     override val labelSets = "セット数"
     override val labelReps = "レップ数"
-    override val labelWeight = "重量"
 
     override fun labelEdit(target: String) = "$target を編集"
 
     override val labelSelectExercise = "何かを選択"
     override val labelWeightUnit = "重量単位"
-    override val labelProgramPlaceholder = "プログラムページのプレースホルダー"
-    override val labelHistoryListPlaceholder = "履歴リストのプレースホルダー"
     override val labelOpenDrawer = "ナビゲーションドロワーを開く"
     override val labelHistoryEmpty = "履歴はまだありません。"
     override val labelAppName = "Fitnez2"
@@ -97,8 +89,6 @@ object JaStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "不明な種目"
     override val labelOlderRecords = "過去のレコード"
-    override val labelRestDay = "休息日"
-    override fun labelExercisesCount(count: Int) = "$count 個の種目"
 
     // Developer Options
     override val devColorPalette = "カラーパレット"
@@ -114,18 +104,8 @@ object JaStrings : EnStrings(
     override val devMoveSlider = "スライダーを動かして異なる振動を感じてください"
 
     // Validation Errors
-    override val errorSetsEmpty = "セット数は空にできません"
-    override val errorSetsFormat = "セット数の形式が無効です"
-    override val errorSetsWholeNumber = "セット数は整数である必要があります"
     override val errorSetsPositive = "セット数は0より大きい必要があります"
-
-    override val errorRepsEmpty = "レップ数は空にできません"
-    override val errorRepsFormat = "レップ数の形式が無効です"
-    override val errorRepsWholeNumber = "レップ数は整数である必要があります"
     override val errorRepsPositive = "レップ数は0より大きい必要があります"
-
-    override val errorWeightEmpty = "重量は空にできません"
-    override val errorWeightFormat = "重量の形式が無効です"
     override val errorWeightInvalid = "重量の値が無効です"
     
     override val labelGoToCurrentMonth = "現在の月に移動"
@@ -133,9 +113,6 @@ object JaStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "グラフ"
     override val labelNoDataForExercise = "この種目の記録履歴はまだありません"
-    override val labelMaxWeight = "自己ベスト"
-    override val labelCurrentWeight = "最新の重量"
-    override val labelProgress = "進捗"
     override val labelNoExercises = "種目が見つかりません。まず種目を作成してください！"
     override val labelCompareBy = "比較基準"
     override val labelGraphMaxWeight = "重量"
@@ -147,7 +124,6 @@ object JaStrings : EnStrings(
     override val titleUnsavedWork = "未保存の作業"
     override val msgUnsavedWork = "破棄しますか、それとも保存しますか？"
     override val labelDiscard = "破棄"
-    override val labelKeepEditing = "編集を続ける"
     override val labelEditAction = "編集"
 
     // Exercise Selection Dialog Separators

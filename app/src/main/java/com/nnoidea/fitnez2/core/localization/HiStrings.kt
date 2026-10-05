@@ -12,7 +12,6 @@ object HiStrings : EnStrings(
     override val errorExerciseNameBlank = "व्यायाम का नाम खाली नहीं हो सकता"
 
     override val errorIdMustBeZero = "नए व्यायाम का ID 0 होना चाहिए"
-    override val errorIdMustNotBeZero = "अपडेट करने के लिए व्यायाम का ID शून्य नहीं होना चाहिए"
 
     override fun errorExerciseAlreadyExists(name: String) = "'$name' नाम का व्यायाम पहले से मौजूद है"
     override fun errorExerciseRenameConflict(name: String) = "व्यायाम का नाम '$name' पहले से उपयोग में है"
@@ -22,10 +21,7 @@ object HiStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "'$name' नाम का वर्कआउट पहले से मौजूद है"
     override val errorWorkoutNoExercises = "कृपया कम से कम एक व्यायाम जोड़ें"
     override val errorWorkoutEmpty = "वर्कआउट खाली है"
-
-    override val labelAddExercise = "व्यायाम जोड़ें"
     override val labelCreateExercise = "व्यायाम बनाएं"
-    override val labelCreateWorkout = "वर्कआउट बनाएं"
     override val labelWorkoutName = "वर्कआउट का नाम"
     override val labelWorkout = "वर्कआउट"
     override val labelExercise = "व्यायाम"
@@ -35,7 +31,6 @@ object HiStrings : EnStrings(
     override val labelCancel = "रद्द करें"
     override val labelClose = "बंद करें"
     override val labelDelete = "हटाएं"
-    override val labelSwitchLanguage = "भाषा बदलें"
     override val labelAiTranslationsDisclaimer = "अनुवाद आर्टिफिशियल इंटेलिजेंस द्वारा किए गए हैं"
 
     override val labelTimeline = "टाइमलाइन"
@@ -44,14 +39,11 @@ object HiStrings : EnStrings(
 
     override val labelSets = "सेट"
     override val labelReps = "रेप्स"
-    override val labelWeight = "वजन"
 
     override fun labelEdit(target: String) = "$target संपादित करें"
 
     override val labelSelectExercise = "कुछ चुनें"
     override val labelWeightUnit = "वजन की इकाई"
-    override val labelProgramPlaceholder = "प्रोग्राम पेज प्लेसहोल्डर"
-    override val labelHistoryListPlaceholder = "इतिहास सूची प्लेसहोल्डर"
     override val labelOpenDrawer = "नेविगेशन ड्रॉअर खोलें"
     override val labelHistoryEmpty = "अभी तक कोई इतिहास नहीं है।"
     override val labelAppName = "Fitnez2"
@@ -97,8 +89,6 @@ object HiStrings : EnStrings(
     override val unitLb = "पाउंड"
     override val labelUnknownExercise = "अज्ञात व्यायाम"
     override val labelOlderRecords = "पुराने रिकॉर्ड"
-    override val labelRestDay = "आराम का दिन"
-    override fun labelExercisesCount(count: Int) = if (count == 1) "1 व्यायाम" else "$count व्यायाम"
 
     // Developer Options
     override val devColorPalette = "रंग पट्टिका"
@@ -114,18 +104,8 @@ object HiStrings : EnStrings(
     override val devMoveSlider = "विभिन्न कंपनों को महसूस करने के लिए स्लाइडर को हिलाएं"
 
     // Validation Errors
-    override val errorSetsEmpty = "सेट खाली नहीं हो सकते"
-    override val errorSetsFormat = "अमान्य सेट प्रारूप"
-    override val errorSetsWholeNumber = "सेट एक पूर्ण संख्या होनी चाहिए"
     override val errorSetsPositive = "सेट 0 से अधिक होने चाहिए"
-
-    override val errorRepsEmpty = "रेप्स खाली नहीं हो सकते"
-    override val errorRepsFormat = "अमान्य रेप्स प्रारूप"
-    override val errorRepsWholeNumber = "रेप्स एक पूर्ण संख्या होनी चाहिए"
     override val errorRepsPositive = "रेप्स 0 से अधिक होने चाहिए"
-
-    override val errorWeightEmpty = "वजन खाली नहीं हो सकता"
-    override val errorWeightFormat = "अमान्य वजन प्रारूप"
     override val errorWeightInvalid = "अमान्य वजन मान"
     
     override val labelGoToCurrentMonth = "वर्तमान महीने पर जाएं"
@@ -133,9 +113,6 @@ object HiStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "ग्राफ"
     override val labelNoDataForExercise = "इस व्यायाम के लिए अभी तक कोई रिकॉर्ड इतिहास नहीं है"
-    override val labelMaxWeight = "व्यक्तिगत रिकॉर्ड"
-    override val labelCurrentWeight = "नवीनतम वजन"
-    override val labelProgress = "प्रगति"
     override val labelNoExercises = "कोई व्यायाम नहीं मिला। पहले एक व्यायाम बनाएं!"
     override val labelCompareBy = "तुलना करें"
     override val labelGraphMaxWeight = "वजन"
@@ -147,7 +124,6 @@ object HiStrings : EnStrings(
     override val titleUnsavedWork = "असुरक्षित कार्य"
     override val msgUnsavedWork = "क्या आप छोड़ना चाहते हैं या सहेजना चाहते हैं?"
     override val labelDiscard = "खारिज करें"
-    override val labelKeepEditing = "संपादन जारी रखें"
     override val labelEditAction = "संपादित करें"
 
     // Exercise Selection Dialog Separators

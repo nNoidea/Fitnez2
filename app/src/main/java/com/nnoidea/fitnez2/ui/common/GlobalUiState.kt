@@ -3,7 +3,6 @@ package com.nnoidea.fitnez2.ui.common
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -89,16 +88,9 @@ class GlobalUiState(
     // State: Is any overlay (Drawer, Dialog, etc.) currently masking the main content?
     var isOverlayOpen by mutableStateOf(false)
 
-    // State: Current Language
-    val language: EnStrings
-        get() = LocalizationManager.currentLanguage
-
+    // State: Selected Language
     val selectedLanguage: EnStrings?
         get() = LocalizationManager.selectedLanguage
-
-    val strings by derivedStateOf {
-        LocalizationManager.strings
-    }
 
     // State: Weight Unit
     var weightUnit by mutableStateOf("kg")

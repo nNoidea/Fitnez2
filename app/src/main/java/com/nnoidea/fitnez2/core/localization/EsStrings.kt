@@ -12,7 +12,6 @@ object EsStrings : EnStrings(
     override val errorExerciseNameBlank = "El nombre del ejercicio no puede estar vacío"
 
     override val errorIdMustBeZero = "Los nuevos ejercicios deben tener un ID de 0"
-    override val errorIdMustNotBeZero = "Los ejercicios a actualizar deben tener un ID distinto de cero"
 
     override fun errorExerciseAlreadyExists(name: String) = "El ejercicio con nombre '$name' ya existe"
     override fun errorExerciseRenameConflict(name: String) = "El nombre del ejercicio '$name' ya está en uso"
@@ -22,10 +21,7 @@ object EsStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "El entrenamiento con nombre '$name' ya existe"
     override val errorWorkoutNoExercises = "Por favor, añade al menos un ejercicio"
     override val errorWorkoutEmpty = "El entrenamiento está vacío"
-
-    override val labelAddExercise = "Añadir Ejercicio"
     override val labelCreateExercise = "Crear un ejercicio" // English is "Create an exercise" (Sentence Case).
-    override val labelCreateWorkout = "Crear un entrenamiento" // English is "Create a workout" (Sentence Case).
     override val labelWorkoutName = "Nombre Del Entrenamiento"
     override val labelWorkout = "Entrenamiento"
     override val labelExercise = "Ejercicio"
@@ -35,7 +31,6 @@ object EsStrings : EnStrings(
     override val labelCancel = "Cancelar"
     override val labelClose = "Cerrar"
     override val labelDelete = "Eliminar"
-    override val labelSwitchLanguage = "Cambiar Idioma"
     override val labelAiTranslationsDisclaimer = "Las traducciones son realizadas por Inteligencia Artificial"
 
     override val labelTimeline = "Cronología"
@@ -44,14 +39,11 @@ object EsStrings : EnStrings(
 
     override val labelSets = "Series"
     override val labelReps = "Reps"
-    override val labelWeight = "Peso"
 
     override fun labelEdit(target: String) = "Editar $target"
 
     override val labelSelectExercise = "Seleccionar Algo"
     override val labelWeightUnit = "Unidad De Peso"
-    override val labelProgramPlaceholder = "Marcador De Posición De La Página Del Programa"
-    override val labelHistoryListPlaceholder = "Marcador De Posición De La Lista De Historial"
     override val labelOpenDrawer = "Abrir Menú De Navegación"
     override val labelHistoryEmpty = "Aún no hay historial."
     override val labelAppName = "Fitnez2"
@@ -97,8 +89,6 @@ object EsStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "Ejercicio desconocido"
     override val labelOlderRecords = "Registros más antiguos"
-    override val labelRestDay = "Día de descanso"
-    override fun labelExercisesCount(count: Int) = if (count == 1) "1 ejercicio" else "$count ejercicios"
 
     // Developer Options
     override val devColorPalette = "Paleta de colores"
@@ -114,18 +104,8 @@ object EsStrings : EnStrings(
     override val devMoveSlider = "Mueve el control deslizante para sentir diferentes vibraciones"
 
     // Validation Errors
-    override val errorSetsEmpty = "Las series no pueden estar vacías"
-    override val errorSetsFormat = "Formato de series inválido"
-    override val errorSetsWholeNumber = "Las series deben ser un número entero"
     override val errorSetsPositive = "Las series deben ser mayores que 0"
-
-    override val errorRepsEmpty = "Las reps no pueden estar vacías"
-    override val errorRepsFormat = "Formato de reps inválido"
-    override val errorRepsWholeNumber = "Las reps deben ser un número entero"
     override val errorRepsPositive = "Las reps deben ser mayores que 0"
-
-    override val errorWeightEmpty = "El peso no puede estar vacío"
-    override val errorWeightFormat = "Formato de peso inválido"
     override val errorWeightInvalid = "Valor de peso inválido"
     
     override val labelGoToCurrentMonth = "Ir al mes actual"
@@ -133,9 +113,6 @@ object EsStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "Gráfico"
     override val labelNoDataForExercise = "Aún no hay historial de registros para este ejercicio"
-    override val labelMaxWeight = "Récord personal"
-    override val labelCurrentWeight = "Último peso"
-    override val labelProgress = "Progreso"
     override val labelNoExercises = "No se encontraron ejercicios. ¡Crea un ejercicio primero!"
     override val labelCompareBy = "Comparar por"
     override val labelGraphMaxWeight = "Peso"
@@ -147,7 +124,6 @@ object EsStrings : EnStrings(
     override val titleUnsavedWork = "Trabajo no guardado"
     override val msgUnsavedWork = "¿Quieres descartar o guardar?"
     override val labelDiscard = "Descartar"
-    override val labelKeepEditing = "Seguir editando"
     override val labelEditAction = "Editar"
 
     // Exercise Selection Dialog Separators

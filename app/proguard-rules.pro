@@ -9,9 +9,6 @@
 -keep class com.nnoidea.fitnez2.core.localization.EnStrings { *; }
 -keep class * extends com.nnoidea.fitnez2.core.localization.EnStrings { *; }
 
-# Keep kotlin-reflect metadata if needed (though keeping the classes above usually suffices)
--keepattributes RuntimeVisibleAnnotations,AnnotationDefault,EnclosingMethod,InnerClasses,Signature
--keep class kotlin.reflect.jvm.internal.** { *; }
 
 # Keep Backup data models for GSON serialization/deserialization
 -keep class com.nnoidea.fitnez2.data.models.** { *; }

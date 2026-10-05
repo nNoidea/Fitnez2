@@ -1,6 +1,5 @@
 package com.nnoidea.fitnez2.core.localization
 
-import kotlin.reflect.full.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,10 +10,15 @@ import java.util.Locale
  * Acts as the registry for available languages.
  */
 object LocalizationManager {
-    // Registry of supported languages - Auto-discovered!
-    val supportedLanguages: List<EnStrings> = EnStrings::class.sealedSubclasses
-        .mapNotNull { it.objectInstance }
-        .sortedBy { it.languageName }
+    // Registry of supported languages
+    val supportedLanguages: List<EnStrings> = listOf(
+        EnglishStrings, ArStrings, DaStrings, DeStrings, EsStrings, FrStrings,
+        HiStrings, IdStrings, ItStrings, JaStrings, KoStrings, NlStrings,
+        NoStrings, PlStrings, PtStrings, RuStrings, SvStrings, TrStrings, UkStrings, ZhStrings
+    ).sortedBy { it.languageName }
+
+    private val languagesByCode: Map<String, EnStrings> =
+        supportedLanguages.associateBy { it.appLocale.language }
 
     // User preference: null = System Default, non-null = Specific Language
     var selectedLanguage: EnStrings? by mutableStateOf(null)
@@ -31,13 +35,11 @@ object LocalizationManager {
     }
 
     fun getLanguageByCode(code: String): EnStrings? {
-        return supportedLanguages.find { it.appLocale.language == code }
+        return languagesByCode[code]
     }
 
     private fun detectSystemLanguage(): EnStrings {
-        val systemCode = Locale.getDefault().language
-        return supportedLanguages.find { it.appLocale.language == systemCode }
-            ?: EnglishStrings // Fallback to explicitly defined English object
+        return languagesByCode[Locale.getDefault().language] ?: EnglishStrings
     }
 }
 

@@ -12,7 +12,6 @@ object NlStrings : EnStrings(
     override val errorExerciseNameBlank = "Oefeningsnaam mag niet leeg zijn"
 
     override val errorIdMustBeZero = "Nieuwe oefeningen moeten een ID van 0 hebben"
-    override val errorIdMustNotBeZero = "Bij te werken records moeten een ID hebben dat niet nul is"
 
     override fun errorExerciseAlreadyExists(name: String) = "Oefening met naam '$name' bestaat al"
     override fun errorExerciseRenameConflict(name: String) = "Oefeningsnaam '$name' is al in gebruik"
@@ -22,10 +21,7 @@ object NlStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "Workout met naam '$name' bestaat al"
     override val errorWorkoutNoExercises = "Voeg a.u.b. ten minste één oefening toe"
     override val errorWorkoutEmpty = "Workout is leeg"
-
-    override val labelAddExercise = "Oefening Toevoegen"
     override val labelCreateExercise = "Oefening maken" // English is "Create an exercise" (Sentence Case). So this is fine!
-    override val labelCreateWorkout = "Workout maken" // English is "Create a workout" (Sentence Case). So this is fine!
     override val labelWorkoutName = "Workout Naam"
     override val labelWorkout = "Workout"
     override val labelExercise = "Oefening"
@@ -35,7 +31,6 @@ object NlStrings : EnStrings(
     override val labelCancel = "Annuleren"
     override val labelClose = "Sluiten"
     override val labelDelete = "Verwijderen"
-    override val labelSwitchLanguage = "Taal Wisselen"
     override val labelAiTranslationsDisclaimer = "Vertalingen zijn gedaan door Kunstmatige Intelligentie"
 
     override val labelTimeline = "Tijdlijn"
@@ -44,14 +39,11 @@ object NlStrings : EnStrings(
 
     override val labelSets = "Sets"
     override val labelReps = "Reps"
-    override val labelWeight = "Gewicht"
 
     override fun labelEdit(target: String) = "Bewerk $target"
 
     override val labelSelectExercise = "Selecteer Iets"
     override val labelWeightUnit = "Gewichtseenheid"
-    override val labelProgramPlaceholder = "Programmapagina Tijdelijke Aanduiding"
-    override val labelHistoryListPlaceholder = "Geschiedenislijst Tijdelijke Aanduiding"
     override val labelOpenDrawer = "Navigatiemenu Openen"
     override val labelHistoryEmpty = "Nog geen geschiedenis."
     override val labelAppName = "Fitnez2"
@@ -97,8 +89,6 @@ object NlStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "Onbekende oefening"
     override val labelOlderRecords = "Oudere records"
-    override val labelRestDay = "Rustdag"
-    override fun labelExercisesCount(count: Int) = if (count == 1) "1 oefening" else "$count oefeningen"
 
     // Developer Options
     override val devColorPalette = "Kleurenpalet"
@@ -114,18 +104,8 @@ object NlStrings : EnStrings(
     override val devMoveSlider = "Beweeg de schuifregelaar om verschillende trillingen te voelen"
 
     // Validation Errors
-    override val errorSetsEmpty = "Sets mogen niet leeg zijn"
-    override val errorSetsFormat = "Ongeldig sets-formaat"
-    override val errorSetsWholeNumber = "Sets moeten een heel getal zijn"
     override val errorSetsPositive = "Sets moeten groter zijn dan 0"
-
-    override val errorRepsEmpty = "Reps mogen niet leeg zijn"
-    override val errorRepsFormat = "Ongeldig reps-formaat"
-    override val errorRepsWholeNumber = "Reps moeten een heel getal zijn"
     override val errorRepsPositive = "Reps moeten groter zijn dan 0"
-
-    override val errorWeightEmpty = "Gewicht mag niet leeg zijn"
-    override val errorWeightFormat = "Ongeldig gewicht-formaat"
     override val errorWeightInvalid = "Ongeldige gewichtswaarde"
     
     override val labelGoToCurrentMonth = "Ga naar huidige maand"
@@ -133,9 +113,6 @@ object NlStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "Grafiek"
     override val labelNoDataForExercise = "Nog geen geschiedenis voor deze oefening"
-    override val labelMaxWeight = "Persoonlijk Record"
-    override val labelCurrentWeight = "Laatste Gewicht"
-    override val labelProgress = "Voortgang"
     override val labelNoExercises = "Geen oefeningen gevonden. Maak eerst een oefening!"
     override val labelCompareBy = "Vergelijken op"
     override val labelGraphMaxWeight = "Gewicht"
@@ -147,7 +124,6 @@ object NlStrings : EnStrings(
     override val titleUnsavedWork = "Niet-Opgeslagen Werk"
     override val msgUnsavedWork = "Wil je negeren of opslaan?"
     override val labelDiscard = "Negeren"
-    override val labelKeepEditing = "Blijven Bewerken"
     override val labelEditAction = "Bewerken"
 
     // Exercise Selection Dialog Separators

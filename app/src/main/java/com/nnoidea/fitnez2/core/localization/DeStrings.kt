@@ -12,7 +12,6 @@ object DeStrings : EnStrings(
     override val errorExerciseNameBlank = "Übungsname darf nicht leer sein"
 
     override val errorIdMustBeZero = "Neue Übungen müssen eine ID von 0 haben"
-    override val errorIdMustNotBeZero = "Zu aktualisierende Datensätze müssen eine ID ungleich Null haben"
 
     override fun errorExerciseAlreadyExists(name: String) = "Übung mit dem Namen '$name' existiert bereits"
     override fun errorExerciseRenameConflict(name: String) = "Übungsname '$name' wird bereits verwendet"
@@ -22,10 +21,7 @@ object DeStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "Workout mit dem Namen '$name' existiert bereits"
     override val errorWorkoutNoExercises = "Bitte fügen Sie mindestens eine Übung hinzu"
     override val errorWorkoutEmpty = "Workout ist leer"
-
-    override val labelAddExercise = "Übung Hinzufügen"
     override val labelCreateExercise = "Übung erstellen"
-    override val labelCreateWorkout = "Workout erstellen"
     override val labelWorkoutName = "Workout-Name"
     override val labelWorkout = "Workout"
     override val labelExercise = "Übung"
@@ -35,7 +31,6 @@ object DeStrings : EnStrings(
     override val labelCancel = "Abbrechen"
     override val labelClose = "Schließen"
     override val labelDelete = "Löschen"
-    override val labelSwitchLanguage = "Sprache Wechseln"
     override val labelAiTranslationsDisclaimer = "Übersetzungen wurden durch Künstliche Intelligenz erstellt"
 
     override val labelTimeline = "Timeline"
@@ -44,14 +39,11 @@ object DeStrings : EnStrings(
 
     override val labelSets = "Sätze"
     override val labelReps = "Reps"
-    override val labelWeight = "Gewicht"
 
     override fun labelEdit(target: String) = "$target bearbeiten"
 
     override val labelSelectExercise = "Etwas Auswählen"
     override val labelWeightUnit = "Gewichtseinheit"
-    override val labelProgramPlaceholder = "Programmseite Platzhalter"
-    override val labelHistoryListPlaceholder = "Verlaufsliste Platzhalter"
     override val labelOpenDrawer = "Navigationsmenü Öffnen"
     override val labelHistoryEmpty = "Noch kein Verlauf."
     override val labelAppName = "Fitnez2"
@@ -97,8 +89,6 @@ object DeStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "Unbekannte Übung"
     override val labelOlderRecords = "Ältere Datensätze"
-    override val labelRestDay = "Ruhetag"
-    override fun labelExercisesCount(count: Int) = if (count == 1) "1 Übung" else "$count Übungen"
 
     // Developer Options
     override val devColorPalette = "Farbpalette"
@@ -114,18 +104,8 @@ object DeStrings : EnStrings(
     override val devMoveSlider = "Schieberegler bewegen, um verschiedene Vibrationen zu spüren"
 
     // Validation Errors
-    override val errorSetsEmpty = "Sätze dürfen nicht leer sein"
-    override val errorSetsFormat = "Ungültiges Sätze-Format"
-    override val errorSetsWholeNumber = "Sätze müssen eine ganze Zahl sein"
     override val errorSetsPositive = "Sätze müssen größer als 0 sein"
-
-    override val errorRepsEmpty = "Reps dürfen nicht leer sein"
-    override val errorRepsFormat = "Ungültiges Reps-Format"
-    override val errorRepsWholeNumber = "Reps müssen eine ganze Zahl sein"
     override val errorRepsPositive = "Reps müssen größer als 0 sein"
-
-    override val errorWeightEmpty = "Gewicht darf nicht leer sein"
-    override val errorWeightFormat = "Ungültiges Gewicht-Format"
     override val errorWeightInvalid = "Ungültiger Gewichtswert"
     
     override val labelGoToCurrentMonth = "Zum aktuellen Monat gehen"
@@ -133,9 +113,6 @@ object DeStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "Grafik"
     override val labelNoDataForExercise = "Noch kein Verlauf für diese Übung"
-    override val labelMaxWeight = "Persönlicher Rekord"
-    override val labelCurrentWeight = "Letztes Gewicht"
-    override val labelProgress = "Fortschritt"
     override val labelNoExercises = "Keine Übungen gefunden. Erstellen Sie zuerst eine Übung!"
     override val labelCompareBy = "Vergleichen nach"
     override val labelGraphMaxWeight = "Gewicht"
@@ -147,7 +124,6 @@ object DeStrings : EnStrings(
     override val titleUnsavedWork = "Ungespeicherte Arbeit"
     override val msgUnsavedWork = "Möchten Sie verwerfen oder speichern?"
     override val labelDiscard = "Verwerfen"
-    override val labelKeepEditing = "Weiter Bearbeiten"
     override val labelEditAction = "Bearbeiten"
 
     // Exercise Selection Dialog Separators

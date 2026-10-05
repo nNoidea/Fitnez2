@@ -12,7 +12,6 @@ object PlStrings : EnStrings(
     override val errorExerciseNameBlank = "Nazwa ćwiczenia nie może być pusta"
 
     override val errorIdMustBeZero = "Nowe ćwiczenia muszą mieć ID 0"
-    override val errorIdMustNotBeZero = "Aktualizowane rekordy muszą mieć ID różne od zera"
 
     override fun errorExerciseAlreadyExists(name: String) = "Ćwiczenie o nazwie '$name' już istnieje"
     override fun errorExerciseRenameConflict(name: String) = "Nazwa ćwiczenia '$name' jest już w użyciu"
@@ -22,10 +21,7 @@ object PlStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "Trening o nazwie '$name' już istnieje"
     override val errorWorkoutNoExercises = "Proszę dodać przynajmniej jedno ćwiczenie"
     override val errorWorkoutEmpty = "Trening jest pusty"
-
-    override val labelAddExercise = "Dodaj Ćwiczenie"
     override val labelCreateExercise = "Utwórz ćwiczenie"
-    override val labelCreateWorkout = "Utwórz trening"
     override val labelWorkoutName = "Nazwa Treningu"
     override val labelWorkout = "Trening"
     override val labelExercise = "Ćwiczenie"
@@ -35,7 +31,6 @@ object PlStrings : EnStrings(
     override val labelCancel = "Anuluj"
     override val labelClose = "Zamknij"
     override val labelDelete = "Usuń"
-    override val labelSwitchLanguage = "Zmień Język"
     override val labelAiTranslationsDisclaimer = "Tłumaczenia zostały wykonane przez Sztuczną Inteligencję"
 
     override val labelTimeline = "Oś czasu"
@@ -44,14 +39,11 @@ object PlStrings : EnStrings(
 
     override val labelSets = "Serie"
     override val labelReps = "Powtórzenia"
-    override val labelWeight = "Ciężar"
 
     override fun labelEdit(target: String) = "Edytuj $target"
 
     override val labelSelectExercise = "Wybierz Coś"
     override val labelWeightUnit = "Jednostka Ciężaru"
-    override val labelProgramPlaceholder = "Symbol Zastępczy Strony Programu"
-    override val labelHistoryListPlaceholder = "Symbol Zastępczy Listy Historii"
     override val labelOpenDrawer = "Otwórz Menu Nawigacji"
     override val labelHistoryEmpty = "Brak historii."
     override val labelAppName = "Fitnez2"
@@ -97,14 +89,6 @@ object PlStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "Nieznane ćwiczenie"
     override val labelOlderRecords = "Starsze rekordy"
-    override val labelRestDay = "Dzień odpoczynku"
-    
-    override fun labelExercisesCount(count: Int) = when {
-        count == 1 -> "1 ćwiczenie"
-        count % 100 in 11..14 -> "$count ćwiczeń"
-        count % 10 in 2..4 -> "$count ćwiczenia"
-        else -> "$count ćwiczeń"
-    }
 
     // Developer Options
     override val devColorPalette = "Paleta kolorów"
@@ -118,19 +102,8 @@ object PlStrings : EnStrings(
     override val devGeneratingData = "Generowanie danych..."
     override val devHapticsTest = "Test haptyki"
     override val devMoveSlider = "Przesuń suwak, aby poczuć różne wibracje"
-    
-    override val errorSetsEmpty = "Serie nie mogą być puste"
-    override val errorSetsFormat = "Nieprawidłowy format serii"
-    override val errorSetsWholeNumber = "Serie muszą być liczbą całkowitą"
     override val errorSetsPositive = "Serie muszą być większe niż 0"
-
-    override val errorRepsEmpty = "Powtórzenia nie mogą być puste"
-    override val errorRepsFormat = "Nieprawidłowy format powtórzeń"
-    override val errorRepsWholeNumber = "Powtórzenia muszą być liczbą całkowitą"
     override val errorRepsPositive = "Powtórzenia muszą być większe niż 0"
-
-    override val errorWeightEmpty = "Ciężar nie może być pusty"
-    override val errorWeightFormat = "Nieprawidłowy format ciężaru"
     override val errorWeightInvalid = "Nieprawidłowa wartość ciężaru"
     
     override val labelGoToCurrentMonth = "Idź do bieżącego miesiąca"
@@ -138,9 +111,6 @@ object PlStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "Wykres"
     override val labelNoDataForExercise = "Brak historii rekordów dla tego ćwiczenia"
-    override val labelMaxWeight = "Rekord Życiowy"
-    override val labelCurrentWeight = "Ostatni Ciężar"
-    override val labelProgress = "Postęp"
     override val labelNoExercises = "Nie znaleziono ćwiczeń. Najpierw utwórz ćwiczenie!"
     override val labelCompareBy = "Porównaj według"
     override val labelGraphMaxWeight = "Ciężar"
@@ -152,7 +122,6 @@ object PlStrings : EnStrings(
     override val titleUnsavedWork = "Niezapisane Zmiany"
     override val msgUnsavedWork = "Czy chcesz odrzucić, czy zapisać?"
     override val labelDiscard = "Odrzuć"
-    override val labelKeepEditing = "Kontynuuj Edycję"
     override val labelEditAction = "Edytuj"
 
     // Exercise Selection Dialog Separators

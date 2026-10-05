@@ -12,7 +12,6 @@ object TrStrings : EnStrings(
     override val errorExerciseNameBlank = "Egzersiz adı boş olamaz"
 
     override val errorIdMustBeZero = "Yeni egzersizler için ID 0 olmalıdır. Varolan egzersizler için update() kullanın."
-    override val errorIdMustNotBeZero = "Güncellenecek kayıtların ID'si sıfırdan farklı olmalıdır. Yeni egzersizler için create() kullanın."
 
     override fun errorExerciseAlreadyExists(name: String) = "'$name' adında bir egzersiz zaten mevcut."
     override fun errorExerciseRenameConflict(name: String) = "'$name' ismi başka bir egzersiz tarafından kullanılıyor."
@@ -22,10 +21,7 @@ object TrStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "'$name' adında bir antrenman zaten mevcut."
     override val errorWorkoutNoExercises = "Lütfen en az bir egzersiz ekleyin"
     override val errorWorkoutEmpty = "Antrenman boş"
-
-    override val labelAddExercise = "Egzersiz Ekle"
     override val labelCreateExercise = "Egzersiz Oluştur"
-    override val labelCreateWorkout = "Antrenman Oluştur"
     override val labelWorkoutName = "Antrenman Adı"
     override val labelWorkout = "Antrenman"
     override val labelExercise = "Egzersiz"
@@ -35,7 +31,6 @@ object TrStrings : EnStrings(
     override val labelCancel = "İptal"
     override val labelClose = "Kapat"
     override val labelDelete = "Sil"
-    override val labelSwitchLanguage = "Dili Değiştir"
     override val labelAiTranslationsDisclaimer = "Çeviriler Yapay Zeka tarafından yapılmıştır"
 
     override val labelTimeline = "Zaman Tüneli"
@@ -44,21 +39,16 @@ object TrStrings : EnStrings(
 
     override val labelSets = "Setler"
     override val labelReps = "Tekrar"
-    override val labelWeight = "Ağırlık"
 
     override fun labelEdit(target: String): String = "$target Düzenle"
 
     override val labelSelectExercise: String = "Bir Şey Seçin"
     override val labelWeightUnit: String = "Ağırlık Birimi"
-    override val labelProgramPlaceholder: String = "Program Sayfası Yer Tutucusu"
-    override val labelHistoryListPlaceholder: String = "Geçmiş Listesi Yer Tutucusu"
     override val labelOpenDrawer: String = "Navigasyon Menüsünü Aç"
     override val labelHistoryEmpty: String = "Henüz geçmiş yok."
     override val labelAppName: String = "Fitnez2" // Usually brand names don't change, but good to have control
     override val labelVersion: String = "1.0.0"
     override val labelEditExercise: String = "Egzersizi Düzenle"
-
-    override fun labelWeightWithUnit(unit: String): String = "$labelWeight ($unit)"
 
     override val labelRecordDeleted: String = "Kayıt silindi"
     override val labelRecordsDeleted: String = "Kayıtlar silindi"
@@ -99,8 +89,6 @@ object TrStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "Bilinmeyen Egzersiz"
     override val labelOlderRecords = "Eski Kayıtlar"
-    override val labelRestDay = "Dinlenme Günü"
-    override fun labelExercisesCount(count: Int) = "$count egzersiz"
 
     // Developer Options
     override val devColorPalette = "Renk Paleti"
@@ -116,18 +104,8 @@ object TrStrings : EnStrings(
     override val devMoveSlider = "Farklı titreşimleri hissetmek için kaydırıcıyı hareket ettirin"
 
     // Validation Errors
-    override val errorSetsEmpty = "Setler boş olamaz"
-    override val errorSetsFormat = "Geçersiz set formatı"
-    override val errorSetsWholeNumber = "Setler tam sayı olmalıdır"
     override val errorSetsPositive = "Setler 0'dan büyük olmalıdır"
-
-    override val errorRepsEmpty = "Tekrarlar boş olamaz"
-    override val errorRepsFormat = "Geçersiz tekrar formatı"
-    override val errorRepsWholeNumber = "Tekrarlar tam sayı olmalıdır"
     override val errorRepsPositive = "Tekrarlar 0'dan büyük olmalıdır"
-
-    override val errorWeightEmpty = "Ağırlık boş olamaz"
-    override val errorWeightFormat = "Geçersiz ağırlık formatı"
     override val errorWeightInvalid = "Geçersiz ağırlık değeri"
     
     override val labelGoToCurrentMonth = "Mevcut aya git"
@@ -135,9 +113,6 @@ object TrStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "Grafik"
     override val labelNoDataForExercise = "Bu egzersiz için henüz kayıt geçmişi yok"
-    override val labelMaxWeight = "Kişisel Rekor"
-    override val labelCurrentWeight = "Son Ağırlık"
-    override val labelProgress = "İlerleme"
     override val labelNoExercises = "Egzersiz bulunamadı. Önce bir egzersiz oluşturun!"
     override val labelCompareBy = "Karşılaştırma ölçütü"
     override val labelGraphMaxWeight = "Ağırlık"
@@ -149,7 +124,6 @@ object TrStrings : EnStrings(
     override val titleUnsavedWork = "Kaydedilmemiş Çalışma"
     override val msgUnsavedWork = "Vazgeçmek mi yoksa kaydetmek mi istersiniz?"
     override val labelDiscard = "Vazgeç"
-    override val labelKeepEditing = "Düzenlemeye Devam Et"
     override val labelEditAction = "Düzenle"
 
     // Exercise Selection Dialog Separators

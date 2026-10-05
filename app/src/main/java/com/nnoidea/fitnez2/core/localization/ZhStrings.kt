@@ -12,7 +12,6 @@ object ZhStrings : EnStrings(
     override val errorExerciseNameBlank = "动作名称不能为空"
 
     override val errorIdMustBeZero = "新动作的 ID 必须为 0"
-    override val errorIdMustNotBeZero = "要更新的动作必须具有非零 ID"
 
     override fun errorExerciseAlreadyExists(name: String) = "名称为 '$name' 的动作已存在"
     override fun errorExerciseRenameConflict(name: String) = "动作名称 '$name' 已被使用"
@@ -22,10 +21,7 @@ object ZhStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "名称为 '$name' 的训练已存在"
     override val errorWorkoutNoExercises = "请至少添加一个动作"
     override val errorWorkoutEmpty = "训练内容为空"
-
-    override val labelAddExercise = "添加动作"
     override val labelCreateExercise = "创建动作"
-    override val labelCreateWorkout = "创建训练"
     override val labelWorkoutName = "训练名称"
     override val labelWorkout = "训练"
     override val labelExercise = "动作"
@@ -35,7 +31,6 @@ object ZhStrings : EnStrings(
     override val labelCancel = "取消"
     override val labelClose = "关闭"
     override val labelDelete = "删除"
-    override val labelSwitchLanguage = "切换语言"
     override val labelAiTranslationsDisclaimer = "翻译由人工智能完成"
 
     override val labelTimeline = "时间线"
@@ -44,14 +39,11 @@ object ZhStrings : EnStrings(
 
     override val labelSets = "组数"
     override val labelReps = "次数"
-    override val labelWeight = "重量"
 
     override fun labelEdit(target: String) = "编辑 $target"
 
     override val labelSelectExercise = "选择一项"
     override val labelWeightUnit = "重量单位"
-    override val labelProgramPlaceholder = "计划页面占位符"
-    override val labelHistoryListPlaceholder = "历史列表占位符"
     override val labelOpenDrawer = "打开导航抽屉"
     override val labelHistoryEmpty = "暂无历史记录。"
     override val labelAppName = "Fitnez2"
@@ -97,8 +89,6 @@ object ZhStrings : EnStrings(
     override val unitLb = "lb"
     override val labelUnknownExercise = "未知动作"
     override val labelOlderRecords = "更早的记录"
-    override val labelRestDay = "休息日"
-    override fun labelExercisesCount(count: Int) = if (count == 1) "1 个动作" else "$count 个动作"
 
     // Developer Options
     override val devColorPalette = "调色板"
@@ -114,18 +104,8 @@ object ZhStrings : EnStrings(
     override val devMoveSlider = "移动滑块以感受不同的振动"
 
     // Validation Errors
-    override val errorSetsEmpty = "组数不能为空"
-    override val errorSetsFormat = "组数格式无效"
-    override val errorSetsWholeNumber = "组数必须是整数"
     override val errorSetsPositive = "组数必须大于 0"
-
-    override val errorRepsEmpty = "次数不能为空"
-    override val errorRepsFormat = "次数格式无效"
-    override val errorRepsWholeNumber = "次数必须是整数"
     override val errorRepsPositive = "次数必须大于 0"
-
-    override val errorWeightEmpty = "重量不能为空"
-    override val errorWeightFormat = "重量格式无效"
     override val errorWeightInvalid = "重量值无效"
     
     override val labelGoToCurrentMonth = "转到当前月份"
@@ -133,9 +113,6 @@ object ZhStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "图表"
     override val labelNoDataForExercise = "该动作暂无记录历史"
-    override val labelMaxWeight = "个人纪录"
-    override val labelCurrentWeight = "最新重量"
-    override val labelProgress = "进度"
     override val labelNoExercises = "未找到动作。请先创建一个动作！"
     override val labelCompareBy = "比较依据"
     override val labelGraphMaxWeight = "重量"
@@ -147,7 +124,6 @@ object ZhStrings : EnStrings(
     override val titleUnsavedWork = "未保存的工作"
     override val msgUnsavedWork = "您想放弃还是保存？"
     override val labelDiscard = "放弃"
-    override val labelKeepEditing = "继续编辑"
     override val labelEditAction = "编辑"
 
     // Exercise Selection Dialog Separators

@@ -12,7 +12,6 @@ object RuStrings : EnStrings(
     override val errorExerciseNameBlank = "Название упражнения не может быть пустым"
 
     override val errorIdMustBeZero = "Новые упражнения должны иметь ID 0"
-    override val errorIdMustNotBeZero = "Записи для обновления должны иметь ненулевой ID"
 
     override fun errorExerciseAlreadyExists(name: String) = "Упражнение с именем '$name' уже существует"
     override fun errorExerciseRenameConflict(name: String) = "Название упражнения '$name' уже используется"
@@ -22,10 +21,7 @@ object RuStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "Тренировка с именем '$name' уже существует"
     override val errorWorkoutNoExercises = "Пожалуйста, добавьте хотя бы одно упражнение"
     override val errorWorkoutEmpty = "Тренировка пуста"
-
-    override val labelAddExercise = "Добавить Упражнение"
     override val labelCreateExercise = "Создать упражнение"
-    override val labelCreateWorkout = "Создать тренировку"
     override val labelWorkoutName = "Название Тренировки"
     override val labelWorkout = "Тренировка"
     override val labelExercise = "Упражнение"
@@ -35,7 +31,6 @@ object RuStrings : EnStrings(
     override val labelCancel = "Отмена"
     override val labelClose = "Закрыть"
     override val labelDelete = "Удалить"
-    override val labelSwitchLanguage = "Сменить Язык"
     override val labelAiTranslationsDisclaimer = "Переводы выполнены искусственным интеллектом"
 
     override val labelTimeline = "Хронология"
@@ -44,14 +39,11 @@ object RuStrings : EnStrings(
 
     override val labelSets = "Подходы"
     override val labelReps = "Повторы"
-    override val labelWeight = "Вес"
 
     override fun labelEdit(target: String) = "Редактировать $target"
 
     override val labelSelectExercise = "Выберите Что-нибудь"
     override val labelWeightUnit = "Единица Веса"
-    override val labelProgramPlaceholder = "Заглушка Страницы Программы"
-    override val labelHistoryListPlaceholder = "Заглушка Списка Истории"
     override val labelOpenDrawer = "Открыть Панель Навигации"
     override val labelHistoryEmpty = "Истории пока нет."
     override val labelAppName = "Fitnez2"
@@ -97,14 +89,6 @@ object RuStrings : EnStrings(
     override val unitLb = "фунт"
     override val labelUnknownExercise = "Неизвестное упражнение"
     override val labelOlderRecords = "Более старые записи"
-    override val labelRestDay = "День отдыха"
-    
-    override fun labelExercisesCount(count: Int) = when {
-        count % 100 in 11..14 -> "$count упражнений"
-        count % 10 == 1 -> "$count упражнение"
-        count % 10 in 2..4 -> "$count упражнения"
-        else -> "$count упражнений"
-    }
 
     // Developer Options
     override val devColorPalette = "Цветовая палитра"
@@ -120,18 +104,8 @@ object RuStrings : EnStrings(
     override val devMoveSlider = "Перемещайте ползунок, чтобы почувствовать разные вибрации"
 
     // Validation Errors
-    override val errorSetsEmpty = "Подходы не могут быть пустыми"
-    override val errorSetsFormat = "Неверный формат подходов"
-    override val errorSetsWholeNumber = "Подходы должны быть целым числом"
     override val errorSetsPositive = "Подходы должны быть больше 0"
-
-    override val errorRepsEmpty = "Повторы не могут быть пустыми"
-    override val errorRepsFormat = "Неверный формат повторов"
-    override val errorRepsWholeNumber = "Повторы должны быть целым числом"
     override val errorRepsPositive = "Повторы должны быть больше 0"
-
-    override val errorWeightEmpty = "Вес не может быть пустым"
-    override val errorWeightFormat = "Неверный формат веса"
     override val errorWeightInvalid = "Неверное значение веса"
     
     override val labelGoToCurrentMonth = "Перейти к текущему месяцу"
@@ -139,9 +113,6 @@ object RuStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "График"
     override val labelNoDataForExercise = "Истории записей для этого упражнения пока нет"
-    override val labelMaxWeight = "Личный Рекорд"
-    override val labelCurrentWeight = "Последний Вес"
-    override val labelProgress = "Прогресс"
     override val labelNoExercises = "Упражнения не найдены. Сначала создайте упражнение!"
     override val labelCompareBy = "Сравнить по"
     override val labelGraphMaxWeight = "Вес"
@@ -153,7 +124,6 @@ object RuStrings : EnStrings(
     override val titleUnsavedWork = "Несохраненная Работа"
     override val msgUnsavedWork = "Хотите закрыть или сохранить?"
     override val labelDiscard = "Отменить"
-    override val labelKeepEditing = "Продолжить Редактирование"
     override val labelEditAction = "Редактировать"
 
     // Exercise Selection Dialog Separators

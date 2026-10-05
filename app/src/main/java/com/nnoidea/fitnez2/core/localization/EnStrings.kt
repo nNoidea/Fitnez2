@@ -16,7 +16,6 @@ sealed class EnStrings(
     open val errorExerciseNameBlank: String = "Exercise name cannot be empty or blank"
 
     open val errorIdMustBeZero: String = "New exercises must have an ID of 0. Use update() for existing exercises."
-    open val errorIdMustNotBeZero: String = "Records to update must have a non-zero ID. Use create() for new exercises."
 
     open fun errorExerciseAlreadyExists(name: String): String = "Exercise with name '$name' already exists."
     open fun errorExerciseRenameConflict(name: String): String = "Exercise name '$name' is already used by another exercise."
@@ -27,10 +26,7 @@ sealed class EnStrings(
     open fun errorWorkoutAlreadyExists(name: String): String = "Workout with name '$name' already exists."
     open val errorWorkoutNoExercises: String = "Please add at least one exercise"
     open val errorWorkoutEmpty: String = "Workout is empty"
-
-    open val labelAddExercise: String = "Add Exercise"
     open val labelCreateExercise: String = "Create an exercise"
-    open val labelCreateWorkout: String = "Create a workout"
     open val labelWorkoutName: String = "Workout Name"
     open val labelWorkout: String = "Workout"
     open val labelExercise: String = "Exercise"
@@ -40,7 +36,6 @@ sealed class EnStrings(
     open val labelCancel: String = "Cancel"
     open val labelClose: String = "Close"
     open val labelDelete: String = "Delete"
-    open val labelSwitchLanguage: String = "Switch Language"
     open val labelAiTranslationsDisclaimer: String = "Translations are done by Artificial Intelligence"
 
     open val labelTimeline: String = "Timeline"
@@ -49,12 +44,6 @@ sealed class EnStrings(
 
     open val labelSets: String = "Sets"
     open val labelReps: String = "Reps"
-    open val labelWeight: String = "Weight"
-
-    open fun formatDate(timestamp: Long): String {
-        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy - EEEE", appLocale)
-        return sdf.format(java.util.Date(timestamp)).lowercase()
-    }
 
     open fun formatDateShort(timestamp: Long): String {
         val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", appLocale)
@@ -71,15 +60,11 @@ sealed class EnStrings(
 
     open val labelSelectExercise: String = "Select Something"
     open val labelWeightUnit: String = "Weight Unit"
-    open val labelProgramPlaceholder: String = "Program Page Placeholder"
-    open val labelHistoryListPlaceholder: String = "History List Placeholder"
     open val labelOpenDrawer: String = "Open Navigation Drawer"
     open val labelHistoryEmpty: String = "No history yet."
     open val labelAppName: String = "Fitnez2"
     open val labelVersion: String = "1.0.0"
     open val labelEditExercise: String = "Edit Exercise"
-
-    open fun labelWeightWithUnit(unit: String): String = "$labelWeight ($unit)"
 
     open val labelRecordDeleted: String = "Record deleted"
     open val labelRecordsDeleted: String = "Records deleted"
@@ -107,9 +92,8 @@ sealed class EnStrings(
 
     open val labelNightMode: String = "Night Mode"
     open val labelNightModeDescription: String = "Early morning workouts before this hour are counted as part of the previous day."
-    open val labelNightModeOff: String = "Off (00:00)"
     open fun labelNightModeHour(hour: Int): String = when (hour) {
-        0 -> labelNightModeOff
+        0 -> "Off (00:00)"
         12 -> "12:00 (Noon)"
         else -> String.format(java.util.Locale.US, "%02d:00", hour)
     }
@@ -129,8 +113,6 @@ sealed class EnStrings(
     open val unitLb: String = "lb"
     open val labelUnknownExercise: String = "Unknown Exercise"
     open val labelOlderRecords: String = "Older Records"
-    open val labelRestDay: String = "Rest Day"
-    open fun labelExercisesCount(count: Int): String = if (count == 1) "1 exercise" else "$count exercises"
 
     // Developer Options
     open val devColorPalette: String = "Color Palette"
@@ -143,24 +125,13 @@ sealed class EnStrings(
     open val devWipeAndGenerate: String = "Wipe & Generate"
     open val devGeneratingData: String = "Generating Data..."
     open val labelClearingDatabase: String = "Clearing database..."
-    open val labelImportingData: String = "Importing data..."
     open val labelExportingData: String = "Exporting data..."
     open val devHapticsTest: String = "Haptics Test"
     open val devMoveSlider: String = "Move slider to feel different vibrations"
 
     // Validation Errors
-    open val errorSetsEmpty: String = "Sets cannot be empty"
-    open val errorSetsFormat: String = "Invalid sets format"
-    open val errorSetsWholeNumber: String = "Sets must be a whole number"
     open val errorSetsPositive: String = "Sets must be greater than 0"
-
-    open val errorRepsEmpty: String = "Reps cannot be empty"
-    open val errorRepsFormat: String = "Invalid reps format"
-    open val errorRepsWholeNumber: String = "Reps must be a whole number"
     open val errorRepsPositive: String = "Reps must be greater than 0"
-
-    open val errorWeightEmpty: String = "Weight cannot be empty"
-    open val errorWeightFormat: String = "Invalid weight format"
     open val errorWeightInvalid: String = "Invalid weight value"
     
     open val labelGoToCurrentMonth: String = "Go to current month"
@@ -168,9 +139,6 @@ sealed class EnStrings(
     // Graph Screen Translations
     open val labelGraph: String = "Graph"
     open val labelNoDataForExercise: String = "No record history for this exercise yet"
-    open val labelMaxWeight: String = "Personal Record"
-    open val labelCurrentWeight: String = "Latest Weight"
-    open val labelProgress: String = "Progress"
     open val labelNoExercises: String = "No exercises found. Create an exercise first!"
     open val labelCompareBy: String = "Compare by"
     open val labelGraphMaxWeight: String = "Weight"
@@ -183,7 +151,6 @@ sealed class EnStrings(
     open val titleUnsavedWork: String = "Unsaved Work"
     open val msgUnsavedWork: String = "Would you like to discard or save?"
     open val labelDiscard: String = "Discard"
-    open val labelKeepEditing: String = "Keep Editing"
     open val labelEditAction: String = "Edit"
 
     // Exercise Selection Dialog Separators

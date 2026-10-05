@@ -12,7 +12,6 @@ object ArStrings : EnStrings(
     override val errorExerciseNameBlank = "لا يمكن أن يكون اسم التمرين فارغًا"
 
     override val errorIdMustBeZero = "يجب أن يكون معرف التمرين الجديد 0"
-    override val errorIdMustNotBeZero = "يجب ألا يكون معرف التمرين للتحديث صفرًا"
 
     override fun errorExerciseAlreadyExists(name: String) = "التمرين بالاسم '$name' موجود بالفعل"
     override fun errorExerciseRenameConflict(name: String) = "اسم التمرين '$name' قيد الاستخدام بالفعل"
@@ -22,10 +21,7 @@ object ArStrings : EnStrings(
     override fun errorWorkoutAlreadyExists(name: String) = "التمرين بالاسم '$name' موجود بالفعل"
     override val errorWorkoutNoExercises = "يرجى إضافة تمرين واحد على الأقل"
     override val errorWorkoutEmpty = "التمرين فارغ"
-
-    override val labelAddExercise = "إضافة تمرين"
     override val labelCreateExercise = "إنشاء تمرين"
-    override val labelCreateWorkout = "إنشاء تدريب"
     override val labelWorkoutName = "اسم التدريب"
     override val labelWorkout = "تدريب"
     override val labelExercise = "تمرين"
@@ -35,7 +31,6 @@ object ArStrings : EnStrings(
     override val labelCancel = "إلغاء"
     override val labelClose = "إغلاق"
     override val labelDelete = "حذف"
-    override val labelSwitchLanguage = "تغيير اللغة"
     override val labelAiTranslationsDisclaimer = "الترجمات تمت بواسطة الذكاء الاصطناعي"
 
     override val labelTimeline = "الجدول الزمني"
@@ -44,14 +39,11 @@ object ArStrings : EnStrings(
 
     override val labelSets = "مجموعات"
     override val labelReps = "تكرارات"
-    override val labelWeight = "الوزن"
 
     override fun labelEdit(target: String) = "تعديل $target"
 
     override val labelSelectExercise = "اختر شيئًا"
     override val labelWeightUnit = "وحدة الوزن"
-    override val labelProgramPlaceholder = "نائب صفحة البرنامج"
-    override val labelHistoryListPlaceholder = "نائب قائمة السجل"
     override val labelOpenDrawer = "افتح درج التنقل"
     override val labelHistoryEmpty = "لا يوجد سجل بعد."
     override val labelAppName = "Fitnez2"
@@ -97,14 +89,6 @@ object ArStrings : EnStrings(
     override val unitLb = "رطل"
     override val labelUnknownExercise = "تمرين غير معروف"
     override val labelOlderRecords = "السجلات القديمة"
-    override val labelRestDay = "يوم راحة"
-    
-    override fun labelExercisesCount(count: Int) = when {
-        count == 1 -> "تمرين واحد"
-        count == 2 -> "تمرينان"
-        count in 3..10 -> "$count تمارين"
-        else -> "$count تمرينًا"
-    }
 
     // Developer Options
     override val devColorPalette = "لوحة الألوان"
@@ -120,18 +104,8 @@ object ArStrings : EnStrings(
     override val devMoveSlider = "حرك شريط التمرير للشعور بالاهتزازات المختلفة"
 
     // Validation Errors
-    override val errorSetsEmpty = "لا يمكن أن تكون المجموعات فارغة"
-    override val errorSetsFormat = "تنسيق مجموعات غير صالح"
-    override val errorSetsWholeNumber = "يجب أن تكون المجموعات عددًا صحيحًا"
     override val errorSetsPositive = "يجب أن تكون المجموعات أكبر من 0"
-
-    override val errorRepsEmpty = "لا يمكن أن تكون التكرارات فارغة"
-    override val errorRepsFormat = "تنسيق تكرارات غير صالح"
-    override val errorRepsWholeNumber = "يجب أن تكون التكرارات عددًا صحيحًا"
     override val errorRepsPositive = "يجب أن تكون التكرارات أكبر من 0"
-
-    override val errorWeightEmpty = "لا يمكن أن يكون الوزن فارغًا"
-    override val errorWeightFormat = "تنسيق وزن غير صالح"
     override val errorWeightInvalid = "قيمة وزن غير صالحة"
     
     override val labelGoToCurrentMonth = "الانتقال إلى الشهر الحالي"
@@ -139,9 +113,6 @@ object ArStrings : EnStrings(
     // Graph Screen Translations
     override val labelGraph = "الرسم البياني"
     override val labelNoDataForExercise = "لا يوجد سجل سجلات لهذا التمرين بعد"
-    override val labelMaxWeight = "الرقم القياسي الشخصي"
-    override val labelCurrentWeight = "الوزن الأخير"
-    override val labelProgress = "التقدم"
     override val labelNoExercises = "لم يتم العثور على تمارين. أنشئ تمرينًا أولاً!"
     override val labelCompareBy = "قارن حسب"
     override val labelGraphMaxWeight = "الوزن"
@@ -153,7 +124,6 @@ object ArStrings : EnStrings(
     override val titleUnsavedWork = "عمل غير محفوظ"
     override val msgUnsavedWork = "هل تريد التجاهل أم الحفظ؟"
     override val labelDiscard = "تجاهل"
-    override val labelKeepEditing = "مواصلة التعديل"
     override val labelEditAction = "تعديل"
 
     // Exercise Selection Dialog Separators
