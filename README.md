@@ -1,17 +1,8 @@
 # Fitnez2
 
-<p align="center">
-  <img src="icon.png" width="256" alt="Fitnez2 App Icon"/>
-  <video src="https://github.com/user-attachments/assets/6db285a7-396c-4f0c-8df2-8765259d5d80" width="256" autoplay loop muted />
-</p>
+# Screenshots
 
-
-
-
-
-
-
-
+![](screenshots/img1.png)
 
 A fitness tracking app for your weight exercises, specially made with Material 3 Expressive + own custom expressive components that go even further than the Material 3 Expressive library.
 
