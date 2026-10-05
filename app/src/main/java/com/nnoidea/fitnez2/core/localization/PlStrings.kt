@@ -47,7 +47,6 @@ object PlStrings : EnStrings(
     override val labelOpenDrawer = "Otwórz Menu Nawigacji"
     override val labelHistoryEmpty = "Brak historii."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "Edytuj ćwiczenie"
 
     override val labelRecordDeleted = "Rekord usunięty"

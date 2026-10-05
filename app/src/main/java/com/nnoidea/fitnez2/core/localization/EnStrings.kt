@@ -63,7 +63,6 @@ sealed class EnStrings(
     open val labelOpenDrawer: String = "Open Navigation Drawer"
     open val labelHistoryEmpty: String = "No history yet."
     open val labelAppName: String = "Fitnez2"
-    open val labelVersion: String = "1.0.0"
     open val labelEditExercise: String = "Edit Exercise"
 
     open val labelRecordDeleted: String = "Record deleted"

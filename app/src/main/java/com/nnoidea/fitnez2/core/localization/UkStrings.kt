@@ -47,7 +47,6 @@ object UkStrings : EnStrings(
     override val labelOpenDrawer = "Відкрити Панель Навігації"
     override val labelHistoryEmpty = "Історії ще немає."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "Редагувати вправу"
 
     override val labelRecordDeleted = "Запис видалено"

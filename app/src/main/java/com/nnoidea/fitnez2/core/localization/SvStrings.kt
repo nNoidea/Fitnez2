@@ -47,7 +47,6 @@ object SvStrings : EnStrings(
     override val labelOpenDrawer = "Öppna Navigeringsmeny"
     override val labelHistoryEmpty = "Ingen historik ännu."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "Redigera övning"
 
     override val labelRecordDeleted = "Post borttagen"

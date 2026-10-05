@@ -47,7 +47,6 @@ object ItStrings : EnStrings(
     override val labelOpenDrawer = "Apri Menu Di Navigazione"
     override val labelHistoryEmpty = "Nessuna cronologia ancora."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "Modifica esercizio"
 
     override val labelRecordDeleted = "Record eliminato"

@@ -47,7 +47,6 @@ object KoStrings : EnStrings(
     override val labelOpenDrawer = "탐색 창 열기"
     override val labelHistoryEmpty = "아직 기록이 없습니다."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "운동 수정"
 
     override val labelRecordDeleted = "기록이 삭제되었습니다"

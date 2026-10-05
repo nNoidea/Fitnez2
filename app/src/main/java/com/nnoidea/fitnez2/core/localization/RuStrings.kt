@@ -47,7 +47,6 @@ object RuStrings : EnStrings(
     override val labelOpenDrawer = "Открыть Панель Навигации"
     override val labelHistoryEmpty = "Истории пока нет."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "Редактировать упражнение"
 
     override val labelRecordDeleted = "Запись удалена"

@@ -47,7 +47,6 @@ object JaStrings : EnStrings(
     override val labelOpenDrawer = "ナビゲーションドロワーを開く"
     override val labelHistoryEmpty = "履歴はまだありません。"
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "種目を編集"
 
     override val labelRecordDeleted = "レコードが削除されました"

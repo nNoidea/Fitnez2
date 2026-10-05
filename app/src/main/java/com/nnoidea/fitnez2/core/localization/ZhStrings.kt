@@ -47,7 +47,6 @@ object ZhStrings : EnStrings(
     override val labelOpenDrawer = "打开导航抽屉"
     override val labelHistoryEmpty = "暂无历史记录。"
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "编辑动作"
 
     override val labelRecordDeleted = "记录已删除"

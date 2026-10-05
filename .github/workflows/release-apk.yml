@@ -1,37 +1,80 @@
-name: Build and Release Production APK
+name: Release APK
 
+# Fires on every push to main, but only does work when the VERSION file changed.
+# A version bump on main is therefore the release trigger.
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read VERSION
+        id: ver
+        run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if VERSION did not change
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet HEAD^ HEAD -- VERSION; then
+            echo "VERSION unchanged, nothing to release."
+            echo "release=false" >> "$GITHUB_ENV"
+          else
+            echo "release=true" >> "$GITHUB_ENV"
+            echo "VERSION changed: ${{ steps.ver.outputs.version }}"
+          fi
 
       - name: Set up JDK 17
+        if: env.release != 'false'
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
 
+      - name: Skip if tag already exists
+        if: env.release != 'false'
+        run: |
+          if git rev-parse "refs/tags/${{ steps.ver.outputs.version }}" >/dev/null 2>&1; then
+            echo "Tag ${{ steps.ver.outputs.version }} already exists, nothing to do."
+            echo "release=false" >> "$GITHUB_ENV"
+          else
+            echo "release=true" >> "$GITHUB_ENV"
+          fi
+
       - name: Grant execute permission for gradlew
+        if: env.release != 'false'
         run: chmod +x gradlew
 
-      - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest
+      - name: Verify build
+        if: env.release != 'false'
+        run: ./gradlew detekt lintDebug testDebugUnitTest assembleRelease
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
+      - name: Create tag
+        if: env.release != 'false'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.ver.outputs.version }}"
+          git push origin "refs/tags/${{ steps.ver.outputs.version }}"
 
-      - name: Upload Release APK
-        uses: softprops/action-gh-release@v2
-        with:
-          files: app/build/outputs/apk/release/*.apk
+      - name: Publish GitHub release with APK
+        if: env.release != 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.ver.outputs.version }}" \
+            --title "${{ steps.ver.outputs.version }}" \
+            --generate-notes \
+            app/build/outputs/apk/release/*.apk

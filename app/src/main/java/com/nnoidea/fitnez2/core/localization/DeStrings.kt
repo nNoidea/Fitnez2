@@ -47,7 +47,6 @@ object DeStrings : EnStrings(
     override val labelOpenDrawer = "Navigationsmenü Öffnen"
     override val labelHistoryEmpty = "Noch kein Verlauf."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "Übung Bearbeiten"
 
     override val labelRecordDeleted = "Datensatz gelöscht"

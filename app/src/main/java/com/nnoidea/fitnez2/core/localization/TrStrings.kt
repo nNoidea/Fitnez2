@@ -47,7 +47,6 @@ object TrStrings : EnStrings(
     override val labelOpenDrawer: String = "Navigasyon Menüsünü Aç"
     override val labelHistoryEmpty: String = "Henüz geçmiş yok."
     override val labelAppName: String = "Fitnez2" // Usually brand names don't change, but good to have control
-    override val labelVersion: String = "1.0.0"
     override val labelEditExercise: String = "Egzersizi Düzenle"
 
     override val labelRecordDeleted: String = "Kayıt silindi"

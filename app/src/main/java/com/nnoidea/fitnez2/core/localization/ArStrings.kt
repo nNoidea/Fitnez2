@@ -47,7 +47,6 @@ object ArStrings : EnStrings(
     override val labelOpenDrawer = "افتح درج التنقل"
     override val labelHistoryEmpty = "لا يوجد سجل بعد."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "تعديل التمرين"
 
     override val labelRecordDeleted = "تم حذف السجل"

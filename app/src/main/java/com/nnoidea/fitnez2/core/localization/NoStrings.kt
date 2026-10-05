@@ -47,7 +47,6 @@ object NoStrings : EnStrings(
     override val labelOpenDrawer = "Åpne Navigasjonsskuff"
     override val labelHistoryEmpty = "Ingen historikk ennå."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "Rediger øvelse"
 
     override val labelRecordDeleted = "Oppføring slettet"

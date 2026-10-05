@@ -47,7 +47,6 @@ object IdStrings : EnStrings(
     override val labelOpenDrawer = "Buka Menu Navigasi"
     override val labelHistoryEmpty = "Belum ada riwayat."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "Edit Latihan"
 
     override val labelRecordDeleted = "Rekor dihapus"

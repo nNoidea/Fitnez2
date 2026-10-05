@@ -47,7 +47,6 @@ object DaStrings : EnStrings(
     override val labelOpenDrawer = "Åbn Navigationsmenu"
     override val labelHistoryEmpty = "Ingen historik endnu."
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "Rediger øvelse"
 
     override val labelRecordDeleted = "Optegnelse slettet"

@@ -47,7 +47,6 @@ object HiStrings : EnStrings(
     override val labelOpenDrawer = "नेविगेशन ड्रॉअर खोलें"
     override val labelHistoryEmpty = "अभी तक कोई इतिहास नहीं है।"
     override val labelAppName = "Fitnez2"
-    override val labelVersion = "1.0.0"
     override val labelEditExercise = "व्यायाम संपादित करें"
 
     override val labelRecordDeleted = "रिकॉर्ड हटाया गया"

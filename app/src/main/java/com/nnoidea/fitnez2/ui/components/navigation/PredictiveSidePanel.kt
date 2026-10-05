@@ -1,5 +1,6 @@
 package com.nnoidea.fitnez2.ui.components.navigation
 
+import com.nnoidea.fitnez2.BuildConfig
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -110,7 +111,7 @@ fun PredictiveSidePanel(
                 onClick = { onItemClick(AppPage.Settings.route) }
             )
             DrawerNavItem(
-                label = globalLocalization.labelVersion,
+                label = BuildConfig.VERSION_NAME,
                 icon = Icons.Default.Info,
                 onClick = {}
             )
