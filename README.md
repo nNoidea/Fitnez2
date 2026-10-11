@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" width="256" height="256" alt="niri-bar icon" />
+</div>
+
 # Fitnez2
 
 A fitness tracking app for your weight exercises, specially made with Material 3 Expressive + own custom expressive components that go even further than the Material 3 Expressive library. BIG buttons and as frictionless UX as possible! You just lift!
