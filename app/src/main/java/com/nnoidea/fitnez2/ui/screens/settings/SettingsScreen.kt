@@ -110,7 +110,7 @@ fun SettingsScreen(
         title = globalLocalization.labelSettings,
         onOpenDrawer = onOpenDrawer
     ) {
-        // Group 1: General Preferences & Appearance
+        // Group 1: Language, in-app fonts, auto-rotate
         SettingsGroup {
             // Language Setting
             val languageOptions = listOf<EnStrings?>(null) + supportedLanguages
@@ -125,6 +125,31 @@ fun SettingsScreen(
                 onSelected = { globalState.switchLanguage(it) },
                 labelProvider = { it?.languageName ?: globalLocalization.labelSystemLanguage },
                 bodyText = globalLocalization.labelAiTranslationsDisclaimer
+            )
+
+            // In-App Font Setting
+            val fontLabel = when (globalState.fontMode) {
+                "system" -> globalLocalization.labelFontSystemDefault
+                "rounded" -> globalLocalization.labelFontGoogleSansFlexRounded
+                else -> globalLocalization.labelFontSystemDefault
+            }
+
+            radioItem(
+                label = globalLocalization.labelInAppFont,
+                value = fontLabel,
+                icon = Icons.Default.Edit,
+                iconContainerColor = errorContainer.copy(alpha = 0.8f),
+                iconTint = onErrorContainer,
+                options = listOf("system", "rounded"),
+                selected = globalState.fontMode,
+                onSelected = { globalState.switchFontMode(it) },
+                labelProvider = {
+                    when (it) {
+                        "system" -> globalLocalization.labelFontSystemDefault
+                        "rounded" -> globalLocalization.labelFontGoogleSansFlexRounded
+                        else -> ""
+                    }
+                }
             )
 
             // Rotation Setting
@@ -153,7 +178,10 @@ fun SettingsScreen(
                     }
                 }
             )
+        }
 
+        // Group 2: Weight Unit, default exercise values, night owl mode
+        SettingsGroup {
             // Weight Unit Setting
             radioItem(
                 label = globalLocalization.labelWeightUnit,
@@ -167,7 +195,17 @@ fun SettingsScreen(
                 labelProvider = { it }
             )
 
-            // Night Mode Setting
+            // Default Exercise Values Setting
+            item(
+                label = globalLocalization.labelDefaultExerciseValues,
+                value = "$defaultSets x $defaultReps @ $defaultWeight",
+                icon = Icons.Default.Star,
+                iconContainerColor = primaryContainer.copy(alpha = 0.6f),
+                iconTint = primary,
+                onClick = { showDefaultsDialog = true }
+            )
+
+            // Night Owl Mode Setting
             val nightModeOptions = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
             radioItem(
                 label = globalLocalization.labelNightMode,
@@ -180,41 +218,6 @@ fun SettingsScreen(
                 onSelected = { globalState.switchNightModeHour(it) },
                 labelProvider = { globalLocalization.labelNightModeHour(it) },
                 bodyText = globalLocalization.labelNightModeDescription
-            )
-
-            // In-App Font Setting
-            val fontLabel = when (globalState.fontMode) {
-                "system" -> globalLocalization.labelFontSystemDefault
-                "rounded" -> globalLocalization.labelFontGoogleSansFlexRounded
-                else -> globalLocalization.labelFontSystemDefault
-            }
-
-            radioItem(
-                label = globalLocalization.labelInAppFont,
-                value = fontLabel,
-                icon = Icons.Default.Edit,
-                iconContainerColor = errorContainer.copy(alpha = 0.8f),
-                iconTint = onErrorContainer,
-                options = listOf("system", "rounded"),
-                selected = globalState.fontMode,
-                onSelected = { globalState.switchFontMode(it) },
-                labelProvider = {
-                    when (it) {
-                        "system" -> globalLocalization.labelFontSystemDefault
-                        "rounded" -> globalLocalization.labelFontGoogleSansFlexRounded
-                        else -> ""
-                    }
-                }
-            )
-
-            // Default Exercise Values Setting
-            item(
-                label = globalLocalization.labelDefaultExerciseValues,
-                value = "$defaultSets x $defaultReps @ $defaultWeight",
-                icon = Icons.Default.Star,
-                iconContainerColor = primaryContainer.copy(alpha = 0.6f),
-                iconTint = primary,
-                onClick = { showDefaultsDialog = true }
             )
         }
 

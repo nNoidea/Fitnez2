@@ -17,7 +17,6 @@ import com.nnoidea.fitnez2.data.entities.Record
  * 3. Rep progressions on working sets (e.g. 9,9,6 vs 9,9,7 at 6.25kg) show clear, distinguishable strength gains.
  */
 object OneRmConfig {
-    const val EPLEY_REP_DIVISOR = 30.0
     const val VOLUME_BONUS_RATIO = 0.20
     const val MAX_VOLUME_BONUS_FRACTION_OF_PEAK = 0.30
 }
@@ -26,7 +25,7 @@ fun calculateDayOneRm(records: List<Record>): Double {
     if (records.isEmpty()) return 0.0
     val bases = records.map {
         if (it.weight <= 0.0 || it.reps <= 0) 0.0
-        else it.weight * (1.0 + it.reps / OneRmConfig.EPLEY_REP_DIVISOR)
+        else it.weight * (1.0 + it.reps / 30.0)
     }
     val peak = bases.maxOrNull() ?: 0.0
     if (peak <= 0.0) return 0.0
@@ -35,7 +34,7 @@ fun calculateDayOneRm(records: List<Record>): Double {
     // The peak set is the primary lift. Extra volume beyond the peak set is the rep-work performed in supplementary sets.
     val repWorks = records.map {
         if (it.weight <= 0.0 || it.reps <= 0) 0.0
-        else it.weight * (it.reps / OneRmConfig.EPLEY_REP_DIVISOR)
+        else it.weight * (it.reps / 30.0)
     }
     val peakIndex = bases.indexOf(peak)
     val peakRepWork = if (peakIndex >= 0) repWorks[peakIndex] else 0.0

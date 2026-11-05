@@ -89,7 +89,7 @@ sealed class EnStrings(
     open val labelRotationOn: String = "On"
     open val labelRotationOff: String = "Off"
 
-    open val labelNightMode: String = "Night Mode"
+    open val labelNightMode: String = "Night Owl Mode"
     open val labelNightModeDescription: String = "Early morning workouts before this hour are counted as part of the previous day."
     open fun labelNightModeHour(hour: Int): String = when (hour) {
         0 -> "Off (00:00)"

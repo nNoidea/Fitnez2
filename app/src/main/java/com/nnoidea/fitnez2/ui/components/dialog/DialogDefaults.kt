@@ -132,3 +132,16 @@ internal fun DialogDismissButton(label: String, onDismiss: () -> Unit) {
         Text(label)
     }
 }
+
+@Composable
+internal fun DialogDestructiveButton(label: String, onClick: () -> Unit) {
+    val view = LocalView.current
+    TextButton(
+        onClick = {
+            DialogDefaults.performDismissHaptic(view)
+            onClick()
+        }
+    ) {
+        Text(label, color = MaterialTheme.colorScheme.error)
+    }
+}

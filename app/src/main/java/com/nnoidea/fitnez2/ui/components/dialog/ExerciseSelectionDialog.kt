@@ -1,7 +1,11 @@
 package com.nnoidea.fitnez2.ui.components.dialog
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,13 +13,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +35,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import android.content.Intent
+import android.os.VibrationEffect
 import androidx.compose.ui.platform.LocalContext
 import com.nnoidea.fitnez2.core.localization.globalLocalization
 import com.nnoidea.fitnez2.data.entities.Exercise
@@ -37,7 +43,10 @@ import com.nnoidea.fitnez2.data.entities.Workout
 import com.nnoidea.fitnez2.service.ExerciseService
 import com.nnoidea.fitnez2.service.WorkoutService
 import com.nnoidea.fitnez2.MainActivity
+import com.nnoidea.fitnez2.ui.components.haptics.HapticEngine
 import com.nnoidea.fitnez2.ui.navigation.AppPage
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -128,8 +137,7 @@ fun ExerciseSelectionDialog(
                     isSelected = exercise.id == selectedExerciseId,
                     testTag = "exercise_option_${exercise.name}",
                     onSelect = { onExerciseSelected(exercise) },
-                    onEdit = { exerciseToEdit = exercise },
-                    onDelete = { exerciseToDelete = exercise }
+                    onEdit = { exerciseToEdit = exercise }
                 )
             }
         }
@@ -160,6 +168,12 @@ fun ExerciseSelectionDialog(
         label = globalLocalization.labelExerciseName,
         confirmLabel = globalLocalization.labelSave,
         cancelLabel = globalLocalization.labelCancel,
+        deleteLabel = globalLocalization.labelDelete,
+        onDelete = {
+            val toDelete = exerciseToEdit
+            exerciseToEdit = null
+            exerciseToDelete = toDelete
+        },
         onDismissRequest = { exerciseToEdit = null },
         onConfirm = { newName ->
             exerciseToEdit?.let { exercise ->
@@ -215,6 +229,7 @@ fun ExerciseSelectionDialog(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SelectionItemRow(
     name: String,
@@ -224,7 +239,36 @@ private fun SelectionItemRow(
     onDelete: (() -> Unit)? = null,
     testTag: String? = null
 ) {
+    val context = LocalContext.current
     val view = LocalView.current
+    val scope = rememberCoroutineScope()
+    val interactionSource = remember { MutableInteractionSource() }
+
+    LaunchedEffect(interactionSource, onEdit) {
+        var chargeupJob: Job? = null
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    if (onEdit != null) {
+                        chargeupJob?.cancel()
+                        chargeupJob = scope.launch {
+                            delay(100)
+                            HapticEngine.playPrimitive(
+                                context,
+                                VibrationEffect.Composition.PRIMITIVE_QUICK_RISE,
+                                0.7f
+                            )
+                        }
+                    }
+                }
+                is PressInteraction.Release, is PressInteraction.Cancel -> {
+                    chargeupJob?.cancel()
+                    chargeupJob = null
+                }
+            }
+        }
+    }
+
     val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
     val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
 
@@ -234,10 +278,22 @@ private fun SelectionItemRow(
             .background(containerColor, RoundedCornerShape(12.dp))
             .clip(RoundedCornerShape(12.dp))
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
-            .clickable {
-                DialogDefaults.performItemClickHaptic(view)
-                onSelect()
-            }
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.material3.ripple(),
+                onClick = {
+                    DialogDefaults.performItemClickHaptic(view)
+                    onSelect()
+                },
+                onLongClick = if (onEdit != null) {
+                    {
+                        HapticEngine.performSpringSnap(context)
+                        HapticEngine.performConfirm(view)
+                        onEdit()
+                    }
+                } else null,
+                onLongClickLabel = if (onEdit != null) globalLocalization.labelEdit(name) else null
+            )
             .padding(vertical = 12.dp, horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -249,21 +305,6 @@ private fun SelectionItemRow(
             color = contentColor,
             modifier = Modifier.weight(1f)
         )
-
-        if (onEdit != null) {
-            IconButton(
-                onClick = {
-                    DialogDefaults.performItemClickHaptic(view)
-                    onEdit()
-                }
-            ) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = globalLocalization.labelEdit(name),
-                    tint = if (isSelected) contentColor else MaterialTheme.colorScheme.primary
-                )
-            }
-        }
 
         if (onDelete != null) {
             IconButton(

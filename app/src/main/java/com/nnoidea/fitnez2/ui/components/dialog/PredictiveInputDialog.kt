@@ -29,8 +29,11 @@ fun PredictiveInputDialog(
     placeholder: String? = null,
     confirmLabel: String = globalLocalization.labelSave,
     cancelLabel: String = globalLocalization.labelCancel,
+    deleteLabel: String = globalLocalization.labelDelete,
     dismissOnClickOutside: Boolean = true,
     dismissOnBackPress: Boolean = true,
+    onDelete: (() -> Unit)? = null,
+    neutralButton: (@Composable () -> Unit)? = null,
     onConfirm: (String) -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -42,6 +45,22 @@ fun PredictiveInputDialog(
         }
     }
 
+    val effectiveNeutralButton: (@Composable () -> Unit)? = when {
+        onDelete != null -> {
+            {
+                DialogDestructiveButton(
+                    label = deleteLabel,
+                    onClick = {
+                        keyboardController?.hide()
+                        onDelete()
+                    }
+                )
+            }
+        }
+        neutralButton != null -> neutralButton
+        else -> null
+    }
+
     PredictiveAlertDialog(
         show = show,
         onDismissRequest = onDismissRequest,
@@ -49,6 +68,7 @@ fun PredictiveInputDialog(
         modifier = modifier,
         dismissOnClickOutside = dismissOnClickOutside,
         dismissOnBackPress = dismissOnBackPress,
+        neutralButton = effectiveNeutralButton,
         confirmButton = {
             DialogConfirmButton(
                 label = confirmLabel,

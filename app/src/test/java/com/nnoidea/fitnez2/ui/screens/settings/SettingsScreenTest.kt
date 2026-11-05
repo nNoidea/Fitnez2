@@ -1,5 +1,6 @@
 package com.nnoidea.fitnez2.ui.screens.settings
 
+import android.content.Context
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
@@ -11,11 +12,21 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import com.nnoidea.fitnez2.core.localization.LocalizationManager
+import com.nnoidea.fitnez2.data.AppDatabase
+import com.nnoidea.fitnez2.service.SettingsService
+import com.nnoidea.fitnez2.ui.common.ProvideGlobalUiState
+import com.nnoidea.fitnez2.ui.common.rememberGlobalUiState
 import com.nnoidea.fitnez2.ui.components.SettingsGroup
 import com.nnoidea.fitnez2.ui.components.SettingsPageScaffold
 import com.nnoidea.fitnez2.ui.theme.Fitnez2Theme
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -180,6 +191,24 @@ class SettingsScreenTest {
         assertTrue(clicked)
     }
 
+    private lateinit var database: AppDatabase
+    private lateinit var settingsService: SettingsService
+
+    @Before
+    fun setUp() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+            .allowMainThreadQueries()
+            .build()
+        settingsService = SettingsService(context)
+        LocalizationManager.setLanguage(null)
+    }
+
+    @After
+    fun tearDown() {
+        database.close()
+    }
+
     @Test
     fun testSettingsGroup_nightModeRadioItem_rendersAndSelects() {
         var selectedHour by mutableStateOf(0)
@@ -188,7 +217,7 @@ class SettingsScreenTest {
             Fitnez2Theme {
                 SettingsGroup {
                     radioItem(
-                        label = "Night Mode",
+                        label = "Night Owl Mode",
                         value = if (selectedHour == 0) "Off (00:00)" else String.format(java.util.Locale.US, "%02d:00", selectedHour),
                         options = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
                         selected = selectedHour,
@@ -199,15 +228,45 @@ class SettingsScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Night Mode").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Night Owl Mode").assertIsDisplayed()
         composeTestRule.onNodeWithText("Off (00:00)").assertIsDisplayed()
 
         // Click to open dialog
-        composeTestRule.onNodeWithText("Night Mode").performClick()
+        composeTestRule.onNodeWithText("Night Owl Mode").performClick()
 
         // Select 01:00
         composeTestRule.onNodeWithText("01:00").assertIsDisplayed()
         composeTestRule.onNodeWithText("01:00").performClick()
         assertEquals(1, selectedHour)
+    }
+
+    @Test
+    fun testSettingsScreen_rendersInExpectedGroupsAndOrder() {
+        composeTestRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    SettingsScreen(onOpenDrawer = {})
+                }
+            }
+        }
+
+        // Group 1: Language, In-App Fonts, Auto-rotate
+        composeTestRule.onNodeWithText("Language").assertIsDisplayed()
+        composeTestRule.onNodeWithText("In-App Font").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Auto-rotate").assertIsDisplayed()
+
+        // Group 2: Weight Unit, Default Exercise Values, Night Owl Mode
+        composeTestRule.onNodeWithText("Weight Unit").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Default Exercise Values").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Night Owl Mode").performScrollTo().assertIsDisplayed()
+
+        // Group 3: Export Data, Import Data
+        composeTestRule.onNodeWithText("Export Data").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Import Data").performScrollTo().assertIsDisplayed()
     }
 }
