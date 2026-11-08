@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -129,18 +130,12 @@ fun ExerciseSelectionDialog(
         }
 
         // Exercises section
-        if (sortedExercises.isNotEmpty()) {
-            LabeledSectionDivider(label = globalLocalization.labelExercises)
-            sortedExercises.forEach { exercise ->
-                SelectionItemRow(
-                    name = exercise.name,
-                    isSelected = exercise.id == selectedExerciseId,
-                    testTag = "exercise_option_${exercise.name}",
-                    onSelect = { onExerciseSelected(exercise) },
-                    onEdit = { exerciseToEdit = exercise }
-                )
-            }
-        }
+        ExerciseListSection(
+            exercises = sortedExercises,
+            selectedExerciseId = selectedExerciseId,
+            onExerciseSelected = onExerciseSelected,
+            onEdit = { exerciseToEdit = it }
+        )
     }
 
     PredictiveConfirmationDialog(
@@ -378,5 +373,55 @@ private fun LabeledSectionDivider(label: String) {
             color = MaterialTheme.colorScheme.outlineVariant
         )
     }
+}
+
+@Composable
+private fun ExerciseListSection(
+    exercises: List<Exercise>,
+    selectedExerciseId: String?,
+    onExerciseSelected: (Exercise) -> Unit,
+    onEdit: (Exercise) -> Unit
+) {
+    if (exercises.isEmpty()) return
+    LabeledSectionDivider(label = globalLocalization.labelExercises)
+    exercises.forEachIndexed { index, exercise ->
+        val prevName = if (index > 0) exercises[index - 1].name else null
+        if (shouldInsertLetterDivider(index, exercise.name, prevName)) {
+            val charTag = exercise.name.trim().firstOrNull()?.uppercaseChar() ?: ' '
+            LetterSectionDivider(charTag = charTag)
+        }
+        SelectionItemRow(
+            name = exercise.name,
+            isSelected = exercise.id == selectedExerciseId,
+            testTag = "exercise_option_${exercise.name}",
+            onSelect = { onExerciseSelected(exercise) },
+            onEdit = { onEdit(exercise) }
+        )
+    }
+}
+
+@Composable
+private fun LetterSectionDivider(charTag: Char) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .testTag("exercise_letter_divider_$charTag"),
+        contentAlignment = Alignment.Center
+    ) {
+        HorizontalDivider(
+            modifier = Modifier
+                .fillMaxWidth(0.5f)
+                .testTag("exercise_letter_divider_line_$charTag"),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        )
+    }
+}
+
+private fun shouldInsertLetterDivider(index: Int, currentName: String, prevName: String?): Boolean {
+    if (index == 0 || prevName == null) return false
+    val curr = currentName.trim().firstOrNull()?.uppercaseChar() ?: return false
+    val prev = prevName.trim().firstOrNull()?.uppercaseChar() ?: return false
+    return curr != prev
 }
 

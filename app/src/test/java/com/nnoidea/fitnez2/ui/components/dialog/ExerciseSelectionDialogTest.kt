@@ -3,10 +3,13 @@ package com.nnoidea.fitnez2.ui.components.dialog
 import android.content.Context
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -78,6 +81,45 @@ class ExerciseSelectionDialogTest {
 
         // Delete button is NOT present on the row
         composeTestRule.onAllNodesWithContentDescription(globalLocalization.labelDelete).assertCountEquals(0)
+    }
+
+    @Test
+    fun testExerciseList_insertsLineDividerWhenFirstLetterChanges() {
+        val exercises = listOf(
+            Exercise(id = "1", name = "Bench Press"),
+            Exercise(id = "2", name = "Cable Row"),
+            Exercise(id = "3", name = "Chest Press")
+        )
+
+        composeTestRule.setContent {
+            Fitnez2Theme {
+                ExerciseSelectionDialog(
+                    show = true,
+                    exercises = exercises,
+                    selectedExerciseId = null,
+                    exerciseService = exerciseService,
+                    onDismissRequest = {},
+                    onExerciseSelected = {}
+                )
+            }
+        }
+
+        // B -> C causes a 50% width line divider before 'Cable Row'
+        val containerNode = composeTestRule.onNodeWithTag("exercise_letter_divider_C", useUnmergedTree = true)
+        containerNode.assertExists()
+
+        val lineNode = composeTestRule.onNodeWithTag("exercise_letter_divider_line_C", useUnmergedTree = true)
+        lineNode.assertExists()
+
+        val containerBounds = containerNode.getUnclippedBoundsInRoot()
+        val lineBounds = lineNode.getUnclippedBoundsInRoot()
+        val containerWidth = containerBounds.right - containerBounds.left
+        val lineWidth = lineBounds.right - lineBounds.left
+        val expectedWidth = containerWidth * 0.5f
+        org.junit.Assert.assertEquals(expectedWidth.value, lineWidth.value, 1.0f)
+
+        // 'Chest Press' also starts with C, so no extra divider for C
+        composeTestRule.onAllNodesWithTag("exercise_letter_divider_C", useUnmergedTree = true).assertCountEquals(1)
     }
 
     @Test
