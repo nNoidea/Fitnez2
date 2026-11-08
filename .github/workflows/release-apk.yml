@@ -35,13 +35,25 @@ jobs:
             echo "VERSION changed: ${{ steps.ver.outputs.version }}"
           fi
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         if: env.release != 'false'
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: gradle
+
+      - name: Ensure app/build.gradle.kts is in sync with VERSION
+        if: env.release != 'false'
+        run: |
+          python3 scripts/sync_version.py
+          if ! git diff --quiet app/build.gradle.kts; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add app/build.gradle.kts
+            git commit -m "chore: sync app/build.gradle.kts to ${{ steps.ver.outputs.version }}"
+            git push origin main
+          fi
 
       - name: Skip if tag already exists
         if: env.release != 'false'

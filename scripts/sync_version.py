@@ -104,13 +104,9 @@ def main():
 
     if is_hook:
         if changed:
-            # Stage the changed file
+            # Stage the changed file so it is included in this commit
             subprocess.run(["git", "add", "app/build.gradle.kts"], cwd=repo_root, check=False)
-            print(f"\n[version-sync] Mismatch detected between VERSION and app/build.gradle.kts!")
-            print(f"[version-sync] Auto-fixed app/build.gradle.kts -> versionName \"{version_name}\", versionCode {version_code}")
-            print(f"[version-sync] Changes have been staged for you.")
-            print(f"[version-sync] Commit blocked to let you review. Please re-run: git commit\n")
-            sys.exit(1)
+            print(f"[version-sync] Auto-synced app/build.gradle.kts -> versionName \"{version_name}\", versionCode {version_code} (staged)")
         sys.exit(0)
 
     if changed:
