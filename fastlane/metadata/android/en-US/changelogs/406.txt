@@ -1,0 +1,3 @@
+- Streamlined exercise selection dialog with subtle divider lines
+- Reorganized and refined settings screen
+- Enhanced progress graph label font rendering and contrast

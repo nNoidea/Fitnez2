@@ -1,4 +1,4 @@
-.PHONY: build install clean stop prod prod-install emulator test test-unit coverage coverage-report detekt check screenshots
+.PHONY: build install clean stop prod prod-install emulator test test-unit coverage coverage-report detekt check screenshots icon icons version
 
 # Default task: Builds the debug APK
 build:
@@ -84,3 +84,11 @@ check:
 screenshots:
 	@echo "Capturing screenshots..."
 	./scripts/screenshots.sh
+
+# Regenerates icon_round.png, fastlane store icons, and Android mipmaps from icon.svg
+icon icons:
+	@./scripts/generate_icons.py
+
+# Syncs app/build.gradle.kts with VERSION, or updates to a new version (e.g. make version v=0.4.8)
+version:
+	@./scripts/sync_version.py $(v)

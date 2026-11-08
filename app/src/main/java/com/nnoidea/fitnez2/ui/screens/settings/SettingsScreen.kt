@@ -1,7 +1,5 @@
 package com.nnoidea.fitnez2.ui.screens.settings
 
-import com.nnoidea.fitnez2.BuildConfig
-
 import com.nnoidea.fitnez2.ui.components.dialog.LoadingDialog
 import com.nnoidea.fitnez2.ui.components.SettingsPageScaffold
 import com.nnoidea.fitnez2.ui.components.SettingsGroup
@@ -251,23 +249,19 @@ fun SettingsScreen(
         }
 
         // Group 3: Advanced
-        // Developer Options hosts a one-tap "wipe all data + insert 1,000,000
-        // synthetic records" stress test. Never reachable in a release build.
-        if (BuildConfig.DEBUG) {
-            SettingsGroup {
-                // Developer Settings
-                item(
-                    label = globalLocalization.labelDeveloperOptions,
-                    value = "",
-                    icon = Icons.Default.Build,
-                    iconContainerColor = surfaceVariant,
-                    iconTint = onSurfaceVariant,
-                    showChevron = true,
-                    onClick = {
-                        onNavigateToDeveloper?.invoke()
-                    }
-                )
-            }
+        SettingsGroup {
+            // Developer Settings
+            item(
+                label = globalLocalization.labelDeveloperOptions,
+                value = "",
+                icon = Icons.Default.Build,
+                iconContainerColor = surfaceVariant,
+                iconTint = onSurfaceVariant,
+                showChevron = true,
+                onClick = {
+                    onNavigateToDeveloper?.invoke()
+                }
+            )
         }
     }
     

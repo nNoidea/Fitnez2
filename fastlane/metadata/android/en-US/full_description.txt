@@ -1,0 +1,10 @@
+Fitnez2 is a fast, offline fitness tracking app specially crafted for weight exercises and gym workouts. Built with Material 3 Expressive design, large touch targets, and tactile haptic feedback so you can log your lifts with zero friction.
+
+Features:
+• 100% Offline & Private: No internet permission, no accounts, and no trackers. Your data never leaves your device.
+• Material 3 Expressive UI: High-contrast, big buttons designed for effortless logging between sets.
+• Rich Haptic Engine: Tactile clicks, snaps, and spring tension detents for confident physical feedback.
+• Workout & Exercise Management: Group exercises into workouts or track individual lifts on the fly.
+• Progress Tracking: Visualize your volume and progressive overload over time with built-in charts and calendar views.
+• Backup & Restore: Simple JSON export and import using Android's Storage Access Framework.
+• Free & Open Source: Licensed under the GNU Affero General Public License (AGPL-3.0).

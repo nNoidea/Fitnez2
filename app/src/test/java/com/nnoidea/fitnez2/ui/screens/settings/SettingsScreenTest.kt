@@ -268,5 +268,31 @@ class SettingsScreenTest {
         // Group 3: Export Data, Import Data
         composeTestRule.onNodeWithText("Export Data").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Import Data").performScrollTo().assertIsDisplayed()
+
+        // Group 4: Developer Options
+        composeTestRule.onNodeWithText("Developer Options").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun testSettingsScreen_developerOptionsClicked_invokesCallback() {
+        var developerNavigated = false
+        composeTestRule.setContent {
+            val globalUiState = rememberGlobalUiState(settingsService)
+            Fitnez2Theme(fontMode = globalUiState.fontMode) {
+                ProvideGlobalUiState(
+                    database = database,
+                    settingsService = settingsService,
+                    state = globalUiState
+                ) {
+                    SettingsScreen(
+                        onOpenDrawer = {},
+                        onNavigateToDeveloper = { developerNavigated = true }
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithText("Developer Options").performScrollTo().performClick()
+        assertTrue(developerNavigated)
     }
 }

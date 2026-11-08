@@ -1,7 +1,5 @@
 package com.nnoidea.fitnez2
 
-import com.nnoidea.fitnez2.BuildConfig
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -49,15 +47,9 @@ import kotlinx.coroutines.CancellationException
 
 /**
  * Resolves the NavHost start destination from an incoming intent extra.
- * Extracted as a pure function so the release-build fallback (developer
- * destination is not registered when [developerAllowed] is false) is
- * unit-tested instead of verified by crashing on a device.
  */
-internal fun resolveInitialRoute(requestedRoute: String?, developerAllowed: Boolean): String {
+internal fun resolveInitialRoute(requestedRoute: String?): String {
     if (requestedRoute != null && AppPage.entries.any { it.route == requestedRoute }) {
-        if (requestedRoute == AppPage.Developer.route && !developerAllowed) {
-            return AppPage.Timeline.route
-        }
         return requestedRoute
     }
     return AppPage.Timeline.route
@@ -125,7 +117,7 @@ class MainActivity : ComponentActivity() {
                         state = globalUiState
                     ) {
                     val initialRoute = remember {
-                        resolveInitialRoute(intent.getStringExtra(EXTRA_PAGE_ROUTE), BuildConfig.DEBUG)
+                        resolveInitialRoute(intent.getStringExtra(EXTRA_PAGE_ROUTE))
                     }
                     val homeBottomSheetState = com.nnoidea.fitnez2.ui.screens.timeline.rememberHomeBottomSheetState()
 
@@ -218,10 +210,8 @@ class MainActivity : ComponentActivity() {
                                 composable(AppPage.Settings.route) {
                                     SettingsScreen(
                                         onOpenDrawer = { scope.launch { drawerState.open() } },
-                                        onNavigateToDeveloper = if (BuildConfig.DEBUG) {
-                                            { navController.navigate(AppPage.Developer.route) }
-                                        } else {
-                                            null
+                                        onNavigateToDeveloper = {
+                                            navController.navigate(AppPage.Developer.route)
                                         }
                                     )
                                 }
@@ -250,12 +240,10 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
-                                if (BuildConfig.DEBUG) {
-                                    composable(AppPage.Developer.route) {
-                                        DeveloperOptionsScreen(
-                                            onBack = { navController.popBackStack() }
-                                        )
-                                    }
+                                composable(AppPage.Developer.route) {
+                                    DeveloperOptionsScreen(
+                                        onBack = { navController.popBackStack() }
+                                    )
                                 }
                             }
                         }

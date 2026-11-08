@@ -1,0 +1,33 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+>
+  <g transform="translate(256, 256) rotate(-45)">
+    <!-- Center Bar / Handle (Light-Toned Black) -->
+    <rect
+            x="-50"
+            y="-32"
+            width="100"
+            height="64"
+            rx="20"
+            ry="20"
+            fill="#42414d"
+        />
+
+    <!-- Right Side Weight Stack (Black) -->
+    <g fill="#000000">
+      <rect x="64" y="-138" width="75" height="276" rx="24" ry="24" />
+      <rect x="147" y="-110" width="62" height="220" rx="20" ry="20" />
+      <rect x="217" y="-79" width="50" height="158" rx="16" ry="16" />
+    </g>
+
+    <!-- Left Side Weight Stack (Symmetric) -->
+    <g fill="#000000">
+      <rect x="-139" y="-138" width="75" height="276" rx="24" ry="24" />
+      <rect x="-209" y="-110" width="62" height="220" rx="20" ry="20" />
+      <rect x="-267" y="-79" width="50" height="158" rx="16" ry="16" />
+    </g>
+  </g>
+</svg>

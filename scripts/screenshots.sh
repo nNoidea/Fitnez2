@@ -158,3 +158,13 @@ done
 if [ "$missing" = "0" ]; then
     echo "README.md references all 4 screenshots."
 fi
+
+# Sync screenshots to F-Droid Fastlane metadata if directory exists
+FASTLANE_SHOTS="$ROOT/fastlane/metadata/android/en-US/images/phoneScreenshots"
+if [ -d "$FASTLANE_SHOTS" ]; then
+    cp "$OUT/timeline.png" "$FASTLANE_SHOTS/1.png"
+    cp "$OUT/monthly.png" "$FASTLANE_SHOTS/2.png"
+    cp "$OUT/graph.png" "$FASTLANE_SHOTS/3.png"
+    cp "$OUT/settings.png" "$FASTLANE_SHOTS/4.png"
+    echo "Updated F-Droid Fastlane screenshots (1.png - 4.png)."
+fi

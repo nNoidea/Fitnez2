@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" width="256" height="256" alt="niri-bar icon" />
+  <img src="icon_round.png" width="256" height="256" alt="Fitnez2 icon" />
 </div>
 
 # Fitnez2

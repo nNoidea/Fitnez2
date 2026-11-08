@@ -6,14 +6,6 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
-// Single source of truth: the VERSION file at the repo root. CI releases by reading
-// the same file, so the APK, the in-app indicator, and the git tag can never drift.
-// ponytail: versionCode is derived rather than hand-maintained; it only needs to
-// increase monotonically for Android, which this guarantees for any sane semver.
-val appVersion: String = file("$rootDir/VERSION").readText().trim()
-val appVersionCode: Int = appVersion.split(".")
-    .let { (major, minor, patch) -> major.toInt() * 100_000 + minor.toInt() * 100 + patch.toInt() }
-
 android {
     namespace = "com.nnoidea.fitnez2"
     compileSdk {
@@ -24,8 +16,8 @@ android {
         applicationId = "com.nnoidea.fitnez2"
         minSdk = 31
         targetSdk = 36
-        versionCode = appVersionCode
-        versionName = appVersion
+        versionCode = 407
+        versionName = "0.4.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

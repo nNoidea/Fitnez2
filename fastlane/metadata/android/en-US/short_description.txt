@@ -1,0 +1,1 @@
+Minimalist, offline weightlifting tracker with Material 3 UX
