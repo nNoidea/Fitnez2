@@ -16,22 +16,53 @@ android {
         applicationId = "com.nnoidea.fitnez2"
         minSdk = 31
         targetSdk = 36
-        versionCode = 407
-        versionName = "0.4.7"
+        versionCode = 408
+        versionName = "0.4.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("SIGNING_STORE_FILE")
+            val localKeystore = rootProject.file("keys/fitnez2-release.jks")
+            val localPasswordFile = rootProject.file("keys/fitnez2-release.pass")
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+            } else if (localKeystore.exists() && localPasswordFile.exists()) {
+                val pwd = localPasswordFile.readText().trim()
+                storeFile = localKeystore
+                storePassword = pwd
+                keyAlias = "fitnez2"
+                keyPassword = pwd
+            } else {
+                val debugConfig = getByName("debug")
+                storeFile = debugConfig.storeFile
+                storePassword = debugConfig.storePassword
+                keyAlias = debugConfig.keyAlias
+                keyPassword = debugConfig.keyPassword
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

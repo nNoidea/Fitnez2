@@ -69,8 +69,24 @@ jobs:
         if: env.release != 'false'
         run: chmod +x gradlew
 
+      - name: Decode signing keystore
+        if: env.release != 'false'
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+        run: |
+          if [ -z "$SIGNING_KEY_BASE64" ]; then
+            echo "::error::SIGNING_KEY_BASE64 secret is not set. Refusing to build release APK with debug key."
+            exit 1
+          fi
+          echo "$SIGNING_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "SIGNING_STORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
       - name: Verify build
         if: env.release != 'false'
+        env:
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: ./gradlew detekt lintDebug testDebugUnitTest assembleRelease
 
       - name: Create tag
@@ -90,3 +106,7 @@ jobs:
             --title "${{ steps.ver.outputs.version }}" \
             --generate-notes \
             app/build/outputs/apk/release/*.apk
+
+      - name: Clean up keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"

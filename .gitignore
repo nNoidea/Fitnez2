@@ -23,5 +23,9 @@ GEMINI.md
 /breezy-weather-main
 .kotlin/
 *.json
+*.jks
+*.keystore
+*.pass
+keys/
 
 Fitnez/
